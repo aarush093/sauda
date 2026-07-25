@@ -1,0 +1,1953 @@
+{
+  "name": "empty-hand-draw-five",
+  "description": "An empty hand draws 5 at the start of the turn (§4.4, #14).",
+  "initialState": {
+    "rules": {
+      "players": {
+        "min": 2,
+        "max": 4
+      },
+      "handLimit": 7,
+      "playsPerTurn": 3,
+      "drawPerTurn": 2,
+      "emptyHandDraw": 5,
+      "maxDugnaPerCharge": 2,
+      "buildingsStackRent": true,
+      "orphanedBuildings": "toBank",
+      "winDeclaredOnOwnTurnOnly": true
+    },
+    "cards": {
+      "prop_puraniDilli_0": {
+        "id": "prop_puraniDilli_0",
+        "kind": "property",
+        "set": "puraniDilli",
+        "index": 0,
+        "value": 1
+      },
+      "prop_puraniDilli_1": {
+        "id": "prop_puraniDilli_1",
+        "kind": "property",
+        "set": "puraniDilli",
+        "index": 1,
+        "value": 1
+      },
+      "prop_kashi_0": {
+        "id": "prop_kashi_0",
+        "kind": "property",
+        "set": "kashi",
+        "index": 0,
+        "value": 1
+      },
+      "prop_kashi_1": {
+        "id": "prop_kashi_1",
+        "kind": "property",
+        "set": "kashi",
+        "index": 1,
+        "value": 1
+      },
+      "prop_kashi_2": {
+        "id": "prop_kashi_2",
+        "kind": "property",
+        "set": "kashi",
+        "index": 2,
+        "value": 1
+      },
+      "prop_jaipur_0": {
+        "id": "prop_jaipur_0",
+        "kind": "property",
+        "set": "jaipur",
+        "index": 0,
+        "value": 2
+      },
+      "prop_jaipur_1": {
+        "id": "prop_jaipur_1",
+        "kind": "property",
+        "set": "jaipur",
+        "index": 1,
+        "value": 2
+      },
+      "prop_jaipur_2": {
+        "id": "prop_jaipur_2",
+        "kind": "property",
+        "set": "jaipur",
+        "index": 2,
+        "value": 2
+      },
+      "prop_kolkata_0": {
+        "id": "prop_kolkata_0",
+        "kind": "property",
+        "set": "kolkata",
+        "index": 0,
+        "value": 2
+      },
+      "prop_kolkata_1": {
+        "id": "prop_kolkata_1",
+        "kind": "property",
+        "set": "kolkata",
+        "index": 1,
+        "value": 2
+      },
+      "prop_kolkata_2": {
+        "id": "prop_kolkata_2",
+        "kind": "property",
+        "set": "kolkata",
+        "index": 2,
+        "value": 2
+      },
+      "prop_chennai_0": {
+        "id": "prop_chennai_0",
+        "kind": "property",
+        "set": "chennai",
+        "index": 0,
+        "value": 3
+      },
+      "prop_chennai_1": {
+        "id": "prop_chennai_1",
+        "kind": "property",
+        "set": "chennai",
+        "index": 1,
+        "value": 3
+      },
+      "prop_chennai_2": {
+        "id": "prop_chennai_2",
+        "kind": "property",
+        "set": "chennai",
+        "index": 2,
+        "value": 3
+      },
+      "prop_bangalore_0": {
+        "id": "prop_bangalore_0",
+        "kind": "property",
+        "set": "bangalore",
+        "index": 0,
+        "value": 3
+      },
+      "prop_bangalore_1": {
+        "id": "prop_bangalore_1",
+        "kind": "property",
+        "set": "bangalore",
+        "index": 1,
+        "value": 3
+      },
+      "prop_bangalore_2": {
+        "id": "prop_bangalore_2",
+        "kind": "property",
+        "set": "bangalore",
+        "index": 2,
+        "value": 3
+      },
+      "prop_newDelhi_0": {
+        "id": "prop_newDelhi_0",
+        "kind": "property",
+        "set": "newDelhi",
+        "index": 0,
+        "value": 4
+      },
+      "prop_newDelhi_1": {
+        "id": "prop_newDelhi_1",
+        "kind": "property",
+        "set": "newDelhi",
+        "index": 1,
+        "value": 4
+      },
+      "prop_newDelhi_2": {
+        "id": "prop_newDelhi_2",
+        "kind": "property",
+        "set": "newDelhi",
+        "index": 2,
+        "value": 4
+      },
+      "prop_mumbai_0": {
+        "id": "prop_mumbai_0",
+        "kind": "property",
+        "set": "mumbai",
+        "index": 0,
+        "value": 4
+      },
+      "prop_mumbai_1": {
+        "id": "prop_mumbai_1",
+        "kind": "property",
+        "set": "mumbai",
+        "index": 1,
+        "value": 4
+      },
+      "prop_junction_0": {
+        "id": "prop_junction_0",
+        "kind": "property",
+        "set": "junction",
+        "index": 0,
+        "value": 2
+      },
+      "prop_junction_1": {
+        "id": "prop_junction_1",
+        "kind": "property",
+        "set": "junction",
+        "index": 1,
+        "value": 2
+      },
+      "prop_junction_2": {
+        "id": "prop_junction_2",
+        "kind": "property",
+        "set": "junction",
+        "index": 2,
+        "value": 2
+      },
+      "prop_junction_3": {
+        "id": "prop_junction_3",
+        "kind": "property",
+        "set": "junction",
+        "index": 3,
+        "value": 2
+      },
+      "prop_utility_0": {
+        "id": "prop_utility_0",
+        "kind": "property",
+        "set": "utility",
+        "index": 0,
+        "value": 2
+      },
+      "prop_utility_1": {
+        "id": "prop_utility_1",
+        "kind": "property",
+        "set": "utility",
+        "index": 1,
+        "value": 2
+      },
+      "wild_jaipur_kolkata_0": {
+        "id": "wild_jaipur_kolkata_0",
+        "kind": "wildcard",
+        "colors": [
+          "jaipur",
+          "kolkata"
+        ],
+        "value": 2
+      },
+      "wild_jaipur_kolkata_1": {
+        "id": "wild_jaipur_kolkata_1",
+        "kind": "wildcard",
+        "colors": [
+          "jaipur",
+          "kolkata"
+        ],
+        "value": 2
+      },
+      "wild_chennai_bangalore_0": {
+        "id": "wild_chennai_bangalore_0",
+        "kind": "wildcard",
+        "colors": [
+          "chennai",
+          "bangalore"
+        ],
+        "value": 3
+      },
+      "wild_chennai_bangalore_1": {
+        "id": "wild_chennai_bangalore_1",
+        "kind": "wildcard",
+        "colors": [
+          "chennai",
+          "bangalore"
+        ],
+        "value": 3
+      },
+      "wild_kashi_puraniDilli_0": {
+        "id": "wild_kashi_puraniDilli_0",
+        "kind": "wildcard",
+        "colors": [
+          "kashi",
+          "puraniDilli"
+        ],
+        "value": 1
+      },
+      "wild_kashi_junction_0": {
+        "id": "wild_kashi_junction_0",
+        "kind": "wildcard",
+        "colors": [
+          "kashi",
+          "junction"
+        ],
+        "value": 4
+      },
+      "wild_mumbai_newDelhi_0": {
+        "id": "wild_mumbai_newDelhi_0",
+        "kind": "wildcard",
+        "colors": [
+          "mumbai",
+          "newDelhi"
+        ],
+        "value": 4
+      },
+      "wild_newDelhi_junction_0": {
+        "id": "wild_newDelhi_junction_0",
+        "kind": "wildcard",
+        "colors": [
+          "newDelhi",
+          "junction"
+        ],
+        "value": 4
+      },
+      "wild_junction_utility_0": {
+        "id": "wild_junction_utility_0",
+        "kind": "wildcard",
+        "colors": [
+          "junction",
+          "utility"
+        ],
+        "value": 2
+      },
+      "wild_any_0": {
+        "id": "wild_any_0",
+        "kind": "wildcard",
+        "colors": "ANY",
+        "value": 0
+      },
+      "wild_any_1": {
+        "id": "wild_any_1",
+        "kind": "wildcard",
+        "colors": "ANY",
+        "value": 0
+      },
+      "action_kabza_0": {
+        "id": "action_kabza_0",
+        "kind": "action",
+        "action": "kabza",
+        "value": 5
+      },
+      "action_kabza_1": {
+        "id": "action_kabza_1",
+        "kind": "action",
+        "action": "kabza",
+        "value": 5
+      },
+      "action_haathKiSafai_0": {
+        "id": "action_haathKiSafai_0",
+        "kind": "action",
+        "action": "haathKiSafai",
+        "value": 3
+      },
+      "action_haathKiSafai_1": {
+        "id": "action_haathKiSafai_1",
+        "kind": "action",
+        "action": "haathKiSafai",
+        "value": 3
+      },
+      "action_haathKiSafai_2": {
+        "id": "action_haathKiSafai_2",
+        "kind": "action",
+        "action": "haathKiSafai",
+        "value": 3
+      },
+      "action_adlaBadli_0": {
+        "id": "action_adlaBadli_0",
+        "kind": "action",
+        "action": "adlaBadli",
+        "value": 3
+      },
+      "action_adlaBadli_1": {
+        "id": "action_adlaBadli_1",
+        "kind": "action",
+        "action": "adlaBadli",
+        "value": 3
+      },
+      "action_adlaBadli_2": {
+        "id": "action_adlaBadli_2",
+        "kind": "action",
+        "action": "adlaBadli",
+        "value": 3
+      },
+      "action_nahiChalega_0": {
+        "id": "action_nahiChalega_0",
+        "kind": "action",
+        "action": "nahiChalega",
+        "value": 4
+      },
+      "action_nahiChalega_1": {
+        "id": "action_nahiChalega_1",
+        "kind": "action",
+        "action": "nahiChalega",
+        "value": 4
+      },
+      "action_nahiChalega_2": {
+        "id": "action_nahiChalega_2",
+        "kind": "action",
+        "action": "nahiChalega",
+        "value": 4
+      },
+      "action_vasooli_0": {
+        "id": "action_vasooli_0",
+        "kind": "action",
+        "action": "vasooli",
+        "value": 3
+      },
+      "action_vasooli_1": {
+        "id": "action_vasooli_1",
+        "kind": "action",
+        "action": "vasooli",
+        "value": 3
+      },
+      "action_vasooli_2": {
+        "id": "action_vasooli_2",
+        "kind": "action",
+        "action": "vasooli",
+        "value": 3
+      },
+      "action_shagun_0": {
+        "id": "action_shagun_0",
+        "kind": "action",
+        "action": "shagun",
+        "value": 2
+      },
+      "action_shagun_1": {
+        "id": "action_shagun_1",
+        "kind": "action",
+        "action": "shagun",
+        "value": 2
+      },
+      "action_shagun_2": {
+        "id": "action_shagun_2",
+        "kind": "action",
+        "action": "shagun",
+        "value": 2
+      },
+      "action_aageBadho_0": {
+        "id": "action_aageBadho_0",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_1": {
+        "id": "action_aageBadho_1",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_2": {
+        "id": "action_aageBadho_2",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_3": {
+        "id": "action_aageBadho_3",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_4": {
+        "id": "action_aageBadho_4",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_5": {
+        "id": "action_aageBadho_5",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_6": {
+        "id": "action_aageBadho_6",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_7": {
+        "id": "action_aageBadho_7",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_8": {
+        "id": "action_aageBadho_8",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_9": {
+        "id": "action_aageBadho_9",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_makaan_0": {
+        "id": "action_makaan_0",
+        "kind": "action",
+        "action": "makaan",
+        "value": 3
+      },
+      "action_makaan_1": {
+        "id": "action_makaan_1",
+        "kind": "action",
+        "action": "makaan",
+        "value": 3
+      },
+      "action_makaan_2": {
+        "id": "action_makaan_2",
+        "kind": "action",
+        "action": "makaan",
+        "value": 3
+      },
+      "action_haveli_0": {
+        "id": "action_haveli_0",
+        "kind": "action",
+        "action": "haveli",
+        "value": 4
+      },
+      "action_haveli_1": {
+        "id": "action_haveli_1",
+        "kind": "action",
+        "action": "haveli",
+        "value": 4
+      },
+      "action_dugna_0": {
+        "id": "action_dugna_0",
+        "kind": "action",
+        "action": "dugna",
+        "value": 1
+      },
+      "action_dugna_1": {
+        "id": "action_dugna_1",
+        "kind": "action",
+        "action": "dugna",
+        "value": 1
+      },
+      "kiraya_puraniDilli_kashi_0": {
+        "id": "kiraya_puraniDilli_kashi_0",
+        "kind": "kiraya",
+        "colors": [
+          "puraniDilli",
+          "kashi"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_puraniDilli_kashi_1": {
+        "id": "kiraya_puraniDilli_kashi_1",
+        "kind": "kiraya",
+        "colors": [
+          "puraniDilli",
+          "kashi"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_jaipur_kolkata_0": {
+        "id": "kiraya_jaipur_kolkata_0",
+        "kind": "kiraya",
+        "colors": [
+          "jaipur",
+          "kolkata"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_jaipur_kolkata_1": {
+        "id": "kiraya_jaipur_kolkata_1",
+        "kind": "kiraya",
+        "colors": [
+          "jaipur",
+          "kolkata"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_chennai_bangalore_0": {
+        "id": "kiraya_chennai_bangalore_0",
+        "kind": "kiraya",
+        "colors": [
+          "chennai",
+          "bangalore"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_chennai_bangalore_1": {
+        "id": "kiraya_chennai_bangalore_1",
+        "kind": "kiraya",
+        "colors": [
+          "chennai",
+          "bangalore"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_newDelhi_mumbai_0": {
+        "id": "kiraya_newDelhi_mumbai_0",
+        "kind": "kiraya",
+        "colors": [
+          "newDelhi",
+          "mumbai"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_newDelhi_mumbai_1": {
+        "id": "kiraya_newDelhi_mumbai_1",
+        "kind": "kiraya",
+        "colors": [
+          "newDelhi",
+          "mumbai"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_junction_utility_0": {
+        "id": "kiraya_junction_utility_0",
+        "kind": "kiraya",
+        "colors": [
+          "junction",
+          "utility"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_junction_utility_1": {
+        "id": "kiraya_junction_utility_1",
+        "kind": "kiraya",
+        "colors": [
+          "junction",
+          "utility"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_any_0": {
+        "id": "kiraya_any_0",
+        "kind": "kiraya",
+        "colors": "ANY",
+        "value": 3,
+        "targeted": true
+      },
+      "kiraya_any_1": {
+        "id": "kiraya_any_1",
+        "kind": "kiraya",
+        "colors": "ANY",
+        "value": 3,
+        "targeted": true
+      },
+      "kiraya_any_2": {
+        "id": "kiraya_any_2",
+        "kind": "kiraya",
+        "colors": "ANY",
+        "value": 3,
+        "targeted": true
+      },
+      "money_1_0": {
+        "id": "money_1_0",
+        "kind": "money",
+        "value": 1
+      },
+      "money_1_1": {
+        "id": "money_1_1",
+        "kind": "money",
+        "value": 1
+      },
+      "money_1_2": {
+        "id": "money_1_2",
+        "kind": "money",
+        "value": 1
+      },
+      "money_1_3": {
+        "id": "money_1_3",
+        "kind": "money",
+        "value": 1
+      },
+      "money_1_4": {
+        "id": "money_1_4",
+        "kind": "money",
+        "value": 1
+      },
+      "money_1_5": {
+        "id": "money_1_5",
+        "kind": "money",
+        "value": 1
+      },
+      "money_2_0": {
+        "id": "money_2_0",
+        "kind": "money",
+        "value": 2
+      },
+      "money_2_1": {
+        "id": "money_2_1",
+        "kind": "money",
+        "value": 2
+      },
+      "money_2_2": {
+        "id": "money_2_2",
+        "kind": "money",
+        "value": 2
+      },
+      "money_2_3": {
+        "id": "money_2_3",
+        "kind": "money",
+        "value": 2
+      },
+      "money_2_4": {
+        "id": "money_2_4",
+        "kind": "money",
+        "value": 2
+      },
+      "money_3_0": {
+        "id": "money_3_0",
+        "kind": "money",
+        "value": 3
+      },
+      "money_3_1": {
+        "id": "money_3_1",
+        "kind": "money",
+        "value": 3
+      },
+      "money_3_2": {
+        "id": "money_3_2",
+        "kind": "money",
+        "value": 3
+      },
+      "money_4_0": {
+        "id": "money_4_0",
+        "kind": "money",
+        "value": 4
+      },
+      "money_4_1": {
+        "id": "money_4_1",
+        "kind": "money",
+        "value": 4
+      },
+      "money_4_2": {
+        "id": "money_4_2",
+        "kind": "money",
+        "value": 4
+      },
+      "money_5_0": {
+        "id": "money_5_0",
+        "kind": "money",
+        "value": 5
+      },
+      "money_5_1": {
+        "id": "money_5_1",
+        "kind": "money",
+        "value": 5
+      },
+      "money_10_0": {
+        "id": "money_10_0",
+        "kind": "money",
+        "value": 10
+      }
+    },
+    "players": [
+      {
+        "id": 0,
+        "hand": [],
+        "bank": [],
+        "properties": {
+          "puraniDilli": {
+            "set": "puraniDilli",
+            "cards": [],
+            "buildings": []
+          },
+          "kashi": {
+            "set": "kashi",
+            "cards": [],
+            "buildings": []
+          },
+          "jaipur": {
+            "set": "jaipur",
+            "cards": [],
+            "buildings": []
+          },
+          "kolkata": {
+            "set": "kolkata",
+            "cards": [],
+            "buildings": []
+          },
+          "chennai": {
+            "set": "chennai",
+            "cards": [],
+            "buildings": []
+          },
+          "bangalore": {
+            "set": "bangalore",
+            "cards": [],
+            "buildings": []
+          },
+          "newDelhi": {
+            "set": "newDelhi",
+            "cards": [],
+            "buildings": []
+          },
+          "mumbai": {
+            "set": "mumbai",
+            "cards": [],
+            "buildings": []
+          },
+          "junction": {
+            "set": "junction",
+            "cards": [],
+            "buildings": []
+          },
+          "utility": {
+            "set": "utility",
+            "cards": [],
+            "buildings": []
+          }
+        }
+      },
+      {
+        "id": 1,
+        "hand": [],
+        "bank": [],
+        "properties": {
+          "puraniDilli": {
+            "set": "puraniDilli",
+            "cards": [],
+            "buildings": []
+          },
+          "kashi": {
+            "set": "kashi",
+            "cards": [],
+            "buildings": []
+          },
+          "jaipur": {
+            "set": "jaipur",
+            "cards": [],
+            "buildings": []
+          },
+          "kolkata": {
+            "set": "kolkata",
+            "cards": [],
+            "buildings": []
+          },
+          "chennai": {
+            "set": "chennai",
+            "cards": [],
+            "buildings": []
+          },
+          "bangalore": {
+            "set": "bangalore",
+            "cards": [],
+            "buildings": []
+          },
+          "newDelhi": {
+            "set": "newDelhi",
+            "cards": [],
+            "buildings": []
+          },
+          "mumbai": {
+            "set": "mumbai",
+            "cards": [],
+            "buildings": []
+          },
+          "junction": {
+            "set": "junction",
+            "cards": [],
+            "buildings": []
+          },
+          "utility": {
+            "set": "utility",
+            "cards": [],
+            "buildings": []
+          }
+        }
+      }
+    ],
+    "drawPile": [
+      "prop_puraniDilli_0",
+      "prop_puraniDilli_1",
+      "prop_kashi_0",
+      "prop_kashi_1",
+      "prop_kashi_2",
+      "prop_jaipur_0",
+      "prop_jaipur_1",
+      "prop_jaipur_2",
+      "prop_kolkata_0",
+      "prop_kolkata_1",
+      "prop_kolkata_2",
+      "prop_chennai_0",
+      "prop_chennai_1",
+      "prop_chennai_2",
+      "prop_bangalore_0",
+      "prop_bangalore_1",
+      "prop_bangalore_2",
+      "prop_newDelhi_0",
+      "prop_newDelhi_1",
+      "prop_newDelhi_2",
+      "prop_mumbai_0",
+      "prop_mumbai_1",
+      "prop_junction_0",
+      "prop_junction_1",
+      "prop_junction_2",
+      "prop_junction_3",
+      "prop_utility_0",
+      "prop_utility_1",
+      "wild_jaipur_kolkata_0",
+      "wild_jaipur_kolkata_1",
+      "wild_chennai_bangalore_0",
+      "wild_chennai_bangalore_1",
+      "wild_kashi_puraniDilli_0",
+      "wild_kashi_junction_0",
+      "wild_mumbai_newDelhi_0",
+      "wild_newDelhi_junction_0",
+      "wild_junction_utility_0",
+      "wild_any_0",
+      "wild_any_1",
+      "action_kabza_0",
+      "action_kabza_1",
+      "action_haathKiSafai_0",
+      "action_haathKiSafai_1",
+      "action_haathKiSafai_2",
+      "action_adlaBadli_0",
+      "action_adlaBadli_1",
+      "action_adlaBadli_2",
+      "action_nahiChalega_0",
+      "action_nahiChalega_1",
+      "action_nahiChalega_2",
+      "action_vasooli_0",
+      "action_vasooli_1",
+      "action_vasooli_2",
+      "action_shagun_0",
+      "action_shagun_1",
+      "action_shagun_2",
+      "action_aageBadho_0",
+      "action_aageBadho_1",
+      "action_aageBadho_2",
+      "action_aageBadho_3",
+      "action_aageBadho_4",
+      "action_aageBadho_5",
+      "action_aageBadho_6",
+      "action_aageBadho_7",
+      "action_aageBadho_8",
+      "action_aageBadho_9",
+      "action_makaan_0",
+      "action_makaan_1",
+      "action_makaan_2",
+      "action_haveli_0",
+      "action_haveli_1",
+      "action_dugna_0",
+      "action_dugna_1",
+      "kiraya_puraniDilli_kashi_0",
+      "kiraya_puraniDilli_kashi_1",
+      "kiraya_jaipur_kolkata_0",
+      "kiraya_jaipur_kolkata_1",
+      "kiraya_chennai_bangalore_0",
+      "kiraya_chennai_bangalore_1",
+      "kiraya_newDelhi_mumbai_0",
+      "kiraya_newDelhi_mumbai_1",
+      "kiraya_junction_utility_0",
+      "kiraya_junction_utility_1",
+      "kiraya_any_0",
+      "kiraya_any_1",
+      "kiraya_any_2",
+      "money_1_0",
+      "money_1_1",
+      "money_1_2",
+      "money_1_3",
+      "money_1_4",
+      "money_1_5",
+      "money_2_0",
+      "money_2_1",
+      "money_2_2",
+      "money_2_3",
+      "money_2_4",
+      "money_3_0",
+      "money_3_1",
+      "money_3_2",
+      "money_4_0",
+      "money_4_1",
+      "money_4_2",
+      "money_5_0",
+      "money_5_1",
+      "money_10_0"
+    ],
+    "discardPile": [],
+    "currentPlayerIndex": 0,
+    "playsRemaining": 3,
+    "turnCount": 1,
+    "phase": "awaitingDraw",
+    "pendingInterrupts": [],
+    "nextInterruptId": 1,
+    "rngState": 12345,
+    "winnerIndex": null
+  },
+  "actions": [
+    {
+      "type": "DRAW"
+    }
+  ],
+  "finalState": {
+    "rules": {
+      "players": {
+        "min": 2,
+        "max": 4
+      },
+      "handLimit": 7,
+      "playsPerTurn": 3,
+      "drawPerTurn": 2,
+      "emptyHandDraw": 5,
+      "maxDugnaPerCharge": 2,
+      "buildingsStackRent": true,
+      "orphanedBuildings": "toBank",
+      "winDeclaredOnOwnTurnOnly": true
+    },
+    "cards": {
+      "prop_puraniDilli_0": {
+        "id": "prop_puraniDilli_0",
+        "kind": "property",
+        "set": "puraniDilli",
+        "index": 0,
+        "value": 1
+      },
+      "prop_puraniDilli_1": {
+        "id": "prop_puraniDilli_1",
+        "kind": "property",
+        "set": "puraniDilli",
+        "index": 1,
+        "value": 1
+      },
+      "prop_kashi_0": {
+        "id": "prop_kashi_0",
+        "kind": "property",
+        "set": "kashi",
+        "index": 0,
+        "value": 1
+      },
+      "prop_kashi_1": {
+        "id": "prop_kashi_1",
+        "kind": "property",
+        "set": "kashi",
+        "index": 1,
+        "value": 1
+      },
+      "prop_kashi_2": {
+        "id": "prop_kashi_2",
+        "kind": "property",
+        "set": "kashi",
+        "index": 2,
+        "value": 1
+      },
+      "prop_jaipur_0": {
+        "id": "prop_jaipur_0",
+        "kind": "property",
+        "set": "jaipur",
+        "index": 0,
+        "value": 2
+      },
+      "prop_jaipur_1": {
+        "id": "prop_jaipur_1",
+        "kind": "property",
+        "set": "jaipur",
+        "index": 1,
+        "value": 2
+      },
+      "prop_jaipur_2": {
+        "id": "prop_jaipur_2",
+        "kind": "property",
+        "set": "jaipur",
+        "index": 2,
+        "value": 2
+      },
+      "prop_kolkata_0": {
+        "id": "prop_kolkata_0",
+        "kind": "property",
+        "set": "kolkata",
+        "index": 0,
+        "value": 2
+      },
+      "prop_kolkata_1": {
+        "id": "prop_kolkata_1",
+        "kind": "property",
+        "set": "kolkata",
+        "index": 1,
+        "value": 2
+      },
+      "prop_kolkata_2": {
+        "id": "prop_kolkata_2",
+        "kind": "property",
+        "set": "kolkata",
+        "index": 2,
+        "value": 2
+      },
+      "prop_chennai_0": {
+        "id": "prop_chennai_0",
+        "kind": "property",
+        "set": "chennai",
+        "index": 0,
+        "value": 3
+      },
+      "prop_chennai_1": {
+        "id": "prop_chennai_1",
+        "kind": "property",
+        "set": "chennai",
+        "index": 1,
+        "value": 3
+      },
+      "prop_chennai_2": {
+        "id": "prop_chennai_2",
+        "kind": "property",
+        "set": "chennai",
+        "index": 2,
+        "value": 3
+      },
+      "prop_bangalore_0": {
+        "id": "prop_bangalore_0",
+        "kind": "property",
+        "set": "bangalore",
+        "index": 0,
+        "value": 3
+      },
+      "prop_bangalore_1": {
+        "id": "prop_bangalore_1",
+        "kind": "property",
+        "set": "bangalore",
+        "index": 1,
+        "value": 3
+      },
+      "prop_bangalore_2": {
+        "id": "prop_bangalore_2",
+        "kind": "property",
+        "set": "bangalore",
+        "index": 2,
+        "value": 3
+      },
+      "prop_newDelhi_0": {
+        "id": "prop_newDelhi_0",
+        "kind": "property",
+        "set": "newDelhi",
+        "index": 0,
+        "value": 4
+      },
+      "prop_newDelhi_1": {
+        "id": "prop_newDelhi_1",
+        "kind": "property",
+        "set": "newDelhi",
+        "index": 1,
+        "value": 4
+      },
+      "prop_newDelhi_2": {
+        "id": "prop_newDelhi_2",
+        "kind": "property",
+        "set": "newDelhi",
+        "index": 2,
+        "value": 4
+      },
+      "prop_mumbai_0": {
+        "id": "prop_mumbai_0",
+        "kind": "property",
+        "set": "mumbai",
+        "index": 0,
+        "value": 4
+      },
+      "prop_mumbai_1": {
+        "id": "prop_mumbai_1",
+        "kind": "property",
+        "set": "mumbai",
+        "index": 1,
+        "value": 4
+      },
+      "prop_junction_0": {
+        "id": "prop_junction_0",
+        "kind": "property",
+        "set": "junction",
+        "index": 0,
+        "value": 2
+      },
+      "prop_junction_1": {
+        "id": "prop_junction_1",
+        "kind": "property",
+        "set": "junction",
+        "index": 1,
+        "value": 2
+      },
+      "prop_junction_2": {
+        "id": "prop_junction_2",
+        "kind": "property",
+        "set": "junction",
+        "index": 2,
+        "value": 2
+      },
+      "prop_junction_3": {
+        "id": "prop_junction_3",
+        "kind": "property",
+        "set": "junction",
+        "index": 3,
+        "value": 2
+      },
+      "prop_utility_0": {
+        "id": "prop_utility_0",
+        "kind": "property",
+        "set": "utility",
+        "index": 0,
+        "value": 2
+      },
+      "prop_utility_1": {
+        "id": "prop_utility_1",
+        "kind": "property",
+        "set": "utility",
+        "index": 1,
+        "value": 2
+      },
+      "wild_jaipur_kolkata_0": {
+        "id": "wild_jaipur_kolkata_0",
+        "kind": "wildcard",
+        "colors": [
+          "jaipur",
+          "kolkata"
+        ],
+        "value": 2
+      },
+      "wild_jaipur_kolkata_1": {
+        "id": "wild_jaipur_kolkata_1",
+        "kind": "wildcard",
+        "colors": [
+          "jaipur",
+          "kolkata"
+        ],
+        "value": 2
+      },
+      "wild_chennai_bangalore_0": {
+        "id": "wild_chennai_bangalore_0",
+        "kind": "wildcard",
+        "colors": [
+          "chennai",
+          "bangalore"
+        ],
+        "value": 3
+      },
+      "wild_chennai_bangalore_1": {
+        "id": "wild_chennai_bangalore_1",
+        "kind": "wildcard",
+        "colors": [
+          "chennai",
+          "bangalore"
+        ],
+        "value": 3
+      },
+      "wild_kashi_puraniDilli_0": {
+        "id": "wild_kashi_puraniDilli_0",
+        "kind": "wildcard",
+        "colors": [
+          "kashi",
+          "puraniDilli"
+        ],
+        "value": 1
+      },
+      "wild_kashi_junction_0": {
+        "id": "wild_kashi_junction_0",
+        "kind": "wildcard",
+        "colors": [
+          "kashi",
+          "junction"
+        ],
+        "value": 4
+      },
+      "wild_mumbai_newDelhi_0": {
+        "id": "wild_mumbai_newDelhi_0",
+        "kind": "wildcard",
+        "colors": [
+          "mumbai",
+          "newDelhi"
+        ],
+        "value": 4
+      },
+      "wild_newDelhi_junction_0": {
+        "id": "wild_newDelhi_junction_0",
+        "kind": "wildcard",
+        "colors": [
+          "newDelhi",
+          "junction"
+        ],
+        "value": 4
+      },
+      "wild_junction_utility_0": {
+        "id": "wild_junction_utility_0",
+        "kind": "wildcard",
+        "colors": [
+          "junction",
+          "utility"
+        ],
+        "value": 2
+      },
+      "wild_any_0": {
+        "id": "wild_any_0",
+        "kind": "wildcard",
+        "colors": "ANY",
+        "value": 0
+      },
+      "wild_any_1": {
+        "id": "wild_any_1",
+        "kind": "wildcard",
+        "colors": "ANY",
+        "value": 0
+      },
+      "action_kabza_0": {
+        "id": "action_kabza_0",
+        "kind": "action",
+        "action": "kabza",
+        "value": 5
+      },
+      "action_kabza_1": {
+        "id": "action_kabza_1",
+        "kind": "action",
+        "action": "kabza",
+        "value": 5
+      },
+      "action_haathKiSafai_0": {
+        "id": "action_haathKiSafai_0",
+        "kind": "action",
+        "action": "haathKiSafai",
+        "value": 3
+      },
+      "action_haathKiSafai_1": {
+        "id": "action_haathKiSafai_1",
+        "kind": "action",
+        "action": "haathKiSafai",
+        "value": 3
+      },
+      "action_haathKiSafai_2": {
+        "id": "action_haathKiSafai_2",
+        "kind": "action",
+        "action": "haathKiSafai",
+        "value": 3
+      },
+      "action_adlaBadli_0": {
+        "id": "action_adlaBadli_0",
+        "kind": "action",
+        "action": "adlaBadli",
+        "value": 3
+      },
+      "action_adlaBadli_1": {
+        "id": "action_adlaBadli_1",
+        "kind": "action",
+        "action": "adlaBadli",
+        "value": 3
+      },
+      "action_adlaBadli_2": {
+        "id": "action_adlaBadli_2",
+        "kind": "action",
+        "action": "adlaBadli",
+        "value": 3
+      },
+      "action_nahiChalega_0": {
+        "id": "action_nahiChalega_0",
+        "kind": "action",
+        "action": "nahiChalega",
+        "value": 4
+      },
+      "action_nahiChalega_1": {
+        "id": "action_nahiChalega_1",
+        "kind": "action",
+        "action": "nahiChalega",
+        "value": 4
+      },
+      "action_nahiChalega_2": {
+        "id": "action_nahiChalega_2",
+        "kind": "action",
+        "action": "nahiChalega",
+        "value": 4
+      },
+      "action_vasooli_0": {
+        "id": "action_vasooli_0",
+        "kind": "action",
+        "action": "vasooli",
+        "value": 3
+      },
+      "action_vasooli_1": {
+        "id": "action_vasooli_1",
+        "kind": "action",
+        "action": "vasooli",
+        "value": 3
+      },
+      "action_vasooli_2": {
+        "id": "action_vasooli_2",
+        "kind": "action",
+        "action": "vasooli",
+        "value": 3
+      },
+      "action_shagun_0": {
+        "id": "action_shagun_0",
+        "kind": "action",
+        "action": "shagun",
+        "value": 2
+      },
+      "action_shagun_1": {
+        "id": "action_shagun_1",
+        "kind": "action",
+        "action": "shagun",
+        "value": 2
+      },
+      "action_shagun_2": {
+        "id": "action_shagun_2",
+        "kind": "action",
+        "action": "shagun",
+        "value": 2
+      },
+      "action_aageBadho_0": {
+        "id": "action_aageBadho_0",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_1": {
+        "id": "action_aageBadho_1",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_2": {
+        "id": "action_aageBadho_2",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_3": {
+        "id": "action_aageBadho_3",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_4": {
+        "id": "action_aageBadho_4",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_5": {
+        "id": "action_aageBadho_5",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_6": {
+        "id": "action_aageBadho_6",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_7": {
+        "id": "action_aageBadho_7",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_8": {
+        "id": "action_aageBadho_8",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_aageBadho_9": {
+        "id": "action_aageBadho_9",
+        "kind": "action",
+        "action": "aageBadho",
+        "value": 1
+      },
+      "action_makaan_0": {
+        "id": "action_makaan_0",
+        "kind": "action",
+        "action": "makaan",
+        "value": 3
+      },
+      "action_makaan_1": {
+        "id": "action_makaan_1",
+        "kind": "action",
+        "action": "makaan",
+        "value": 3
+      },
+      "action_makaan_2": {
+        "id": "action_makaan_2",
+        "kind": "action",
+        "action": "makaan",
+        "value": 3
+      },
+      "action_haveli_0": {
+        "id": "action_haveli_0",
+        "kind": "action",
+        "action": "haveli",
+        "value": 4
+      },
+      "action_haveli_1": {
+        "id": "action_haveli_1",
+        "kind": "action",
+        "action": "haveli",
+        "value": 4
+      },
+      "action_dugna_0": {
+        "id": "action_dugna_0",
+        "kind": "action",
+        "action": "dugna",
+        "value": 1
+      },
+      "action_dugna_1": {
+        "id": "action_dugna_1",
+        "kind": "action",
+        "action": "dugna",
+        "value": 1
+      },
+      "kiraya_puraniDilli_kashi_0": {
+        "id": "kiraya_puraniDilli_kashi_0",
+        "kind": "kiraya",
+        "colors": [
+          "puraniDilli",
+          "kashi"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_puraniDilli_kashi_1": {
+        "id": "kiraya_puraniDilli_kashi_1",
+        "kind": "kiraya",
+        "colors": [
+          "puraniDilli",
+          "kashi"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_jaipur_kolkata_0": {
+        "id": "kiraya_jaipur_kolkata_0",
+        "kind": "kiraya",
+        "colors": [
+          "jaipur",
+          "kolkata"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_jaipur_kolkata_1": {
+        "id": "kiraya_jaipur_kolkata_1",
+        "kind": "kiraya",
+        "colors": [
+          "jaipur",
+          "kolkata"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_chennai_bangalore_0": {
+        "id": "kiraya_chennai_bangalore_0",
+        "kind": "kiraya",
+        "colors": [
+          "chennai",
+          "bangalore"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_chennai_bangalore_1": {
+        "id": "kiraya_chennai_bangalore_1",
+        "kind": "kiraya",
+        "colors": [
+          "chennai",
+          "bangalore"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_newDelhi_mumbai_0": {
+        "id": "kiraya_newDelhi_mumbai_0",
+        "kind": "kiraya",
+        "colors": [
+          "newDelhi",
+          "mumbai"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_newDelhi_mumbai_1": {
+        "id": "kiraya_newDelhi_mumbai_1",
+        "kind": "kiraya",
+        "colors": [
+          "newDelhi",
+          "mumbai"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_junction_utility_0": {
+        "id": "kiraya_junction_utility_0",
+        "kind": "kiraya",
+        "colors": [
+          "junction",
+          "utility"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_junction_utility_1": {
+        "id": "kiraya_junction_utility_1",
+        "kind": "kiraya",
+        "colors": [
+          "junction",
+          "utility"
+        ],
+        "value": 1,
+        "targeted": false
+      },
+      "kiraya_any_0": {
+        "id": "kiraya_any_0",
+        "kind": "kiraya",
+        "colors": "ANY",
+        "value": 3,
+        "targeted": true
+      },
+      "kiraya_any_1": {
+        "id": "kiraya_any_1",
+        "kind": "kiraya",
+        "colors": "ANY",
+        "value": 3,
+        "targeted": true
+      },
+      "kiraya_any_2": {
+        "id": "kiraya_any_2",
+        "kind": "kiraya",
+        "colors": "ANY",
+        "value": 3,
+        "targeted": true
+      },
+      "money_1_0": {
+        "id": "money_1_0",
+        "kind": "money",
+        "value": 1
+      },
+      "money_1_1": {
+        "id": "money_1_1",
+        "kind": "money",
+        "value": 1
+      },
+      "money_1_2": {
+        "id": "money_1_2",
+        "kind": "money",
+        "value": 1
+      },
+      "money_1_3": {
+        "id": "money_1_3",
+        "kind": "money",
+        "value": 1
+      },
+      "money_1_4": {
+        "id": "money_1_4",
+        "kind": "money",
+        "value": 1
+      },
+      "money_1_5": {
+        "id": "money_1_5",
+        "kind": "money",
+        "value": 1
+      },
+      "money_2_0": {
+        "id": "money_2_0",
+        "kind": "money",
+        "value": 2
+      },
+      "money_2_1": {
+        "id": "money_2_1",
+        "kind": "money",
+        "value": 2
+      },
+      "money_2_2": {
+        "id": "money_2_2",
+        "kind": "money",
+        "value": 2
+      },
+      "money_2_3": {
+        "id": "money_2_3",
+        "kind": "money",
+        "value": 2
+      },
+      "money_2_4": {
+        "id": "money_2_4",
+        "kind": "money",
+        "value": 2
+      },
+      "money_3_0": {
+        "id": "money_3_0",
+        "kind": "money",
+        "value": 3
+      },
+      "money_3_1": {
+        "id": "money_3_1",
+        "kind": "money",
+        "value": 3
+      },
+      "money_3_2": {
+        "id": "money_3_2",
+        "kind": "money",
+        "value": 3
+      },
+      "money_4_0": {
+        "id": "money_4_0",
+        "kind": "money",
+        "value": 4
+      },
+      "money_4_1": {
+        "id": "money_4_1",
+        "kind": "money",
+        "value": 4
+      },
+      "money_4_2": {
+        "id": "money_4_2",
+        "kind": "money",
+        "value": 4
+      },
+      "money_5_0": {
+        "id": "money_5_0",
+        "kind": "money",
+        "value": 5
+      },
+      "money_5_1": {
+        "id": "money_5_1",
+        "kind": "money",
+        "value": 5
+      },
+      "money_10_0": {
+        "id": "money_10_0",
+        "kind": "money",
+        "value": 10
+      }
+    },
+    "players": [
+      {
+        "id": 0,
+        "hand": [
+          "money_10_0",
+          "money_5_1",
+          "money_5_0",
+          "money_4_2",
+          "money_4_1"
+        ],
+        "bank": [],
+        "properties": {
+          "puraniDilli": {
+            "set": "puraniDilli",
+            "cards": [],
+            "buildings": []
+          },
+          "kashi": {
+            "set": "kashi",
+            "cards": [],
+            "buildings": []
+          },
+          "jaipur": {
+            "set": "jaipur",
+            "cards": [],
+            "buildings": []
+          },
+          "kolkata": {
+            "set": "kolkata",
+            "cards": [],
+            "buildings": []
+          },
+          "chennai": {
+            "set": "chennai",
+            "cards": [],
+            "buildings": []
+          },
+          "bangalore": {
+            "set": "bangalore",
+            "cards": [],
+            "buildings": []
+          },
+          "newDelhi": {
+            "set": "newDelhi",
+            "cards": [],
+            "buildings": []
+          },
+          "mumbai": {
+            "set": "mumbai",
+            "cards": [],
+            "buildings": []
+          },
+          "junction": {
+            "set": "junction",
+            "cards": [],
+            "buildings": []
+          },
+          "utility": {
+            "set": "utility",
+            "cards": [],
+            "buildings": []
+          }
+        }
+      },
+      {
+        "id": 1,
+        "hand": [],
+        "bank": [],
+        "properties": {
+          "puraniDilli": {
+            "set": "puraniDilli",
+            "cards": [],
+            "buildings": []
+          },
+          "kashi": {
+            "set": "kashi",
+            "cards": [],
+            "buildings": []
+          },
+          "jaipur": {
+            "set": "jaipur",
+            "cards": [],
+            "buildings": []
+          },
+          "kolkata": {
+            "set": "kolkata",
+            "cards": [],
+            "buildings": []
+          },
+          "chennai": {
+            "set": "chennai",
+            "cards": [],
+            "buildings": []
+          },
+          "bangalore": {
+            "set": "bangalore",
+            "cards": [],
+            "buildings": []
+          },
+          "newDelhi": {
+            "set": "newDelhi",
+            "cards": [],
+            "buildings": []
+          },
+          "mumbai": {
+            "set": "mumbai",
+            "cards": [],
+            "buildings": []
+          },
+          "junction": {
+            "set": "junction",
+            "cards": [],
+            "buildings": []
+          },
+          "utility": {
+            "set": "utility",
+            "cards": [],
+            "buildings": []
+          }
+        }
+      }
+    ],
+    "drawPile": [
+      "prop_puraniDilli_0",
+      "prop_puraniDilli_1",
+      "prop_kashi_0",
+      "prop_kashi_1",
+      "prop_kashi_2",
+      "prop_jaipur_0",
+      "prop_jaipur_1",
+      "prop_jaipur_2",
+      "prop_kolkata_0",
+      "prop_kolkata_1",
+      "prop_kolkata_2",
+      "prop_chennai_0",
+      "prop_chennai_1",
+      "prop_chennai_2",
+      "prop_bangalore_0",
+      "prop_bangalore_1",
+      "prop_bangalore_2",
+      "prop_newDelhi_0",
+      "prop_newDelhi_1",
+      "prop_newDelhi_2",
+      "prop_mumbai_0",
+      "prop_mumbai_1",
+      "prop_junction_0",
+      "prop_junction_1",
+      "prop_junction_2",
+      "prop_junction_3",
+      "prop_utility_0",
+      "prop_utility_1",
+      "wild_jaipur_kolkata_0",
+      "wild_jaipur_kolkata_1",
+      "wild_chennai_bangalore_0",
+      "wild_chennai_bangalore_1",
+      "wild_kashi_puraniDilli_0",
+      "wild_kashi_junction_0",
+      "wild_mumbai_newDelhi_0",
+      "wild_newDelhi_junction_0",
+      "wild_junction_utility_0",
+      "wild_any_0",
+      "wild_any_1",
+      "action_kabza_0",
+      "action_kabza_1",
+      "action_haathKiSafai_0",
+      "action_haathKiSafai_1",
+      "action_haathKiSafai_2",
+      "action_adlaBadli_0",
+      "action_adlaBadli_1",
+      "action_adlaBadli_2",
+      "action_nahiChalega_0",
+      "action_nahiChalega_1",
+      "action_nahiChalega_2",
+      "action_vasooli_0",
+      "action_vasooli_1",
+      "action_vasooli_2",
+      "action_shagun_0",
+      "action_shagun_1",
+      "action_shagun_2",
+      "action_aageBadho_0",
+      "action_aageBadho_1",
+      "action_aageBadho_2",
+      "action_aageBadho_3",
+      "action_aageBadho_4",
+      "action_aageBadho_5",
+      "action_aageBadho_6",
+      "action_aageBadho_7",
+      "action_aageBadho_8",
+      "action_aageBadho_9",
+      "action_makaan_0",
+      "action_makaan_1",
+      "action_makaan_2",
+      "action_haveli_0",
+      "action_haveli_1",
+      "action_dugna_0",
+      "action_dugna_1",
+      "kiraya_puraniDilli_kashi_0",
+      "kiraya_puraniDilli_kashi_1",
+      "kiraya_jaipur_kolkata_0",
+      "kiraya_jaipur_kolkata_1",
+      "kiraya_chennai_bangalore_0",
+      "kiraya_chennai_bangalore_1",
+      "kiraya_newDelhi_mumbai_0",
+      "kiraya_newDelhi_mumbai_1",
+      "kiraya_junction_utility_0",
+      "kiraya_junction_utility_1",
+      "kiraya_any_0",
+      "kiraya_any_1",
+      "kiraya_any_2",
+      "money_1_0",
+      "money_1_1",
+      "money_1_2",
+      "money_1_3",
+      "money_1_4",
+      "money_1_5",
+      "money_2_0",
+      "money_2_1",
+      "money_2_2",
+      "money_2_3",
+      "money_2_4",
+      "money_3_0",
+      "money_3_1",
+      "money_3_2",
+      "money_4_0"
+    ],
+    "discardPile": [],
+    "currentPlayerIndex": 0,
+    "playsRemaining": 3,
+    "turnCount": 1,
+    "phase": "playing",
+    "pendingInterrupts": [],
+    "nextInterruptId": 1,
+    "rngState": 12345,
+    "winnerIndex": null
+  },
+  "events": [
+    {
+      "type": "CardsDrawn",
+      "player": 0,
+      "cardIds": [
+        "money_10_0",
+        "money_5_1",
+        "money_5_0",
+        "money_4_2",
+        "money_4_1"
+      ]
+    }
+  ]
+}

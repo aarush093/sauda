@@ -36,3 +36,44 @@ export function shuffle<T>(items: readonly T[], rng: Rng): T[] {
   }
   return result;
 }
+
+// --- Serialisable RNG state (used inside GameState) ---
+//
+// mulberry32 keeps its entire state in one 32-bit integer. Storing that integer
+// in GameState (instead of a closure) is what lets a mid-game reshuffle stay
+// deterministic AND lets the whole state be saved to disk (M4) and replayed.
+// Each step is a pure function: state in, {value, next state} out.
+
+// Normalises a seed into the integer form we store in GameState.
+export function initialRngState(seed: number): number {
+  return seed >>> 0;
+}
+
+// One deterministic step of mulberry32: returns the random value and the next state.
+export function nextRandom(state: number): { value: number; state: number } {
+  const advanced = (state + 0x6d2b79f5) | 0;
+  let t = Math.imul(advanced ^ (advanced >>> 15), 1 | advanced);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  const value = ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  return { value, state: advanced };
+}
+
+// Fisher–Yates shuffle that threads and returns the RNG state, so the caller can
+// store the advanced state back into GameState after a shuffle.
+export function shuffleWithState<T>(
+  items: readonly T[],
+  state: number,
+): { items: T[]; state: number } {
+  const result = items.slice();
+  let rngState = state;
+  for (let i = result.length - 1; i > 0; i--) {
+    const step = nextRandom(rngState);
+    rngState = step.state;
+    const j = Math.floor(step.value * (i + 1));
+    const atI = result[i]!;
+    const atJ = result[j]!;
+    result[i] = atJ;
+    result[j] = atI;
+  }
+  return { items: result, state: rngState };
+}
