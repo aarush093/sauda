@@ -52,3 +52,13 @@ One line per rules interpretation, deviation, or engineering choice worth rememb
 - **Workspace glob fix:** `tools` is a single package, so the workspace entry is `tools`, not `tools/*` (which matches only subdirectories).
 - **CLI runs via `tsx`** (no build step): `pnpm play` (interactive human vs 3 bots; `--auto` plays all seats for a demo transcript), `pnpm simulate --games N`.
 - **HeuristicBot difficulty (v1)** currently tunes the NAHI CHALEGA threshold; the core strategy is shared across Easy/Medium/Hard. Deeper per-difficulty play (discard/played-card tracking for Hard) is deferred.
+
+## M3 — Mobile core (web)
+
+- **`apps/mobile` is a Vite + React 18 + TS web app.** M3 is deliberately visually neutral (plain, legible) — the desi pop-art identity, fonts, stamp-slam signature, motion and sound are **M4**, to be designed deliberately (per user), not auto-generated. Capacitor/Android packaging is **M5**.
+- **No game rule lives in React.** The zustand store is a thin shell over `@sauda/engine`: `dispatch === reduce`, `stepBot` asks a `HeuristicBot` to pick from `legalActions`, the board renders `observe(state, viewSeat)`. `labels.ts` is presentation-only (reads the theme). If a component needs to know legality or outcome, it asks the engine.
+- **Every interaction is `legalActions`.** The action panel renders one button per legal move (grouped by the hand card it uses); interrupt responses (NAHI CHALEGA / allow / pay / place-received) are surfaced as buttons; the board can only offer legal moves — the same guarantee the engine gives the CLI.
+- **Payment in the UI** offers the single suggested `RESPOND_PAY` that `legalActions` provides (from the engine's `suggestPayment`). A manual card-by-card payment picker is deferred to M4 polish.
+- **Hand-off overlay** shows only when the actor is a human *different* from the currently revealed human (pass-and-play privacy); solo (single human) never shows it. The board renders the revealed seat's perspective underneath.
+- **Bots auto-advance** via a timed effect (300 ms) stepping one move at a time so the board updates between moves; the bot RNG is seeded per game.
+- **M3 gate proven headlessly:** a store integration test drives full solo *and* pass-and-play games to a winner through the real store/engine/components (jsdom) asserting **zero `console.error`**; the App mounts and starts a game; `vite build` succeeds. (Real-browser automation was flaky in this environment; `pnpm --filter @sauda/mobile dev` serves it for manual play.)

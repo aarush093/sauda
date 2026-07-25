@@ -1,0 +1,197 @@
+/*
+ * M3 styling is deliberately plain: clean, legible, structurally clear.
+ * The desi pop-art identity, fonts, colours, stamp animation, sound and motion
+ * are all M4 — designed deliberately, not auto-generated here.
+ */
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1c1a17;
+  background: #f4f4f2;
+  line-height: 1.4;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  padding: 8px 12px;
+  min-height: 44px; /* quality floor: 44px tap targets */
+  border: 1px solid #999;
+  border-radius: 6px;
+  background: #fff;
+}
+button:hover:not(:disabled) {
+  background: #eee;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+/* Home */
+.home h1 {
+  margin-bottom: 4px;
+}
+.home .tagline {
+  color: #666;
+  margin-top: 0;
+}
+.home fieldset {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+.home label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 16px;
+}
+.home .start {
+  font-weight: 600;
+}
+
+/* Table */
+.table h2 {
+  margin: 4px 0;
+}
+.turn-info {
+  font-size: 0.9em;
+  color: #444;
+}
+.zone {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px;
+  margin: 8px 0;
+  background: #fff;
+}
+.zone h3 {
+  margin: 0 0 6px;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #666;
+}
+.opponent {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px dashed #eee;
+}
+.opponent:last-child {
+  border-bottom: none;
+}
+.sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.set-chip {
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.85em;
+  background: #fafafa;
+}
+.set-chip.complete {
+  border-color: #1e7a46;
+  color: #1e7a46;
+  font-weight: 600;
+}
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.card {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 0.85em;
+  background: #f6efdf;
+}
+.center {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+/* Action panel */
+.actions .group {
+  margin-bottom: 10px;
+}
+.actions .group h4 {
+  margin: 6px 0;
+  font-size: 0.85em;
+  color: #444;
+}
+.actions .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.actions .respond {
+  border: 2px solid #c6342b;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff6f5;
+}
+.waiting {
+  color: #666;
+  font-style: italic;
+  padding: 8px;
+}
+
+/* Log */
+.log {
+  max-height: 160px;
+  overflow-y: auto;
+  font-size: 0.82em;
+  color: #444;
+  background: #fbfbfb;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 8px;
+  white-space: pre-wrap;
+}
+
+/* Hand-off overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #171b4a;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  padding: 24px;
+}
+.overlay button {
+  background: #d9a441;
+  border: none;
+  font-weight: 600;
+  padding: 12px 24px;
+}
+
+/* Winner banner */
+.winner {
+  border: 2px solid #1e7a46;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  background: #f0fbf4;
+  font-weight: 600;
+}

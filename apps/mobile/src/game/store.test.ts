@@ -1,0 +1,73 @@
+/**
+ * Drives full games through the actual store (engine + bots + hand-off logic) to a
+ * winner, asserting no console errors along the way — this is the M3 gate proof:
+ * a complete game start→win with zero console errors, without any browser.
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { legalActions, mulberry32, observe } from '@sauda/engine';
+import { HeuristicBot } from '@sauda/bots';
+import { actorOf, useGame } from './store';
+import type { SeatConfig } from './store';
+
+let errorSpy: ReturnType<typeof vi.spyOn>;
+
+beforeEach(() => {
+  errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  useGame.getState().reset();
+});
+afterEach(() => {
+  errorSpy.mockRestore();
+});
+
+// Plays a game to completion, using a HeuristicBot to choose for human seats too
+// (so we exercise dispatch + hand-off + reduce end to end).
+function playToWin(seats: SeatConfig[], seed: number): { winner: number | null; sawHandoff: boolean } {
+  const store = useGame.getState();
+  store.newGame({ seats, seed });
+  const policy = new HeuristicBot('medium');
+  const rng = mulberry32(seed);
+  let sawHandoff = false;
+
+  for (let guard = 0; guard < 20_000; guard++) {
+    const current = useGame.getState();
+    const state = current.state!;
+    if (state.phase === 'gameOver') {
+      break;
+    }
+    if (current.handoffSeat !== null) {
+      sawHandoff = true;
+      current.ackHandoff();
+      continue;
+    }
+    const actor = actorOf(state);
+    if (current.seats[actor]!.kind === 'bot') {
+      current.stepBot();
+    } else {
+      const legal = legalActions(state, actor);
+      current.dispatch(policy.chooseAction(observe(state, actor), legal, rng));
+    }
+  }
+  return { winner: useGame.getState().state!.winnerIndex, sawHandoff };
+}
+
+describe('game store — full game via engine', () => {
+  it('solo (1 human vs 3 bots) plays to a winner with no console errors', () => {
+    const seats: SeatConfig[] = [
+      { kind: 'human' },
+      { kind: 'bot', difficulty: 'medium' },
+      { kind: 'bot', difficulty: 'easy' },
+      { kind: 'bot', difficulty: 'hard' },
+    ];
+    const { winner } = playToWin(seats, 12345);
+    expect(winner).not.toBeNull();
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('pass-and-play (3 humans) plays to a winner and shows a hand-off', () => {
+    const seats: SeatConfig[] = [{ kind: 'human' }, { kind: 'human' }, { kind: 'human' }];
+    const { winner, sawHandoff } = playToWin(seats, 999);
+    expect(winner).not.toBeNull();
+    expect(sawHandoff).toBe(true); // the privacy overlay was triggered between players
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+});
