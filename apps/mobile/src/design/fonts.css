@@ -1,0 +1,36 @@
+/*
+ * Self-hosted, subset fonts (M4 §2.4). The woff2 files are bundled in the repo
+ * (fetched once by scripts/fetch-fonts.mjs). The app loads them locally only —
+ * there is NO runtime fetch from Google Fonts or any CDN. font-display: swap so
+ * text paints immediately with the fallback and swaps in when the face is ready.
+ */
+@font-face {
+  font-family: 'Baloo 2';
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/baloo2-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Karla';
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/karla-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Karla';
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/karla-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-weight: 500;
+  font-display: swap;
+  src: url('../assets/fonts/ibmplexmono-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/ibmplexmono-700.woff2') format('woff2');
+}

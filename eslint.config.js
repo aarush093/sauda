@@ -16,6 +16,13 @@ export default tseslint.config(
     },
   },
   {
+    // Dev-only build scripts (e.g. font fetching) run under Node with its globals.
+    files: ['**/scripts/**', '**/*.mjs'],
+    languageOptions: {
+      globals: { fetch: 'readonly', console: 'readonly', process: 'readonly', URL: 'readonly' },
+    },
+  },
+  {
     // Hard guardrail: the engine must be deterministic — seeded RNG only.
     files: ['packages/engine/src/**/*.ts'],
     rules: {

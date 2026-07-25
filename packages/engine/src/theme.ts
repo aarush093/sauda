@@ -28,20 +28,25 @@ export interface SetTheme {
   size: number; // properties needed to complete the set
   value: number; // ₹ bank value of each property in the set
   rent: number[]; // rent[i] = kiraya when owning i+1 properties; last entry = full set
+  // Presentation-only (M4, §3.5): fictional "works" name + founding year for the
+  // vintage factory-footer. Never affects rules; original & IP-clean.
+  works: string;
+  est: number;
 }
 
 // §6.1: the ten sets. Keys are the structural SetIds; values are display/gameplay data.
+// Ink hexes updated per M4 §2.2 (data-only). works/est drive the M4 footer band.
 export const SETS: Record<SetId, SetTheme> = {
-  puraniDilli: { label: 'Purani Dilli', hex: '#8C4A2F', icon: 'jalebi', size: 2, value: 1, rent: [1, 2] },
-  kashi: { label: 'Kashi Ghats', hex: '#2FA8C9', icon: 'diya', size: 3, value: 1, rent: [1, 2, 3] },
-  jaipur: { label: 'Jaipur', hex: '#D6337A', icon: 'jharokha', size: 3, value: 2, rent: [1, 2, 4] },
-  kolkata: { label: 'Kolkata', hex: '#E8842C', icon: 'tram', size: 3, value: 2, rent: [1, 3, 5] },
-  chennai: { label: 'Chennai', hex: '#C6342B', icon: 'filterCoffee', size: 3, value: 3, rent: [2, 3, 6] },
-  bangalore: { label: 'Bangalore', hex: '#E3B505', icon: 'circuit', size: 3, value: 3, rent: [2, 4, 6] },
-  newDelhi: { label: 'New Delhi', hex: '#1E7A46', icon: 'pillar', size: 3, value: 4, rent: [2, 4, 7] },
-  mumbai: { label: 'Mumbai', hex: '#1D3F8F', icon: 'wave', size: 2, value: 4, rent: [3, 8] },
-  junction: { label: 'Junctions', hex: '#22222A', icon: 'train', size: 4, value: 2, rent: [1, 2, 3, 4] },
-  utility: { label: 'Utilities', hex: '#7C8A6E', icon: 'bulb', size: 2, value: 2, rent: [1, 2] },
+  puraniDilli: { label: 'Purani Dilli', hex: '#8C4A2F', icon: 'jalebi', size: 2, value: 1, rent: [1, 2], works: 'OLD DELHI DEEDS & JALEBIWORKS, CHANDNI CHOWK', est: 1893 },
+  kashi: { label: 'Kashi Ghats', hex: '#1F7A8C', icon: 'diya', size: 3, value: 1, rent: [1, 2, 3], works: 'KASHI GHAT DEEDS & LAMPWORKS, DASHASHWAMEDH', est: 1888 },
+  jaipur: { label: 'Jaipur', hex: '#C2367E', icon: 'jharokha', size: 3, value: 2, rent: [1, 2, 4], works: 'PINK CITY DEEDS & GEMWORKS, JOHARI BAZAAR', est: 1901 },
+  kolkata: { label: 'Kolkata', hex: '#D96C2C', icon: 'tram', size: 3, value: 2, rent: [1, 3, 5], works: 'TRAM CITY DEEDS & PRESSWORKS, COLLEGE STREET', est: 1907 },
+  chennai: { label: 'Chennai', hex: '#C6342B', icon: 'filterCoffee', size: 3, value: 3, rent: [2, 3, 6], works: 'COROMANDEL DEEDS & FILTERWORKS, T. NAGAR', est: 1912 },
+  bangalore: { label: 'Bangalore', hex: '#E3A81C', icon: 'circuit', size: 3, value: 3, rent: [2, 4, 6], works: 'GARDEN CITY DEEDS & CIRCUITWORKS, MG ROAD', est: 1921 },
+  newDelhi: { label: 'New Delhi', hex: '#2E7D46', icon: 'pillar', size: 3, value: 4, rent: [2, 4, 7], works: 'CAPITAL DEEDS & STONEWORKS, LODHI ROAD', est: 1931 },
+  mumbai: { label: 'Mumbai', hex: '#27408B', icon: 'wave', size: 2, value: 4, rent: [3, 8], works: 'BOMBAY LAND DEEDS & MATCHWORKS, FORT', est: 1897 },
+  junction: { label: 'Junctions', hex: '#22222A', icon: 'train', size: 4, value: 2, rent: [1, 2, 3, 4], works: 'GRAND TRUNK DEEDS & LOCOWORKS', est: 1885 },
+  utility: { label: 'Utilities', hex: '#7C8A6E', icon: 'bulb', size: 2, value: 2, rent: [1, 2], works: 'CIVIC DEEDS & POWERWORKS', est: 1915 },
 };
 
 // §6.1: the property card names, per set. A property card stores its set + its

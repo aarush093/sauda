@@ -1,0 +1,60 @@
+/**
+ * Read-only card lookup + a de-duplicated list of every distinct card FACE, for
+ * CardFace and the /dev/plates sheet. Pure presentation over engine data — no
+ * rules here.
+ */
+import { ACTIONS, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
+import type { Card, SetId } from '@sauda/engine';
+
+const DECK = buildDeck();
+const BY_ID = new Map(DECK.map((card) => [card.id, card]));
+
+export function cardById(id: string): Card | undefined {
+  return BY_ID.get(id);
+}
+
+// The display name of a property card (from theme, by set + index).
+export function propertyName(card: Extract<Card, { kind: 'property' }>): string {
+  return PROPERTY_NAMES[card.set][card.index] ?? card.id;
+}
+
+export function setLabels(colors: SetId[]): string {
+  return colors.map((c) => SETS[c].label).join(' / ');
+}
+
+// One representative card id per distinct face (so the dev sheet shows each unique
+// design once rather than all 106 physical cards). Order: properties, wildcards,
+// actions, kiraya, money.
+export function representativeCardIds(): string[] {
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  for (const card of DECK) {
+    const key = faceKey(card);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    ids.push(card.id);
+  }
+  return ids;
+}
+
+function faceKey(card: Card): string {
+  switch (card.kind) {
+    case 'property':
+      return `prop:${card.set}:${card.index}`;
+    case 'wildcard':
+      return `wild:${card.colors === 'ANY' ? 'any' : card.colors.join('-')}`;
+    case 'action':
+      return `action:${card.action}`;
+    case 'kiraya':
+      return `kiraya:${card.colors === 'ANY' ? 'any' : card.colors.join('-')}`;
+    case 'money':
+      return `money:${card.value}`;
+  }
+}
+
+// The action descriptor / other short English tag shown under a card name.
+export function actionInfo(action: keyof typeof ACTIONS): { name: string; descriptor: string } {
+  return { name: ACTIONS[action].name, descriptor: ACTIONS[action].descriptor };
+}
