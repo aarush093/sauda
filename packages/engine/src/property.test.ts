@@ -121,7 +121,7 @@ describe('invariants over many random games (§8.2)', () => {
         expect(outcome.finished).toBe(true);
         expect(outcome.turns).toBeLessThan(500);
       }),
-      { numRuns: 40 },
+      { numRuns: 500 },
     );
   });
 });
