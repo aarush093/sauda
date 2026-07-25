@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GAME } from '@sauda/engine';
 import type { Difficulty } from '@sauda/bots';
 import { useGame } from '../game/store';
 import type { SeatConfig } from '../game/store';
@@ -33,8 +34,8 @@ export function Home() {
 
   return (
     <div className="home">
-      <h1>SAUDA</h1>
-      <p className="tagline">Deal karo. Kabza karo. Jeeto.</p>
+      <h1>{GAME.name}</h1>
+      <p className="tagline">{GAME.tagline}</p>
 
       <fieldset>
         <legend>Mode</legend>

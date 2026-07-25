@@ -1,10 +1,11 @@
 /**
  * Read-only view of the table for one player's perspective. It renders an
- * Observation (from the engine) — it never reads or mutates raw GameState.
+ * Observation from the engine and shows ONLY numbers the engine computed
+ * (bank totals, per-group kiraya). No total is ever recomputed here.
  */
-import { SETS } from '@sauda/engine';
+import { SETS, isSetComplete } from '@sauda/engine';
 import type { Observation, PropertyGroup, SetId } from '@sauda/engine';
-import { bankTotal, describeCard } from '../game/labels';
+import { cardDescriptor, describeCard } from '../game/labels';
 import type { SeatConfig } from '../game/store';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
@@ -17,22 +18,30 @@ function seatLabel(seats: SeatConfig[], id: number): string {
   return seat.kind === 'bot' ? `P${id} (bot ${seat.difficulty})` : `P${id}`;
 }
 
-function SetChips({ properties }: { properties: Record<SetId, PropertyGroup[]> }) {
+// One chip per group. A colour can hold more than one set (overflow), so each is
+// shown separately. `kiraya` (when given, for my own sets) is the engine's rent.
+function SetChips({
+  properties,
+  kiraya,
+}: {
+  properties: Record<SetId, PropertyGroup[]>;
+  kiraya?: Record<SetId, number[]>;
+}) {
   const chips: JSX.Element[] = [];
   for (const set of ALL_SETS) {
-    const groups = properties[set];
-    const size = SETS[set].size;
-    // A colour can hold more than one set (overflow), so render a chip per group.
-    groups.forEach((group, index) => {
+    properties[set].forEach((group, index) => {
       if (group.cards.length === 0) {
         return;
       }
-      const complete = group.cards.length >= size;
+      const complete = isSetComplete(group);
+      const size = SETS[set].size;
       const buildings = group.buildings.length > 0 ? ` +${group.buildings.length}b` : '';
+      const rent = kiraya ? ` · rent ₹${kiraya[set][index] ?? 0}` : '';
       chips.push(
         <span key={`${set}-${index}`} className={`set-chip${complete ? ' complete' : ''}`}>
           {SETS[set].label} {complete ? '✓' : `${group.cards.length}/${size}`}
           {buildings}
+          {rent}
         </span>,
       );
     });
@@ -60,7 +69,7 @@ export function Board({
           <div key={opponent.id} className="opponent">
             <span>
               {seatLabel(seats, opponent.id)} · hand {opponent.handCount} · bank ₹
-              {bankTotal(opponent.bank)}
+              {opponent.bankTotal}
             </span>
             <SetChips properties={opponent.properties} />
           </div>
@@ -74,11 +83,11 @@ export function Board({
 
       <div className="zone">
         <h3>Your sets</h3>
-        <SetChips properties={observation.myProperties} />
+        <SetChips properties={observation.myProperties} kiraya={observation.myKiraya} />
       </div>
 
       <div className="zone">
-        <h3>Your bank — ₹{bankTotal(observation.myBank)}</h3>
+        <h3>Your bank — ₹{observation.myBankTotal}</h3>
         <div className="cards">
           {observation.myBank.map((id) => (
             <span key={id} className="card">
@@ -91,11 +100,15 @@ export function Board({
       <div className="zone">
         <h3>Your hand ({observation.myHand.length})</h3>
         <div className="cards">
-          {observation.myHand.map((id) => (
-            <span key={id} className="card">
-              {describeCard(id)}
-            </span>
-          ))}
+          {observation.myHand.map((id) => {
+            const descriptor = cardDescriptor(id);
+            return (
+              <span key={id} className="card">
+                {describeCard(id)}
+                {descriptor ? ` — ${descriptor}` : ''}
+              </span>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -75,3 +75,16 @@ One line per rules interpretation, deviation, or engineering choice worth rememb
 - **Rent per group:** `kirayaForGroup` computes one group's rent; `kirayaFor(colour)` charges the **best (highest-rent) group** of that colour — each group is its own set, rents are never summed across a colour. Test asserts two complete jaipur sets charge ₹4 (one set), not ₹8.
 - **Buildings & KABZA:** MAKAAN/HAVELI attach to a specific complete group; KABZA steals one complete group of a colour (moved to the thief as its own set, which can give them two sets of that colour).
 - **Bots:** the HeuristicBot skips building toward / stealing for an already-complete colour, since a second same-colour set cannot advance the distinct-colour win. Simulator after the change: 95.8% win, 20.3 avg turns, 0 invariant violations.
+
+## Copy & language policy
+
+- **Card names stay desi proper nouns** (Kabza, Haath Ki Safai, Adla-Badli, Nahi Chalega!, Vasooli, Shagun, Aage Badho, Makaan, Haveli, Dugna!, Kiraya) — they are the game's identity and are never translated. **Every other player-facing string is clean English** (tagline, instructions, buttons, tooltips, empty states, win/hand-off copy). No Hinglish anywhere except those names.
+- **Tagline changed** from "Deal karo. Kabza karo. Jeeto." to **"Collect. Conquer. Win."** (`theme.ts#GAME.tagline`, single source; the app Home and CLI banner now read it instead of hardcoding).
+- **Each action card carries a short English `descriptor`** (renamed from the old Hinglish `flavor` field) shown next to its name, e.g. Kabza — "Steal a complete set". KIRAYA has `KIRAYA_DESCRIPTOR`. The app shows the descriptor beside the name in hand.
+- Strings converted: the tagline (theme + Home + CLI) and all ten action `descriptor`s (from Hinglish flavour to English). Card names and the title "SAUDA"/"सौदा" logotype are unchanged.
+
+## Totals audit — all on-screen numbers are engine-derived
+
+- The app no longer computes any card value itself. `observe()` now includes engine-computed **`myBankTotal`**, each opponent's **`bankTotal`**, and per-group **`myKiraya`**; the UI renders those numbers directly. The app's old parallel value helpers (`labels.cardValue`/`bankTotal`) were removed.
+- Set completion and owned/needed counts use engine `isSetComplete` + `SETS[set].size` over the observation's group list, so overflow (a second same-colour set) is shown as its own chip with its own rent.
+- `totals.test.ts` verifies against the engine: bank totals = sum of bankable values; the ANY wildcard is ₹0 and excluded from totals (but still counted as an owned property); a group's displayed kiraya equals `kirayaForGroup` including the MAKAAN/HAVELI bonus; per-group rent across overflow is `[4, 1]` not summed. No numeric mismatch was found — the only issue was that the app *duplicated* the value rule, now removed.

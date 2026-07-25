@@ -16,7 +16,7 @@ import type { SetId, ActionKind } from './types';
 export const GAME = {
   name: 'SAUDA',
   nameDevanagari: 'सौदा',
-  tagline: 'Deal karo. Kabza karo. Jeeto.',
+  tagline: 'Collect. Conquer. Win.',
   currency: '₹ Cr',
 } as const;
 
@@ -60,26 +60,35 @@ export const PROPERTY_NAMES: Record<SetId, string[]> = {
 };
 
 // Display + deck data for one action card kind (§5).
+//
+// LANGUAGE POLICY (see DECISIONS.md): `name` is the card's proper-noun identity and
+// stays as a desi term (KABZA, VASOOLI, …). `descriptor` is a short CLEAN-ENGLISH
+// explanation shown next to the name so its meaning is always in English. No other
+// player-facing string anywhere is Hinglish.
 export interface ActionTheme {
-  name: string; // shown on the card
-  flavor: string; // short Hinglish in-game copy (written fresh — §2)
+  name: string; // shown on the card (desi proper noun — never translated)
+  descriptor: string; // short English explanation shown next to the name
   value: number; // ₹ bank value if banked as money instead of played
   count: number; // how many of this card are in the deck
 }
 
 // §5: the ten action kinds. `count` values sum to 34 (asserted in deck.test.ts).
 export const ACTIONS: Record<ActionKind, ActionTheme> = {
-  kabza: { name: 'Kabza', flavor: 'Ek poora set utha lo — makaan-haveli samet.', value: 5, count: 2 },
-  haathKiSafai: { name: 'Haath Ki Safai', flavor: 'Ek property saaf karo — poore set se nahi.', value: 3, count: 3 },
-  adlaBadli: { name: 'Adla-Badli', flavor: 'Ek property ki adla-badli — poore set se nahi.', value: 3, count: 3 },
-  nahiChalega: { name: 'Nahi Chalega!', flavor: 'Koi bhi chaal cancel karo — kabhi bhi.', value: 4, count: 3 },
-  vasooli: { name: 'Vasooli', flavor: 'Ek khiladi se ₹5 Cr vasoolo.', value: 3, count: 3 },
-  shagun: { name: 'Shagun', flavor: 'Har khiladi se ₹2 Cr.', value: 2, count: 3 },
-  aageBadho: { name: 'Aage Badho', flavor: 'Do card aur utha lo.', value: 1, count: 10 },
-  makaan: { name: 'Makaan', flavor: 'Poore set par makaan — kiraya +₹3 Cr.', value: 3, count: 3 },
-  haveli: { name: 'Haveli', flavor: 'Makaan ke upar haveli — kiraya +₹4 Cr.', value: 4, count: 2 },
-  dugna: { name: 'Dugna!', flavor: 'Kiraya double karo.', value: 1, count: 2 },
+  kabza: { name: 'Kabza', descriptor: 'Steal a complete set', value: 5, count: 2 },
+  haathKiSafai: { name: 'Haath Ki Safai', descriptor: 'Steal one property (not from a complete set)', value: 3, count: 3 },
+  adlaBadli: { name: 'Adla-Badli', descriptor: 'Swap one property with an opponent', value: 3, count: 3 },
+  nahiChalega: { name: 'Nahi Chalega!', descriptor: 'Cancel an action played against you', value: 4, count: 3 },
+  vasooli: { name: 'Vasooli', descriptor: 'One opponent pays you ₹5 Cr', value: 3, count: 3 },
+  shagun: { name: 'Shagun', descriptor: 'Every opponent pays you ₹2 Cr', value: 2, count: 3 },
+  aageBadho: { name: 'Aage Badho', descriptor: 'Draw 2 cards', value: 1, count: 10 },
+  makaan: { name: 'Makaan', descriptor: 'Add ₹3 Cr rent to a complete set', value: 3, count: 3 },
+  haveli: { name: 'Haveli', descriptor: 'Add ₹4 Cr rent (needs a makaan first)', value: 4, count: 2 },
+  dugna: { name: 'Dugna!', descriptor: 'Double a rent charge', value: 1, count: 2 },
 };
+
+// KIRAYA cards are modelled separately (§6.4) but shown to players, so they get an
+// English descriptor too.
+export const KIRAYA_DESCRIPTOR = 'Charge rent for a colour you own';
 
 // One property-wildcard type: which groups it may join, its value, and how many exist.
 export interface WildcardTheme {

@@ -9,6 +9,7 @@
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import {
+  GAME,
   createGame,
   legalActions,
   mulberry32,
@@ -61,7 +62,7 @@ async function main(): Promise<void> {
   const rng = mulberry32((seed >>> 0) ^ 0x51ed2701);
 
   const rl = auto ? null : createInterface({ input: stdin, output: stdout });
-  console.log(`\n=== SAUDA — Deal karo. Kabza karo. Jeeto. ===`);
+  console.log(`\n=== ${GAME.name} — ${GAME.tagline} ===`);
   console.log(auto ? '(auto-demo: all seats played by bots)\n' : '(you are Player 0)\n');
 
   let guard = 0;

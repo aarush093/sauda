@@ -3,7 +3,7 @@
  * readable strings. This is NOT game logic — it only reads the engine's theme.
  * All rules live in @sauda/engine.
  */
-import { ACTIONS, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
+import { ACTIONS, KIRAYA_DESCRIPTOR, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
 import type { Action, GameEvent, SetId } from '@sauda/engine';
 
 const CARD_BY_ID = new Map(buildDeck().map((card) => [card.id, card]));
@@ -12,20 +12,21 @@ function labels(colors: SetId[]): string {
   return colors.map((c) => SETS[c].label).join('/');
 }
 
-// ₹ value of a card for display totals (ANY wildcards show as 0).
-export function cardValue(id: string): number {
+// The short English descriptor shown next to a desi card name, or null if the
+// card has none (money, property, wildcard). All ₹ totals come from the engine
+// via the Observation — the app never computes a card's value itself.
+export function cardDescriptor(id: string): string | null {
   const card = CARD_BY_ID.get(id);
   if (!card) {
-    return 0;
+    return null;
   }
-  if (card.kind === 'wildcard' && card.colors === 'ANY') {
-    return 0;
+  if (card.kind === 'action') {
+    return ACTIONS[card.action].descriptor;
   }
-  return card.value;
-}
-
-export function bankTotal(ids: string[]): number {
-  return ids.reduce((total, id) => total + cardValue(id), 0);
+  if (card.kind === 'kiraya') {
+    return KIRAYA_DESCRIPTOR;
+  }
+  return null;
 }
 
 export function describeCard(id: string): string {

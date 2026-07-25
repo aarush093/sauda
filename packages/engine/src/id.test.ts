@@ -50,7 +50,7 @@ describe('card ids are theme-independent', () => {
       GAME.tagline,
       ...Object.values(SETS).map((set) => set.label),
       ...Object.values(PROPERTY_NAMES).flat(),
-      ...Object.values(ACTIONS).flatMap((action) => [action.name, action.flavor]),
+      ...Object.values(ACTIONS).flatMap((action) => [action.name, action.descriptor]),
     ];
 
     // Strings that must never appear in an ID: the human-facing ones, minus any
