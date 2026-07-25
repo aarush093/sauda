@@ -24,7 +24,8 @@ interface GroupSpec {
 interface PlayerSpec {
   hand?: CardId[];
   bank?: CardId[];
-  properties?: Partial<Record<SetId, GroupSpec>>;
+  // A colour maps to one group (the common case) or several (to set up overflow).
+  properties?: Partial<Record<SetId, GroupSpec | GroupSpec[]>>;
 }
 export interface StateSpec {
   players: PlayerSpec[];
@@ -35,10 +36,10 @@ export interface StateSpec {
   rules?: Rules;
 }
 
-function emptyArea(): Record<SetId, PropertyGroup> {
-  const area = {} as Record<SetId, PropertyGroup>;
+function emptyArea(): Record<SetId, PropertyGroup[]> {
+  const area = {} as Record<SetId, PropertyGroup[]>;
   for (const set of ALL_SETS) {
-    area[set] = { set, cards: [], buildings: [] };
+    area[set] = [];
   }
   return area;
 }
@@ -68,12 +69,16 @@ export function makeState(spec: StateSpec): GameState {
     const properties = emptyArea();
     if (playerSpec.properties) {
       for (const set of ALL_SETS) {
-        const group = playerSpec.properties[set];
-        if (!group) {
+        const spec = playerSpec.properties[set];
+        if (!spec) {
           continue;
         }
-        properties[set].cards = (group.cards ?? []).map(claim);
-        properties[set].buildings = (group.buildings ?? []).map(claim);
+        const groupSpecs = Array.isArray(spec) ? spec : [spec];
+        properties[set] = groupSpecs.map((groupSpec) => ({
+          set,
+          cards: (groupSpec.cards ?? []).map(claim),
+          buildings: (groupSpec.buildings ?? []).map(claim),
+        }));
       }
     }
     return {

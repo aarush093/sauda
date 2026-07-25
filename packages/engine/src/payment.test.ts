@@ -92,10 +92,10 @@ describe('applyPayment (§4.5)', () => {
     expect(validatePayment(state, request, ['prop_mumbai_0']).ok).toBe(true);
     const { events } = applyPayment(state, request, ['prop_mumbai_0']);
 
-    expect(state.players[1]!.properties.mumbai.cards).toEqual(['prop_mumbai_1']);
-    expect(state.players[1]!.properties.mumbai.buildings).toHaveLength(0);
+    expect(state.players[1]!.properties.mumbai[0]!.cards).toEqual(['prop_mumbai_1']);
+    expect(state.players[1]!.properties.mumbai[0]!.buildings).toHaveLength(0);
     expect(state.players[1]!.bank).toContain('action_makaan_0'); // building relocated
-    expect(state.players[0]!.properties.mumbai.cards).toContain('prop_mumbai_0'); // creditor received it
+    expect(state.players[0]!.properties.mumbai[0]!.cards).toContain('prop_mumbai_0'); // creditor received it
     expect(events.some((e) => e.type === 'SetBroken')).toBe(true);
     expect(events.some((e) => e.type === 'BuildingRelocated')).toBe(true);
     expect(checkInvariants(state).ok).toBe(true);
@@ -116,8 +116,8 @@ describe('applyPayment (§4.5)', () => {
     expect(validatePayment(state, request, ['action_makaan_0']).ok).toBe(true);
     applyPayment(state, request, ['action_makaan_0']);
 
-    expect(state.players[1]!.properties.mumbai.cards).toHaveLength(2); // set intact
-    expect(state.players[1]!.properties.mumbai.buildings).toHaveLength(0); // but stripped
+    expect(state.players[1]!.properties.mumbai[0]!.cards).toHaveLength(2); // set intact
+    expect(state.players[1]!.properties.mumbai[0]!.buildings).toHaveLength(0); // but stripped
     expect(state.players[0]!.bank).toContain('action_makaan_0'); // paid building → creditor bank
     expect(checkInvariants(state).ok).toBe(true);
   });

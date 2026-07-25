@@ -21,6 +21,7 @@ import type { CardId, GameEvent, GameState, PlayerId, ReceiveItem } from './stat
 import { fail, ok } from './state';
 import type { Result } from './state';
 import { getCard, isAnyWildcard, isSetComplete } from './sets';
+import { addToColor, pruneEmpty } from './groups';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 
@@ -42,8 +43,9 @@ export function payableCards(state: GameState, playerId: PlayerId): CardId[] {
   const player = state.players[playerId]!;
   const ids: CardId[] = [...player.bank];
   for (const set of ALL_SETS) {
-    const group = player.properties[set];
-    ids.push(...group.cards, ...group.buildings);
+    for (const group of player.properties[set]) {
+      ids.push(...group.cards, ...group.buildings);
+    }
   }
   return ids.filter((id) => !isAnyWildcard(getCard(state, id)));
 }
@@ -151,7 +153,7 @@ function routeCardToCreditor(
     return;
   }
   if (card.kind === 'property') {
-    creditor.properties[card.set].cards.push(id);
+    addToColor(creditor, card.set, id); // routes to a non-full group of the colour
     events.push({ type: 'CardReceived', player: request.creditor, cardId: id, set: card.set });
     return;
   }
@@ -167,9 +169,11 @@ export function removeFromTable(state: GameState, playerId: PlayerId, id: CardId
     return;
   }
   for (const set of ALL_SETS) {
-    const group = player.properties[set];
-    if (removeId(group.cards, id) || removeId(group.buildings, id)) {
-      return;
+    for (const group of player.properties[set]) {
+      if (removeId(group.cards, id) || removeId(group.buildings, id)) {
+        pruneEmpty(player, set); // a group emptied by payment is dropped
+        return;
+      }
     }
   }
   throw new Error(`card ${id} not found on player ${playerId}'s table`);
@@ -193,15 +197,17 @@ export function relocateOrphanedBuildings(state: GameState, playerId: PlayerId):
   }
   const player = state.players[playerId]!;
   for (const set of ALL_SETS) {
-    const group = player.properties[set];
-    if (group.buildings.length > 0 && !isSetComplete(group)) {
-      events.push({ type: 'SetBroken', player: playerId, set });
-      for (const buildingId of group.buildings) {
-        player.bank.push(buildingId);
-        events.push({ type: 'BuildingRelocated', player: playerId, cardId: buildingId, set });
+    for (const group of player.properties[set]) {
+      if (group.buildings.length > 0 && !isSetComplete(group)) {
+        events.push({ type: 'SetBroken', player: playerId, set });
+        for (const buildingId of group.buildings) {
+          player.bank.push(buildingId);
+          events.push({ type: 'BuildingRelocated', player: playerId, cardId: buildingId, set });
+        }
+        group.buildings = [];
       }
-      group.buildings = [];
     }
+    pruneEmpty(player, set); // drop any group left empty after relocation
   }
   return events;
 }
@@ -222,19 +228,20 @@ function payableItems(state: GameState, playerId: PlayerId): PayableItem[] {
     items.push({ id, value: cardPayValue(card), damage: card.kind === 'money' ? 1 : 2 });
   }
   for (const set of ALL_SETS) {
-    const group = player.properties[set];
-    const complete = isSetComplete(group);
-    for (const id of group.cards) {
-      const card = getCard(state, id);
-      if (isAnyWildcard(card)) {
-        continue; // never payable
+    for (const group of player.properties[set]) {
+      const complete = isSetComplete(group);
+      for (const id of group.cards) {
+        const card = getCard(state, id);
+        if (isAnyWildcard(card)) {
+          continue; // never payable
+        }
+        // Breaking a complete set is the worst; a spare wildcard the least bad.
+        const damage = complete ? 40 : card.kind === 'wildcard' ? 4 : 12;
+        items.push({ id, value: cardPayValue(card), damage });
       }
-      // Breaking a complete set is the worst; a spare wildcard the least bad.
-      const damage = complete ? 40 : card.kind === 'wildcard' ? 4 : 12;
-      items.push({ id, value: cardPayValue(card), damage });
-    }
-    for (const id of group.buildings) {
-      items.push({ id, value: cardPayValue(getCard(state, id)), damage: 8 });
+      for (const id of group.buildings) {
+        items.push({ id, value: cardPayValue(getCard(state, id)), damage: 8 });
+      }
     }
   }
   return items;

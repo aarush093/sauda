@@ -62,3 +62,16 @@ One line per rules interpretation, deviation, or engineering choice worth rememb
 - **Hand-off overlay** shows only when the actor is a human *different* from the currently revealed human (pass-and-play privacy); solo (single human) never shows it. The board renders the revealed seat's perspective underneath.
 - **Bots auto-advance** via a timed effect (300 ms) stepping one move at a time so the board updates between moves; the bot RNG is seeded per game.
 - **M3 gate proven headlessly:** a store integration test drives full solo *and* pass-and-play games to a winner through the real store/engine/components (jsdom) asserting **zero `console.error`**; the App mounts and starts a game; `vite build` succeeds. (Real-browser automation was flaky in this environment; `pnpm --filter @sauda/mobile dev` serves it for manual play.)
+
+## Rules clarifications (from the official property rules)
+
+### Win condition — 3 complete sets of 3 DIFFERENT colours (§4.1)
+- Confirmed and made explicit: `hasThreeCompleteSets` now returns `distinctCompleteColorCount(...) >= 3`. Before the overflow change this held only *by construction* (one group per colour); with multiple groups per colour it must be an explicit distinct-colour count. Test (`overflow.test.ts`): two complete jaipur sets + one complete mumbai set = 3 complete sets but only 2 colours → **not** a win.
+- The official "same-colour sets allowed" variant is a **deliberate deviation** — SAUDA requires different colours. It could live behind a rules flag (e.g. `winRequiresDistinctColors`) later.
+
+### Set overflow — a colour can hold more than one set (implemented)
+- **Data model:** `PlayerState.properties: Record<SetId, PropertyGroup[]>` — each colour holds a list of independent sets. `groups.ts#addToColor` fills the first non-full group and otherwise starts a new one, so a group can never exceed its size; surplus (only reachable via wildcards) forms a **second** set. Emptied groups are pruned (`removeFromProperties`/`pruneEmpty`).
+- **Completion & win:** `completeSetCount` = total complete *groups* (two same-colour complete sets count as 2 sets); `distinctCompleteColorCount` = colours with ≥1 complete set; the win uses distinct colours.
+- **Rent per group:** `kirayaForGroup` computes one group's rent; `kirayaFor(colour)` charges the **best (highest-rent) group** of that colour — each group is its own set, rents are never summed across a colour. Test asserts two complete jaipur sets charge ₹4 (one set), not ₹8.
+- **Buildings & KABZA:** MAKAAN/HAVELI attach to a specific complete group; KABZA steals one complete group of a colour (moved to the thief as its own set, which can give them two sets of that colour).
+- **Bots:** the HeuristicBot skips building toward / stealing for an already-complete colour, since a second same-colour set cannot advance the distinct-colour win. Simulator after the change: 95.8% win, 20.3 avg turns, 0 invariant violations.

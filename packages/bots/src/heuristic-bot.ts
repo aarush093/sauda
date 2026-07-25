@@ -170,22 +170,41 @@ export class HeuristicBot implements Bot {
 
 // --- shared read helpers ---------------------------------------------------
 
-// True if placing one more card into `set` would complete a not-yet-complete set.
-function placementCompletesSet(observation: Observation, set: SetId): boolean {
-  const group = observation.myProperties[set];
-  const owned = group.cards.length;
+// A colour already has a complete set (so a second set of it doesn't help the win).
+function colorHasCompleteSet(groups: PropertyGroup[], set: SetId): boolean {
+  return groups.some((group) => group.cards.length >= SETS[set].size);
+}
+
+// Cards in the group a new placement of this colour would land in (the engine fills
+// the first non-full group, else starts a fresh empty one).
+function placementTargetCount(groups: PropertyGroup[], set: SetId): number {
   const size = SETS[set].size;
-  return owned < size && owned + 1 >= size;
+  for (const group of groups) {
+    if (group.cards.length < size) {
+      return group.cards.length;
+    }
+  }
+  return 0;
 }
 
-// How far a group is from completion (0 = already complete). Lower = closer.
-function remainingToComplete(group: PropertyGroup): number {
-  return Math.max(0, SETS[group.set].size - group.cards.length);
+// How many more cards the colour's next set needs (1 = one card from complete).
+function nextSetRemaining(groups: PropertyGroup[], set: SetId): number {
+  return SETS[set].size - placementTargetCount(groups, set);
 }
 
-// Chooses the placement that best advances a set: closest to completion first,
-// then the cheapest set to finish (§8.3 #2: the two cheapest-to-complete sets —
-// the size-2 sets need only two cards, so we concentrate there).
+// True if placing one more card completes a set in a colour I have NOT completed
+// yet (a second same-colour set is only one colour, so it does not help the win).
+function placementCompletesSet(observation: Observation, set: SetId): boolean {
+  const groups = observation.myProperties[set];
+  if (colorHasCompleteSet(groups, set)) {
+    return false;
+  }
+  return nextSetRemaining(groups, set) === 1;
+}
+
+// Chooses the placement that best advances a NEW colour: closest to completion
+// first, then the cheapest set to finish (§8.3 #2 — size-2 sets need only two
+// cards). Skips colours already complete, since a 2nd same-colour set is wasted.
 function bestPlacement(
   observation: Observation,
   placements: Extract<Action, { type: 'PLACE_PROPERTY' }>[],
@@ -193,12 +212,11 @@ function bestPlacement(
   let best: Action | null = null;
   let bestScore = Number.POSITIVE_INFINITY;
   for (const action of placements) {
-    const group = observation.myProperties[action.set];
-    const remaining = remainingToComplete(group);
-    if (remaining === 0) {
-      continue; // don't pile onto an already-complete set
+    const groups = observation.myProperties[action.set];
+    if (colorHasCompleteSet(groups, action.set)) {
+      continue;
     }
-    const remainingAfter = remaining - 1;
+    const remainingAfter = nextSetRemaining(groups, action.set) - 1;
     const score = remainingAfter * 10 + SETS[action.set].size; // fewer-left, then smaller set
     if (score < bestScore) {
       bestScore = score;
@@ -208,32 +226,34 @@ function bestPlacement(
   return best;
 }
 
-// The group a card currently sits in on my table, or null.
+// The colour a card currently sits in on my table, or null.
 function currentSetOf(observation: Observation, cardId: string): SetId | null {
-  for (const group of Object.values(observation.myProperties)) {
-    if (group.cards.includes(cardId)) {
-      return group.set;
+  for (const groups of Object.values(observation.myProperties)) {
+    for (const group of groups) {
+      if (group.cards.includes(cardId)) {
+        return group.set;
+      }
     }
   }
   return null;
 }
 
-// A free REARRANGE_WILDCARD that completes a set without breaking a complete one.
+// A free REARRANGE_WILDCARD that completes a new colour without breaking a complete one.
 function bestRearrangeToComplete(observation: Observation, legalActions: Action[]): Action | null {
   for (const action of legalActions) {
     if (action.type !== 'REARRANGE_WILDCARD') {
       continue;
     }
-    const toGroup = observation.myProperties[action.toSet];
-    const wouldComplete =
-      toGroup.cards.length < SETS[action.toSet].size &&
-      toGroup.cards.length + 1 >= SETS[action.toSet].size;
-    if (!wouldComplete) {
+    const toGroups = observation.myProperties[action.toSet];
+    if (colorHasCompleteSet(toGroups, action.toSet)) {
+      continue; // completing a 2nd same-colour set doesn't help
+    }
+    if (nextSetRemaining(toGroups, action.toSet) !== 1) {
       continue;
     }
     const fromSet = currentSetOf(observation, action.cardId);
     // Don't rob a complete set to make another (no net gain).
-    if (fromSet !== null && remainingToComplete(observation.myProperties[fromSet]) === 0) {
+    if (fromSet !== null && colorHasCompleteSet(observation.myProperties[fromSet], fromSet)) {
       continue;
     }
     return action;
@@ -250,7 +270,8 @@ function bestByPlacement<T extends Action>(
   let best = actions[0]!;
   let bestRemaining = Number.POSITIVE_INFINITY;
   for (const action of actions) {
-    const remaining = remainingToComplete(observation.myProperties[setOf(action)]);
+    const set = setOf(action);
+    const remaining = nextSetRemaining(observation.myProperties[set], set);
     if (remaining < bestRemaining) {
       bestRemaining = remaining;
       best = action;
@@ -338,11 +359,20 @@ function bestHaath(observation: Observation, legalActions: Action[]): Action | n
       continue;
     }
     for (const colour of colourOptions(action.params.cardId)) {
-      const group = observation.myProperties[colour];
-      const owned = group.cards.length;
+      const groups = observation.myProperties[colour];
+      if (colorHasCompleteSet(groups, colour)) {
+        continue; // grabbing for an already-complete colour is wasted for the win
+      }
       const size = SETS[colour].size;
-      if (owned === 0 || owned >= size) {
-        continue; // only colours I am actively building and have not finished
+      // How advanced my closest incomplete set of this colour is.
+      let owned = 0;
+      for (const group of groups) {
+        if (group.cards.length > 0 && group.cards.length < size) {
+          owned = Math.max(owned, group.cards.length);
+        }
+      }
+      if (owned === 0) {
+        continue; // not actively building this colour
       }
       const score = owned + 1 >= size ? 100 : owned * 10;
       if (score > bestScore) {
@@ -386,9 +416,11 @@ function opponentTableValue(observation: Observation, playerId: number): number 
   for (const id of opponent.bank) {
     total += cardValue(id);
   }
-  for (const group of Object.values(opponent.properties)) {
-    for (const id of [...group.cards, ...group.buildings]) {
-      total += cardValue(id);
+  for (const groups of Object.values(opponent.properties)) {
+    for (const group of groups) {
+      for (const id of [...group.cards, ...group.buildings]) {
+        total += cardValue(id);
+      }
     }
   }
   return total;
@@ -397,7 +429,7 @@ function opponentTableValue(observation: Observation, playerId: number): number 
 // Rough kiraya for a colour we own, mirroring §5 from the observation (buildings
 // are inferred from group.buildings length: 1 = +₹3, 2 = +₹7). Estimation only —
 // the authoritative amount is computed by the engine when the card is played.
-function estimateKiraya(group: PropertyGroup, dugnaCount: number): number {
+function estimateGroupKiraya(group: PropertyGroup, dugnaCount: number): number {
   const owned = group.cards.length;
   if (owned === 0) {
     return 0;
@@ -408,6 +440,15 @@ function estimateKiraya(group: PropertyGroup, dugnaCount: number): number {
     amount += [0, 3, 7][Math.min(group.buildings.length, 2)]!;
   }
   return amount * Math.pow(2, dugnaCount);
+}
+
+// A colour is charged at its best (highest-rent) set — mirrors engine kirayaFor.
+function estimateColorKiraya(groups: PropertyGroup[], dugnaCount: number): number {
+  let best = 0;
+  for (const group of groups) {
+    best = Math.max(best, estimateGroupKiraya(group, dugnaCount));
+  }
+  return best;
 }
 
 // Picks the charge with the best (expected take − banked value), if it pays off.
@@ -444,7 +485,7 @@ function evaluateCharge(
     return { expectedTake: take, bankedValue: 2 };
   }
   if (action.type === 'PLAY_KIRAYA') {
-    const amount = estimateKiraya(observation.myProperties[action.color], action.dugnaCardIds.length);
+    const amount = estimateColorKiraya(observation.myProperties[action.color], action.dugnaCardIds.length);
     if (action.target !== null) {
       return { expectedTake: Math.min(amount, opponentTableValue(observation, action.target)), bankedValue: 3 };
     }
@@ -464,9 +505,10 @@ function estimateThreatLoss(observation: Observation, threat: NonNullable<Observ
     case 'charge':
       return effect.amount;
     case 'stealSet': {
-      const group = observation.myProperties[effect.set];
+      const groups = observation.myProperties[effect.set];
+      const stolen = groups.find((g) => g.cards.length >= SETS[effect.set].size) ?? groups[0];
       let value = 0;
-      for (const id of [...group.cards, ...group.buildings]) {
+      for (const id of stolen ? [...stolen.cards, ...stolen.buildings] : []) {
         value += cardValue(id);
       }
       return value + 3; // a whole set is worse than its face value

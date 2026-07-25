@@ -21,8 +21,9 @@ export function accountedCardIds(state: GameState): CardId[] {
   for (const player of state.players) {
     ids.push(...player.hand, ...player.bank);
     for (const set of ALL_SETS) {
-      const group = player.properties[set];
-      ids.push(...group.cards, ...group.buildings);
+      for (const group of player.properties[set]) {
+        ids.push(...group.cards, ...group.buildings);
+      }
     }
   }
   for (const interrupt of state.pendingInterrupts) {

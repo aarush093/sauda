@@ -741,56 +741,16 @@
         ],
         "bank": [],
         "properties": {
-          "puraniDilli": {
-            "set": "puraniDilli",
-            "cards": [],
-            "buildings": []
-          },
-          "kashi": {
-            "set": "kashi",
-            "cards": [],
-            "buildings": []
-          },
-          "jaipur": {
-            "set": "jaipur",
-            "cards": [],
-            "buildings": []
-          },
-          "kolkata": {
-            "set": "kolkata",
-            "cards": [],
-            "buildings": []
-          },
-          "chennai": {
-            "set": "chennai",
-            "cards": [],
-            "buildings": []
-          },
-          "bangalore": {
-            "set": "bangalore",
-            "cards": [],
-            "buildings": []
-          },
-          "newDelhi": {
-            "set": "newDelhi",
-            "cards": [],
-            "buildings": []
-          },
-          "mumbai": {
-            "set": "mumbai",
-            "cards": [],
-            "buildings": []
-          },
-          "junction": {
-            "set": "junction",
-            "cards": [],
-            "buildings": []
-          },
-          "utility": {
-            "set": "utility",
-            "cards": [],
-            "buildings": []
-          }
+          "puraniDilli": [],
+          "kashi": [],
+          "jaipur": [],
+          "kolkata": [],
+          "chennai": [],
+          "bangalore": [],
+          "newDelhi": [],
+          "mumbai": [],
+          "junction": [],
+          "utility": []
         }
       },
       {
@@ -803,56 +763,16 @@
           "money_5_0"
         ],
         "properties": {
-          "puraniDilli": {
-            "set": "puraniDilli",
-            "cards": [],
-            "buildings": []
-          },
-          "kashi": {
-            "set": "kashi",
-            "cards": [],
-            "buildings": []
-          },
-          "jaipur": {
-            "set": "jaipur",
-            "cards": [],
-            "buildings": []
-          },
-          "kolkata": {
-            "set": "kolkata",
-            "cards": [],
-            "buildings": []
-          },
-          "chennai": {
-            "set": "chennai",
-            "cards": [],
-            "buildings": []
-          },
-          "bangalore": {
-            "set": "bangalore",
-            "cards": [],
-            "buildings": []
-          },
-          "newDelhi": {
-            "set": "newDelhi",
-            "cards": [],
-            "buildings": []
-          },
-          "mumbai": {
-            "set": "mumbai",
-            "cards": [],
-            "buildings": []
-          },
-          "junction": {
-            "set": "junction",
-            "cards": [],
-            "buildings": []
-          },
-          "utility": {
-            "set": "utility",
-            "cards": [],
-            "buildings": []
-          }
+          "puraniDilli": [],
+          "kashi": [],
+          "jaipur": [],
+          "kolkata": [],
+          "chennai": [],
+          "bangalore": [],
+          "newDelhi": [],
+          "mumbai": [],
+          "junction": [],
+          "utility": []
         }
       }
     ],
@@ -1731,56 +1651,16 @@
         "hand": [],
         "bank": [],
         "properties": {
-          "puraniDilli": {
-            "set": "puraniDilli",
-            "cards": [],
-            "buildings": []
-          },
-          "kashi": {
-            "set": "kashi",
-            "cards": [],
-            "buildings": []
-          },
-          "jaipur": {
-            "set": "jaipur",
-            "cards": [],
-            "buildings": []
-          },
-          "kolkata": {
-            "set": "kolkata",
-            "cards": [],
-            "buildings": []
-          },
-          "chennai": {
-            "set": "chennai",
-            "cards": [],
-            "buildings": []
-          },
-          "bangalore": {
-            "set": "bangalore",
-            "cards": [],
-            "buildings": []
-          },
-          "newDelhi": {
-            "set": "newDelhi",
-            "cards": [],
-            "buildings": []
-          },
-          "mumbai": {
-            "set": "mumbai",
-            "cards": [],
-            "buildings": []
-          },
-          "junction": {
-            "set": "junction",
-            "cards": [],
-            "buildings": []
-          },
-          "utility": {
-            "set": "utility",
-            "cards": [],
-            "buildings": []
-          }
+          "puraniDilli": [],
+          "kashi": [],
+          "jaipur": [],
+          "kolkata": [],
+          "chennai": [],
+          "bangalore": [],
+          "newDelhi": [],
+          "mumbai": [],
+          "junction": [],
+          "utility": []
         }
       },
       {
@@ -1790,56 +1670,16 @@
           "money_5_0"
         ],
         "properties": {
-          "puraniDilli": {
-            "set": "puraniDilli",
-            "cards": [],
-            "buildings": []
-          },
-          "kashi": {
-            "set": "kashi",
-            "cards": [],
-            "buildings": []
-          },
-          "jaipur": {
-            "set": "jaipur",
-            "cards": [],
-            "buildings": []
-          },
-          "kolkata": {
-            "set": "kolkata",
-            "cards": [],
-            "buildings": []
-          },
-          "chennai": {
-            "set": "chennai",
-            "cards": [],
-            "buildings": []
-          },
-          "bangalore": {
-            "set": "bangalore",
-            "cards": [],
-            "buildings": []
-          },
-          "newDelhi": {
-            "set": "newDelhi",
-            "cards": [],
-            "buildings": []
-          },
-          "mumbai": {
-            "set": "mumbai",
-            "cards": [],
-            "buildings": []
-          },
-          "junction": {
-            "set": "junction",
-            "cards": [],
-            "buildings": []
-          },
-          "utility": {
-            "set": "utility",
-            "cards": [],
-            "buildings": []
-          }
+          "puraniDilli": [],
+          "kashi": [],
+          "jaipur": [],
+          "kolkata": [],
+          "chennai": [],
+          "bangalore": [],
+          "newDelhi": [],
+          "mumbai": [],
+          "junction": [],
+          "utility": []
         }
       }
     ],

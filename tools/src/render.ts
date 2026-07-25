@@ -150,14 +150,16 @@ function renderPlayerLine(bank: string[], properties: Observation['myProperties'
     }
   }
   const sets: string[] = [];
-  for (const group of Object.values(properties) as Observation['myProperties'][SetId][]) {
-    if (group.cards.length === 0) {
-      continue;
+  for (const groups of Object.values(properties) as Observation['myProperties'][SetId][]) {
+    for (const group of groups) {
+      if (group.cards.length === 0) {
+        continue;
+      }
+      const size = SETS[group.set].size;
+      const done = group.cards.length >= size ? '✓' : `${group.cards.length}/${size}`;
+      const buildings = group.buildings.length > 0 ? `+${group.buildings.length}b` : '';
+      sets.push(`${SETS[group.set].label} ${done}${buildings}`);
     }
-    const size = SETS[group.set].size;
-    const done = group.cards.length >= size ? '✓' : `${group.cards.length}/${size}`;
-    const buildings = group.buildings.length > 0 ? `+${group.buildings.length}b` : '';
-    sets.push(`${SETS[group.set].label} ${done}${buildings}`);
   }
   return `bank:₹${bankTotal} | ${sets.join(', ') || 'no sets'}`;
 }

@@ -46,8 +46,10 @@ function tableCardIds(state: GameState): CardId[] {
   const ids: CardId[] = [];
   for (const player of state.players) {
     ids.push(...player.bank);
-    for (const group of Object.values(player.properties)) {
-      ids.push(...group.cards, ...group.buildings);
+    for (const groups of Object.values(player.properties)) {
+      for (const group of groups) {
+        ids.push(...group.cards, ...group.buildings);
+      }
     }
   }
   return ids;

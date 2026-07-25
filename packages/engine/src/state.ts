@@ -29,7 +29,11 @@ export interface PlayerState {
   id: PlayerId;
   hand: CardId[]; // secret zone
   bank: CardId[]; // face-up money pile
-  properties: Record<SetId, PropertyGroup>; // one group per colour, always present
+  // Each colour maps to a LIST of groups. Normally one group per colour, but a
+  // colour can hold a second (or more) set when wildcards give you surplus cards
+  // (§ set overflow): the surplus forms a new set of that colour rather than
+  // overfilling the first. A group is complete once it holds its set's size.
+  properties: Record<SetId, PropertyGroup[]>;
 }
 
 // Where the current player's turn is (§4.4). While an interrupt is open the phase

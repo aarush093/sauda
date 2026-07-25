@@ -22,7 +22,7 @@ export interface OpponentView {
   id: PlayerId;
   handCount: number; // count only — the cards themselves stay hidden
   bank: CardId[];
-  properties: Record<SetId, PropertyGroup>;
+  properties: Record<SetId, PropertyGroup[]>;
 }
 
 // The open interrupt, if any (a charge/steal is public — everyone sees it happen).
@@ -42,7 +42,7 @@ export interface Observation {
   turnCount: number;
   myHand: CardId[]; // full — it is mine
   myBank: CardId[];
-  myProperties: Record<SetId, PropertyGroup>;
+  myProperties: Record<SetId, PropertyGroup[]>;
   opponents: OpponentView[];
   drawPileCount: number; // count only — order is hidden
   discardPile: CardId[]; // discard is public
@@ -87,12 +87,15 @@ export function observe(state: GameState, playerId: PlayerId): Observation {
 }
 
 function cloneProperties(
-  properties: Record<SetId, PropertyGroup>,
-): Record<SetId, PropertyGroup> {
-  const copy = {} as Record<SetId, PropertyGroup>;
+  properties: Record<SetId, PropertyGroup[]>,
+): Record<SetId, PropertyGroup[]> {
+  const copy = {} as Record<SetId, PropertyGroup[]>;
   for (const set of ALL_SETS) {
-    const group = properties[set];
-    copy[set] = { set: group.set, cards: [...group.cards], buildings: [...group.buildings] };
+    copy[set] = properties[set].map((group) => ({
+      set: group.set,
+      cards: [...group.cards],
+      buildings: [...group.buildings],
+    }));
   }
   return copy;
 }

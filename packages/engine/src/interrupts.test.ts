@@ -124,9 +124,9 @@ describe('KABZA (#7)', () => {
     state = step(state, { type: 'PLAY_ACTION', cardId: 'action_kabza_0', params: { action: 'kabza', target: 1, set: 'mumbai' } });
     state = step(state, { type: 'RESPOND_ALLOW' }); // target has no NAHI
 
-    expect(state.players[0]!.properties.mumbai.cards).toEqual(['prop_mumbai_0', 'prop_mumbai_1']);
-    expect(state.players[0]!.properties.mumbai.buildings).toEqual(['action_makaan_0']);
-    expect(state.players[1]!.properties.mumbai.cards).toHaveLength(0);
+    expect(state.players[0]!.properties.mumbai[0]!.cards).toEqual(['prop_mumbai_0', 'prop_mumbai_1']);
+    expect(state.players[0]!.properties.mumbai[0]!.buildings).toEqual(['action_makaan_0']);
+    expect(state.players[1]!.properties.mumbai).toHaveLength(0); // stolen group removed
     expect(checkInvariants(state).ok).toBe(true);
   });
 });
@@ -195,7 +195,7 @@ describe('received wildcard placement (#19)', () => {
 
     state = step(state, { type: 'RESPOND_PLACE_RECEIVED', cardId: 'wild_jaipur_kolkata_0', set: 'kolkata' });
     expect(state.pendingInterrupts).toHaveLength(0);
-    expect(state.players[0]!.properties.kolkata.cards).toContain('wild_jaipur_kolkata_0');
+    expect(state.players[0]!.properties.kolkata[0]!.cards).toContain('wild_jaipur_kolkata_0');
     expect(checkInvariants(state).ok).toBe(true);
   });
 });

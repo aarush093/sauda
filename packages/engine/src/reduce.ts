@@ -33,7 +33,9 @@ import {
   hasThreeCompleteSets,
   isSetComplete,
   kirayaFor,
+  ownsColor,
 } from './sets';
+import { addToColor, findGroupOf, removeFromProperties } from './groups';
 import { chargeStandsByParity } from './interrupts';
 import { applyPayment, relocateOrphanedBuildings, validatePayment } from './payment';
 import type { PaymentRequest } from './payment';
@@ -238,7 +240,7 @@ function handlePlaceProperty(
     return fail('WRONG_COLOR', `card ${cardId} cannot join ${set}`);
   }
   removeId(player.hand, cardId);
-  player.properties[set].cards.push(cardId);
+  addToColor(player, set, cardId); // routes surplus into a second set of the colour
   draft.playsRemaining -= 1;
   events.push({ type: 'PropertyPlaced', player: player.id, cardId, set });
   return ok(undefined);
@@ -257,16 +259,17 @@ function handleRearrange(
     return guard;
   }
   const player = current(draft);
-  const fromSet = findWildcardGroup(draft, player.id, cardId);
-  if (fromSet === null) {
+  const fromGroup = findGroupOf(player, cardId);
+  const card = getCard(draft, cardId);
+  if (fromGroup === null || card.kind !== 'wildcard') {
     return fail('CARD_NOT_ON_TABLE', `wildcard ${cardId} is not in your property area`);
   }
-  const card = getCard(draft, cardId);
   if (!canPlaceInSet(card, toSet)) {
     return fail('WRONG_COLOR', `wildcard ${cardId} cannot join ${toSet}`);
   }
-  removeId(player.properties[fromSet].cards, cardId);
-  player.properties[toSet].cards.push(cardId);
+  const fromSet = fromGroup.set;
+  removeFromProperties(player, cardId); // removes from its group and prunes if emptied
+  addToColor(player, toSet, cardId);
   events.push({ type: 'WildcardRearranged', player: player.id, cardId, fromSet, toSet });
   events.push(...relocateOrphanedBuildings(draft, player.id));
   return ok(undefined);
@@ -326,18 +329,16 @@ function playAageBadho(draft: GameState, cardId: CardId, events: GameEvent[]): R
   return ok(undefined);
 }
 
-// §5: place a MAKAAN on your complete set (never Junctions/Utilities), max one.
+// §5: place a MAKAAN on one of your complete sets of this colour (never
+// Junctions/Utilities), max one per set.
 function playMakaan(draft: GameState, cardId: CardId, set: SetId, events: GameEvent[]): Result<void> {
   const player = current(draft);
-  const group = player.properties[set];
   if (set === 'junction' || set === 'utility') {
     return fail('NO_BUILDING_HERE', 'Junctions and Utilities cannot hold buildings');
   }
-  if (!isSetComplete(group)) {
-    return fail('SET_INCOMPLETE', 'a building needs a complete set');
-  }
-  if (hasMakaan(draft, group)) {
-    return fail('MAKAAN_EXISTS', 'this set already has a makaan');
+  const group = player.properties[set].find((g) => isSetComplete(g) && !hasMakaan(draft, g));
+  if (!group) {
+    return fail('NO_MAKAAN_SPOT', 'no complete set of this colour without a makaan');
   }
   removeId(player.hand, cardId);
   group.buildings.push(cardId);
@@ -346,18 +347,14 @@ function playMakaan(draft: GameState, cardId: CardId, set: SetId, events: GameEv
   return ok(undefined);
 }
 
-// §5: place a HAVELI on a complete set that already has a makaan, max one.
+// §5: place a HAVELI on a complete set of this colour that already has a makaan.
 function playHaveli(draft: GameState, cardId: CardId, set: SetId, events: GameEvent[]): Result<void> {
   const player = current(draft);
-  const group = player.properties[set];
-  if (!isSetComplete(group)) {
-    return fail('SET_INCOMPLETE', 'a building needs a complete set');
-  }
-  if (!hasMakaan(draft, group)) {
-    return fail('NO_MAKAAN', 'a haveli needs a makaan first');
-  }
-  if (hasHaveli(draft, group)) {
-    return fail('HAVELI_EXISTS', 'this set already has a haveli');
+  const group = player.properties[set].find(
+    (g) => isSetComplete(g) && hasMakaan(draft, g) && !hasHaveli(draft, g),
+  );
+  if (!group) {
+    return fail('NO_HAVELI_SPOT', 'no complete set of this colour with a makaan and no haveli');
   }
   removeId(player.hand, cardId);
   group.buildings.push(cardId);
@@ -396,7 +393,7 @@ function playKabza(
   events: GameEvent[],
 ): Result<void> {
   const player = current(draft);
-  if (!isSetComplete(draft.players[target]!.properties[set])) {
+  if (!draft.players[target]!.properties[set].some(isSetComplete)) {
     return fail('SET_INCOMPLETE', 'KABZA can only take a complete set');
   }
   removeId(player.hand, cardId);
@@ -415,11 +412,11 @@ function playHaathKiSafai(
   targetCardId: CardId,
   events: GameEvent[],
 ): Result<void> {
-  const set = findPropertyGroup(draft, target, targetCardId);
-  if (set === null) {
+  const group = findGroupOf(draft.players[target]!, targetCardId);
+  if (group === null) {
     return fail('CARD_NOT_ON_TABLE', 'that property is not on the target table');
   }
-  if (isSetComplete(draft.players[target]!.properties[set])) {
+  if (isSetComplete(group)) {
     return fail('SET_COMPLETE', 'cannot take from a complete set');
   }
   const player = current(draft);
@@ -440,15 +437,15 @@ function playAdlaBadli(
   events: GameEvent[],
 ): Result<void> {
   const player = current(draft);
-  const mySet = findPropertyGroup(draft, player.id, params.myCardId);
-  const theirSet = findPropertyGroup(draft, params.target, params.theirCardId);
-  if (mySet === null || theirSet === null) {
+  const myGroup = findGroupOf(player, params.myCardId);
+  const theirGroup = findGroupOf(draft.players[params.target]!, params.theirCardId);
+  if (myGroup === null || theirGroup === null) {
     return fail('CARD_NOT_ON_TABLE', 'both cards must be on the table');
   }
-  if (isSetComplete(player.properties[mySet])) {
+  if (isSetComplete(myGroup)) {
     return fail('SET_COMPLETE', 'cannot swap from your complete set');
   }
-  if (isSetComplete(draft.players[params.target]!.properties[theirSet])) {
+  if (isSetComplete(theirGroup)) {
     return fail('SET_COMPLETE', 'cannot swap from their complete set');
   }
   removeId(player.hand, cardId);
@@ -492,7 +489,7 @@ function handlePlayKiraya(
   if (!colorAllowed) {
     return fail('WRONG_COLOR', 'this KIRAYA cannot charge that colour');
   }
-  if (player.properties[action.color].cards.length === 0) {
+  if (!ownsColor(draft, player.id, action.color)) {
     return fail('COLOR_NOT_OWNED', 'you must own a property of the chosen colour');
   }
 
@@ -660,12 +657,16 @@ function applyEffect(
 ): Interrupt['pendingReceive'] {
   switch (frame.effect.kind) {
     case 'stealSet': {
+      // Take one complete group of the colour (with its buildings) and move it to
+      // the origin as its own set — the origin may now hold two sets of that colour.
       const set = frame.effect.set;
       const from = draft.players[frame.target]!;
       const to = draft.players[frame.origin]!;
-      to.properties[set].cards.push(...from.properties[set].cards);
-      to.properties[set].buildings.push(...from.properties[set].buildings);
-      from.properties[set] = { set, cards: [], buildings: [] };
+      const index = from.properties[set].findIndex(isSetComplete);
+      if (index !== -1) {
+        const [stolen] = from.properties[set].splice(index, 1);
+        to.properties[set].push(stolen!);
+      }
       events.push({ type: 'SetStolen', from: frame.target, to: frame.origin, set });
       return [];
     }
@@ -714,10 +715,7 @@ function transferProperty(
   events: GameEvent[],
   opts: { stolen: boolean },
 ): Interrupt['pendingReceive'] {
-  const set = findPropertyGroup(draft, from, cardId);
-  if (set !== null) {
-    removeId(draft.players[from]!.properties[set].cards, cardId);
-  }
+  removeFromProperties(draft.players[from]!, cardId); // removes + prunes emptied group
   const card = getCard(draft, cardId);
   if (opts.stolen) {
     events.push({ type: 'PropertyStolen', from, to, cardId });
@@ -725,7 +723,7 @@ function transferProperty(
   // A fixed property lands in its own set. Any wildcard (colour or ANY) waits for
   // the receiver to choose its group (§4.5, edge #19).
   if (card.kind === 'property') {
-    draft.players[to]!.properties[card.set].cards.push(cardId);
+    addToColor(draft.players[to]!, card.set, cardId);
     events.push({ type: 'CardReceived', player: to, cardId, set: card.set });
     return [];
   }
@@ -782,7 +780,7 @@ function handlePlaceReceived(
   if (!canPlaceInSet(card, set)) {
     return fail('WRONG_COLOR', `card ${cardId} cannot join ${set}`);
   }
-  draft.players[head.receiver]!.properties[set].cards.push(cardId);
+  addToColor(draft.players[head.receiver]!, set, cardId);
   events.push({ type: 'CardReceived', player: head.receiver, cardId, set });
   frame.pendingReceive.shift();
   if (frame.pendingReceive.length === 0) {
@@ -835,26 +833,6 @@ function opponents(draft: GameState, playerId: PlayerId): PlayerId[] {
   return list;
 }
 
-// Which group holds this property/wildcard on a player's table, or null.
-function findPropertyGroup(draft: GameState, playerId: PlayerId, cardId: CardId): SetId | null {
-  const player = draft.players[playerId]!;
-  for (const group of Object.values(player.properties) as PropertyGroup[]) {
-    if (group.cards.includes(cardId)) {
-      return group.set;
-    }
-  }
-  return null;
-}
-
-// Like findPropertyGroup, but only returns the group if the card is a wildcard.
-function findWildcardGroup(draft: GameState, playerId: PlayerId, cardId: CardId): SetId | null {
-  const set = findPropertyGroup(draft, playerId, cardId);
-  if (set === null) {
-    return null;
-  }
-  return getCard(draft, cardId).kind === 'wildcard' ? set : null;
-}
-
 function removeId(list: CardId[], id: CardId): boolean {
   const index = list.indexOf(id);
   if (index === -1) {
@@ -886,12 +864,15 @@ function cloneState(state: GameState): GameState {
 }
 
 function cloneProperties(
-  properties: Record<SetId, PropertyGroup>,
-): Record<SetId, PropertyGroup> {
-  const copy = {} as Record<SetId, PropertyGroup>;
+  properties: Record<SetId, PropertyGroup[]>,
+): Record<SetId, PropertyGroup[]> {
+  const copy = {} as Record<SetId, PropertyGroup[]>;
   for (const set of Object.keys(properties) as SetId[]) {
-    const group = properties[set];
-    copy[set] = { set: group.set, cards: [...group.cards], buildings: [...group.buildings] };
+    copy[set] = properties[set].map((group) => ({
+      set: group.set,
+      cards: [...group.cards],
+      buildings: [...group.buildings],
+    }));
   }
   return copy;
 }

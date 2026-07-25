@@ -17,12 +17,12 @@ export interface NewGameOptions {
   rules?: Rules;
 }
 
-// An empty property area: one (empty) group per colour, always present so lookups
-// never hit undefined.
-function emptyPropertyArea(): Record<SetId, PropertyGroup> {
-  const area = {} as Record<SetId, PropertyGroup>;
+// An empty property area: every colour starts with an empty list of groups.
+// Groups are created on demand as cards are placed (§ overflow).
+function emptyPropertyArea(): Record<SetId, PropertyGroup[]> {
+  const area = {} as Record<SetId, PropertyGroup[]>;
   for (const set of Object.keys(SETS) as SetId[]) {
-    area[set] = { set, cards: [], buildings: [] };
+    area[set] = [];
   }
   return area;
 }

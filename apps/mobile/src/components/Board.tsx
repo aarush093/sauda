@@ -17,22 +17,25 @@ function seatLabel(seats: SeatConfig[], id: number): string {
   return seat.kind === 'bot' ? `P${id} (bot ${seat.difficulty})` : `P${id}`;
 }
 
-function SetChips({ properties }: { properties: Record<SetId, PropertyGroup> }) {
-  const chips = [];
+function SetChips({ properties }: { properties: Record<SetId, PropertyGroup[]> }) {
+  const chips: JSX.Element[] = [];
   for (const set of ALL_SETS) {
-    const group = properties[set];
-    if (group.cards.length === 0) {
-      continue;
-    }
+    const groups = properties[set];
     const size = SETS[set].size;
-    const complete = group.cards.length >= size;
-    const buildings = group.buildings.length > 0 ? ` +${group.buildings.length}b` : '';
-    chips.push(
-      <span key={set} className={`set-chip${complete ? ' complete' : ''}`}>
-        {SETS[set].label} {complete ? '✓' : `${group.cards.length}/${size}`}
-        {buildings}
-      </span>,
-    );
+    // A colour can hold more than one set (overflow), so render a chip per group.
+    groups.forEach((group, index) => {
+      if (group.cards.length === 0) {
+        return;
+      }
+      const complete = group.cards.length >= size;
+      const buildings = group.buildings.length > 0 ? ` +${group.buildings.length}b` : '';
+      chips.push(
+        <span key={`${set}-${index}`} className={`set-chip${complete ? ' complete' : ''}`}>
+          {SETS[set].label} {complete ? '✓' : `${group.cards.length}/${size}`}
+          {buildings}
+        </span>,
+      );
+    });
   }
   return <div className="sets">{chips.length > 0 ? chips : <em>no sets</em>}</div>;
 }

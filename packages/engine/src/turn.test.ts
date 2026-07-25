@@ -84,7 +84,7 @@ describe('plays (§4.4 step 3)', () => {
   it('places a property into its colour group', () => {
     const state = makeState({ players: [{ hand: ['prop_mumbai_0'] }, {}] });
     const next = step(state, { type: 'PLACE_PROPERTY', cardId: 'prop_mumbai_0', set: 'mumbai' });
-    expect(next.players[0]!.properties.mumbai.cards).toContain('prop_mumbai_0');
+    expect(next.players[0]!.properties.mumbai[0]!.cards).toContain('prop_mumbai_0');
     expect(next.playsRemaining).toBe(2);
   });
 });
@@ -100,8 +100,8 @@ describe('rearrange wildcards (#17)', () => {
       cardId: 'wild_jaipur_kolkata_0',
       toSet: 'kolkata',
     });
-    expect(next.players[0]!.properties.kolkata.cards).toContain('wild_jaipur_kolkata_0');
-    expect(next.players[0]!.properties.jaipur.cards).toHaveLength(0);
+    expect(next.players[0]!.properties.kolkata[0]!.cards).toContain('wild_jaipur_kolkata_0');
+    expect(next.players[0]!.properties.jaipur).toHaveLength(0); // emptied group is pruned
     expect(next.playsRemaining).toBe(3); // free, not a play
   });
 

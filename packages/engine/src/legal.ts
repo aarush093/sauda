@@ -139,15 +139,17 @@ function playingActions(state: GameState, playerId: PlayerId): Action[] {
 function rearrangeActions(state: GameState, playerId: PlayerId): Action[] {
   const player = state.players[playerId]!;
   const actions: Action[] = [];
-  for (const group of Object.values(player.properties) as PropertyGroup[]) {
-    for (const cardId of group.cards) {
-      const card = getCard(state, cardId);
-      if (card.kind !== 'wildcard') {
-        continue;
-      }
-      for (const toSet of placeableSets(card)) {
-        if (toSet !== group.set) {
-          actions.push({ type: 'REARRANGE_WILDCARD', cardId, toSet });
+  for (const groups of Object.values(player.properties) as PropertyGroup[][]) {
+    for (const group of groups) {
+      for (const cardId of group.cards) {
+        const card = getCard(state, cardId);
+        if (card.kind !== 'wildcard') {
+          continue;
+        }
+        for (const toSet of placeableSets(card)) {
+          if (toSet !== group.set) {
+            actions.push({ type: 'REARRANGE_WILDCARD', cardId, toSet });
+          }
         }
       }
     }
@@ -259,7 +261,9 @@ function kirayaPlays(state: GameState, playerId: PlayerId, cardId: CardId): Acti
   const actions: Action[] = [];
 
   const colors = card.colors === 'ANY' ? ALL_SETS : card.colors;
-  const ownedColors = colors.filter((color) => me.properties[color].cards.length > 0);
+  const ownedColors = colors.filter((color) =>
+    me.properties[color].some((group) => group.cards.length > 0),
+  );
 
   // DUGNA attachments: identical cards, so a canonical "first N in hand" is enough.
   const dugnaInHand = me.hand.filter((id) => {
@@ -299,9 +303,10 @@ function opponents(state: GameState, playerId: PlayerId): PlayerId[] {
   return list;
 }
 
+// Colours in which the player has at least one complete set (KABZA targets).
 function completeSetsOf(state: GameState, playerId: PlayerId): SetId[] {
   const player = state.players[playerId]!;
-  return ALL_SETS.filter((set) => isSetComplete(player.properties[set]));
+  return ALL_SETS.filter((set) => player.properties[set].some(isSetComplete));
 }
 
 // Properties that can be stolen/swapped: those NOT in a complete set (§5).
@@ -309,16 +314,17 @@ function stealableProperties(state: GameState, playerId: PlayerId): CardId[] {
   const player = state.players[playerId]!;
   const ids: CardId[] = [];
   for (const set of ALL_SETS) {
-    const group = player.properties[set];
-    if (!isSetComplete(group)) {
-      ids.push(...group.cards);
+    for (const group of player.properties[set]) {
+      if (!isSetComplete(group)) {
+        ids.push(...group.cards);
+      }
     }
   }
   return ids;
 }
 
-// Sets where a building can be placed: complete, not Junctions/Utilities, and the
-// prerequisite building state matches (§5).
+// Colours where a building can be placed: some complete set of that colour (never
+// Junctions/Utilities) whose building state allows it (§5).
 function buildableSets(
   state: GameState,
   playerId: PlayerId,
@@ -330,14 +336,16 @@ function buildableSets(
     if (set === 'junction' || set === 'utility') {
       continue;
     }
-    const group = player.properties[set];
-    if (!isSetComplete(group)) {
-      continue;
-    }
-    if (building === 'makaan' && !hasMakaan(state, group)) {
-      result.push(set);
-    }
-    if (building === 'haveli' && hasMakaan(state, group) && !hasHaveli(state, group)) {
+    const groups = player.properties[set];
+    const hasSpot = groups.some((group) => {
+      if (!isSetComplete(group)) {
+        return false;
+      }
+      return building === 'makaan'
+        ? !hasMakaan(state, group)
+        : hasMakaan(state, group) && !hasHaveli(state, group);
+    });
+    if (hasSpot) {
       result.push(set);
     }
   }
