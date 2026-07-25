@@ -5,7 +5,15 @@
  */
 import type { SetId } from './types';
 import { SETS } from './theme';
-import type { CardId, GameState, PlayerId, PropertyGroup, TurnPhase } from './state';
+import type {
+  CardId,
+  GameState,
+  InterruptStatus,
+  PendingEffect,
+  PlayerId,
+  PropertyGroup,
+  TurnPhase,
+} from './state';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 
@@ -15,6 +23,15 @@ export interface OpponentView {
   handCount: number; // count only — the cards themselves stay hidden
   bank: CardId[];
   properties: Record<SetId, PropertyGroup>;
+}
+
+// The open interrupt, if any (a charge/steal is public — everyone sees it happen).
+// A bot uses this to decide NAHI CHALEGA vs comply, and to size a payment.
+export interface InterruptView {
+  origin: PlayerId;
+  target: PlayerId;
+  status: InterruptStatus;
+  effect: PendingEffect;
 }
 
 export interface Observation {
@@ -29,11 +46,13 @@ export interface Observation {
   opponents: OpponentView[];
   drawPileCount: number; // count only — order is hidden
   discardPile: CardId[]; // discard is public
+  interrupt: InterruptView | null; // the open charge/steal, if any
   winnerIndex: number | null;
 }
 
 export function observe(state: GameState, playerId: PlayerId): Observation {
   const me = state.players[playerId]!;
+  const top = state.pendingInterrupts[state.pendingInterrupts.length - 1];
 
   const opponents: OpponentView[] = [];
   for (const player of state.players) {
@@ -60,6 +79,9 @@ export function observe(state: GameState, playerId: PlayerId): Observation {
     opponents,
     drawPileCount: state.drawPile.length,
     discardPile: [...state.discardPile],
+    interrupt: top
+      ? { origin: top.origin, target: top.target, status: top.status, effect: top.effect }
+      : null,
     winnerIndex: state.winnerIndex,
   };
 }

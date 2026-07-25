@@ -14,3 +14,5 @@ export * from './interrupts';
 export * from './payment';
 export * from './reduce';
 export * from './legal';
+// Test scenario helpers (used by this package's and other packages' test suites).
+export * from './testkit';

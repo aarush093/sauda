@@ -206,37 +206,72 @@ export function relocateOrphanedBuildings(state: GameState, playerId: PlayerId):
   return events;
 }
 
-// The one canonical way to PICK a payment: always minimise overpay (never hand over
-// more than necessary). Bots use this in M2; the UI offers it as "auto-pay" in M3.
+// How costly it is to GIVE UP a card, so payment prefers cash over property and
+// never breaks a complete set unless forced. Lower = give this away first.
+interface PayableItem {
+  id: CardId;
+  value: number;
+  damage: number;
+}
+
+function payableItems(state: GameState, playerId: PlayerId): PayableItem[] {
+  const player = state.players[playerId]!;
+  const items: PayableItem[] = [];
+  for (const id of player.bank) {
+    const card = getCard(state, id);
+    items.push({ id, value: cardPayValue(card), damage: card.kind === 'money' ? 1 : 2 });
+  }
+  for (const set of ALL_SETS) {
+    const group = player.properties[set];
+    const complete = isSetComplete(group);
+    for (const id of group.cards) {
+      const card = getCard(state, id);
+      if (isAnyWildcard(card)) {
+        continue; // never payable
+      }
+      // Breaking a complete set is the worst; a spare wildcard the least bad.
+      const damage = complete ? 40 : card.kind === 'wildcard' ? 4 : 12;
+      items.push({ id, value: cardPayValue(card), damage });
+    }
+    for (const id of group.buildings) {
+      items.push({ id, value: cardPayValue(getCard(state, id)), damage: 8 });
+    }
+  }
+  return items;
+}
+
+// The one canonical way to PICK a payment: minimise overpay first (never hand over
+// more value than necessary), then minimise damage (cash before property, keep
+// complete sets). Bots use this in M2; the UI offers it as "auto-pay" in M3.
 export function suggestPayment(state: GameState, request: PaymentRequest): CardId[] {
-  const payableIds = payableCards(state, request.debtor);
-  const tableTotal = totalPayableValue(state, request.debtor);
+  const items = payableItems(state, request.debtor);
+  const tableTotal = items.reduce((sum, item) => sum + item.value, 0);
 
   // Table can't cover the debt ⇒ forced to pay everything.
   if (tableTotal <= request.amountOwed) {
-    return payableIds;
+    return items.map((item) => item.id);
   }
 
-  // Otherwise find a subset whose value is the smallest total that still covers the
-  // debt. This is a tiny subset-sum (values ≤ 10, table total ≤ 57), so we track,
-  // for each reachable sum, one card combination that reaches it.
-  const combinationForSum = new Map<number, CardId[]>();
-  combinationForSum.set(0, []);
-  for (const id of payableIds) {
-    const value = cardPayValue(getCard(state, id));
-    for (const [sum, cards] of [...combinationForSum]) {
-      const nextSum = sum + value;
-      if (!combinationForSum.has(nextSum)) {
-        combinationForSum.set(nextSum, [...cards, id]);
+  // Tiny subset-sum (values ≤ 10, total ≤ 57): for each reachable total, keep the
+  // combination with the least damage. We then take the smallest total ≥ the debt.
+  const bestForSum = new Map<number, { cards: CardId[]; damage: number }>();
+  bestForSum.set(0, { cards: [], damage: 0 });
+  for (const item of items) {
+    for (const [sum, entry] of [...bestForSum]) {
+      const nextSum = sum + item.value;
+      const nextDamage = entry.damage + item.damage;
+      const existing = bestForSum.get(nextSum);
+      if (!existing || nextDamage < existing.damage) {
+        bestForSum.set(nextSum, { cards: [...entry.cards, item.id], damage: nextDamage });
       }
     }
   }
 
   let bestSum = -1;
-  for (const sum of combinationForSum.keys()) {
+  for (const sum of bestForSum.keys()) {
     if (sum >= request.amountOwed && (bestSum === -1 || sum < bestSum)) {
       bestSum = sum;
     }
   }
-  return combinationForSum.get(bestSum) ?? payableIds;
+  return bestForSum.get(bestSum)?.cards ?? items.map((item) => item.id);
 }

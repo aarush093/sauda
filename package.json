@@ -13,7 +13,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verify": "pnpm -r typecheck && pnpm -r test"
+    "verify": "pnpm -r typecheck && pnpm -r test",
+    "play": "pnpm --filter @sauda/tools play",
+    "simulate": "pnpm --filter @sauda/tools simulate"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

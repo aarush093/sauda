@@ -40,3 +40,15 @@ One line per rules interpretation, deviation, or engineering choice worth rememb
 - **KIRAYA is bankable** (treated as an action-type card for §4.4 "bank any money or action card").
 - **Rearranging a wildcard out of a complete set relocates its buildings** (§4.5's orphan rule applied generally, not only during payment).
 - **Multi-target charges push one frame per opponent** and resolve top-of-stack first; sibling order is deterministic (reverse of push order).
+
+## M2 — Bots + CLI
+
+- **Bot interface:** `chooseAction(observation, legalActions, rng) → Action`. Bots see only an `Observation` (hidden info respected) and the exact legal move list; they never touch raw state.
+- **`observe` now exposes the open interrupt** (origin/target/status/effect) — a charge is public, and a bot needs it to size a NAHI CHALEGA / payment decision.
+- **HeuristicBot delegates ALL payment to the engine's `suggestPayment`** (surfaced as the single `RESPOND_PAY` that `legalActions` provides). It never re-implements §4.5 (user directive). A test asserts the bot's selection is byte-identical to `suggestPayment`.
+- **`suggestPayment` upgraded to damage-aware** (M2): minimal overpay stays the primary key, with a secondary tie-break that prefers giving cash over property and never breaks a complete set unless forced. Shared by bots now and the M3 "auto-pay" UI. The payment-minimality tests are unaffected (they pin the sum, not the tie-break).
+- **The simulator asserts ZERO invariant violations across all 1000 games**, not merely that games finish (user directive). It also enforces the §8.3 targets and exits non-zero on any miss.
+- **§8.3 gate result:** HeuristicBot(Medium) vs RandomBot over 1000 seeded games → **95.0% win** (target ≥90%), **avg 20.6 turns** (target ≤25), **0 invariant violations**.
+- **Workspace glob fix:** `tools` is a single package, so the workspace entry is `tools`, not `tools/*` (which matches only subdirectories).
+- **CLI runs via `tsx`** (no build step): `pnpm play` (interactive human vs 3 bots; `--auto` plays all seats for a demo transcript), `pnpm simulate --games N`.
+- **HeuristicBot difficulty (v1)** currently tunes the NAHI CHALEGA threshold; the core strategy is shared across Easy/Medium/Hard. Deeper per-difficulty play (discard/played-card tracking for Hard) is deferred.
