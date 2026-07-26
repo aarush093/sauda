@@ -69,7 +69,7 @@ export function Board({
           <div key={opponent.id} className="opponent">
             <span>
               {seatLabel(seats, opponent.id)} · hand {opponent.handCount} · bank ₹
-              {opponent.bankTotal}
+              {opponent.bankTotal} Cr
             </span>
             <SetChips properties={opponent.properties} />
           </div>
@@ -87,7 +87,7 @@ export function Board({
       </div>
 
       <div className="zone">
-        <h3>Your bank — ₹{observation.myBankTotal}</h3>
+        <h3>Your bank — ₹{observation.myBankTotal} Cr</h3>
         <div className="cards">
           {observation.myBank.map((id) => (
             <span key={id} className="card">

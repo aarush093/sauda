@@ -9,7 +9,7 @@
  * No rules live here; values come from theme/engine data.
  */
 import type { CSSProperties } from 'react';
-import { ACTIONS, KIRAYA_DESCRIPTOR, GAME, SETS } from '@sauda/engine';
+import { ACTIONS, KIRAYA_DESCRIPTOR, SETS } from '@sauda/engine';
 import type { Card, SetId } from '@sauda/engine';
 import { CARD, FONT, INK, cardWidth } from '../design/tokens';
 import type { CardSize } from '../design/tokens';
@@ -123,6 +123,8 @@ function FullFace({ card }: { card: Card }) {
 const mono = (weight = 500): CSSProperties => ({ fontFamily: FONT.mono, fontWeight: weight });
 const display: CSSProperties = { fontFamily: FONT.display, fontWeight: 700, letterSpacing: '0.02em' };
 
+// Value badge: keeps the ₹N Cr unit but stacks "Cr" under the number so it never
+// overflows the disc (abbreviate the layout, not the unit).
 function ValueBadge({ value, ink }: { value: number; ink: string }) {
   return (
     <div
@@ -130,19 +132,20 @@ function ValueBadge({ value, ink }: { value: number; ink: string }) {
         position: 'absolute',
         top: 5,
         left: 5,
-        width: 22,
-        height: 22,
+        width: 24,
+        height: 24,
         borderRadius: '50%',
         background: INK.cardCream,
         border: `2px solid ${ink}`,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 9,
-        ...mono(700),
+        lineHeight: 1,
       }}
     >
-      ₹{value}
+      <span style={{ fontSize: 8, ...mono(700) }}>₹{value}</span>
+      <span style={{ fontSize: 5, ...mono(500) }}>Cr</span>
     </div>
   );
 }
@@ -184,11 +187,11 @@ function CornerChip({ value }: { value: number }) {
         borderRadius: 3,
         background: INK.gold,
         color: INK.deepInk,
-        fontSize: 9,
+        fontSize: 8,
         ...mono(700),
       }}
     >
-      ₹{value}
+      ₹{value} Cr
     </div>
   );
 }
@@ -451,7 +454,7 @@ function WildcardFull({ card }: { card: Extract<Card, { kind: 'wildcard' }> }) {
         ) : (
           card.colors.map((set) => (
             <div key={set}>
-              {SETS[set].label} — SET ₹{SETS[set].rent[SETS[set].rent.length - 1]}
+              {SETS[set].label} — SET ₹{SETS[set].rent[SETS[set].rent.length - 1]} Cr
             </div>
           ))
         )}
@@ -467,11 +470,9 @@ function MoneyFull({ card }: { card: Extract<Card, { kind: 'money' }> }) {
     <div style={{ ...frameStyle('full'), border: `2px solid ${INK.gold}` }}>
       <div style={{ position: 'absolute', inset: 4, border: `1.5px double ${INK.gold}`, borderRadius: 4 }} />
       {big && <div style={{ position: 'absolute', top: 4, left: 4, right: 4, height: 8, background: INK.gold }} />}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', ...mono(700), fontSize: 34, color: INK.deepInk }}>
-        ₹{card.value}
-      </div>
-      <div style={{ position: 'absolute', bottom: 6, left: 0, right: 0, textAlign: 'center', fontSize: 6, ...mono(500), color: '#5b5344' }}>
-        {GAME.currency}
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'baseline', justifyContent: 'center', ...mono(700), color: INK.deepInk }}>
+        <span style={{ fontSize: 30 }}>₹{card.value}</span>
+        <span style={{ fontSize: 12, marginLeft: 2, ...mono(500) }}>Cr</span>
       </div>
     </div>
   );
@@ -504,7 +505,7 @@ function MidFace({ card, heldCount }: { card: Card; heldCount: number | undefine
           ))}
         </div>
         <div style={{ textAlign: 'center', color: INK.stampRed, ...mono(700), fontSize: 8 }}>
-          SET ₹{theme.rent[theme.rent.length - 1]}
+          SET ₹{theme.rent[theme.rent.length - 1]} Cr
         </div>
         <CornerChip value={card.value} />
       </div>
@@ -512,8 +513,8 @@ function MidFace({ card, heldCount }: { card: Card; heldCount: number | undefine
   }
   // Non-set cards get a compact neutral MID.
   return (
-    <div style={{ ...frameStyle('mid'), display: 'flex', alignItems: 'center', justifyContent: 'center', ...mono(700), fontSize: 12 }}>
-      {card.kind === 'money' ? `₹${card.value}` : miniLabel(card)}
+    <div style={{ ...frameStyle('mid'), display: 'flex', alignItems: 'center', justifyContent: 'center', ...mono(700), fontSize: 11 }}>
+      {card.kind === 'money' ? `₹${card.value} Cr` : miniLabel(card)}
     </div>
   );
 }
@@ -546,8 +547,8 @@ function ChipFace({ card, heldCount }: { card: Card; heldCount: number | undefin
     );
   }
   return (
-    <div style={{ ...frameStyle('chip'), display: 'flex', alignItems: 'center', justifyContent: 'center', ...mono(700), fontSize: 10 }}>
-      {card.kind === 'money' ? `₹${card.value}` : miniLabel(card)}
+    <div style={{ ...frameStyle('chip'), display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', ...mono(700), fontSize: card.kind === 'money' ? 7 : 10 }}>
+      {card.kind === 'money' ? `₹${card.value} Cr` : miniLabel(card)}
     </div>
   );
 }

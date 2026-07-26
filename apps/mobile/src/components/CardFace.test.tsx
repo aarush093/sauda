@@ -32,9 +32,10 @@ describe('CardFace', () => {
     expect(screen.getByText(`₹${SETS.mumbai.rent[SETS.mumbai.rent.length - 1]} Cr`)).toBeTruthy();
   });
 
-  it('renders money as a rupee note', () => {
+  it('renders money as a rupee note with the Cr unit', () => {
     render(<CardFace cardId="money_10_0" size="full" />);
     expect(screen.getByText('₹10')).toBeTruthy();
+    expect(screen.getByText('Cr')).toBeTruthy(); // unit shown consistently
   });
 
   it('shows an action’s English descriptor next to its desi name', () => {
