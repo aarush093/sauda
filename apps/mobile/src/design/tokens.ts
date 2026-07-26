@@ -18,9 +18,12 @@ export const INK = {
 
 // §2.4 typography. Families resolve to the self-hosted faces in fonts.css.
 export const FONT = {
-  display: "'Baloo 2', system-ui, sans-serif", // chunky, Devanagari-capable
-  body: "'Karla', system-ui, sans-serif",
+  display: "'Baloo 2', system-ui, sans-serif", // chunky, Devanagari-capable — headings/logo
+  body: "'Karla', system-ui, sans-serif", // UI chrome only — never on the card face
   mono: "'IBM Plex Mono', ui-monospace, monospace", // tabular numerals / money
+  // Vintage letterpress voice for card labels/captions. A system serif stack, so it
+  // stays fully offline (no fetch); the card face uses this instead of a modern sans.
+  serif: "'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif",
 } as const;
 
 // §2.4 card sizing. Ratio is height / width = 145 / 100.

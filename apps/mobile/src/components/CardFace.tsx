@@ -56,7 +56,7 @@ function frameStyle(size: CardSize): CSSProperties {
     background: INK.cardCream,
     color: INK.deepInk,
     border: `2px solid ${INK.agedLine}`,
-    fontFamily: FONT.body,
+    fontFamily: FONT.serif, // vintage letterpress voice on the card face (no modern sans)
     userSelect: 'none',
   };
 }
@@ -123,71 +123,44 @@ function FullFace({ card }: { card: Card }) {
 const mono = (weight = 500): CSSProperties => ({ fontFamily: FONT.mono, fontWeight: weight });
 const display: CSSProperties = { fontFamily: FONT.display, fontWeight: 700, letterSpacing: '0.02em' };
 
-// Value badge: keeps the ₹N Cr unit but stacks "Cr" under the number so it never
-// overflows the disc (abbreviate the layout, not the unit).
+// Footer band height as a single source, shared by FooterBand and the corner marks.
+const FOOTER_HEIGHT_PCT = 19;
+// The band's vertical centre (in % from the card bottom). The seal (bottom-right)
+// and the value chip (bottom-left) are both centred on this line, in the corners.
+const FOOTER_MID_PCT = FOOTER_HEIGHT_PCT / 2;
+const SEAL_SIZE = 20;
+
+// Shared gold value-chip look, used by the corner chip on all card kinds.
+const valueChipStyle: CSSProperties = {
+  padding: '1px 4px',
+  borderRadius: 3,
+  background: INK.gold,
+  color: INK.deepInk,
+  fontSize: 8,
+  whiteSpace: 'nowrap',
+  ...mono(700),
+};
+
+// Value badge: sits INSIDE the plate's printed circle (top-left), "₹N Cr" on a
+// single line in small type — never spilling past the circle or the card border.
 function ValueBadge({ value, ink }: { value: number; ink: string }) {
   return (
     <div
       style={{
         position: 'absolute',
-        top: 5,
-        left: 5,
-        width: 24,
-        height: 24,
+        top: 9,
+        left: 10,
+        width: 20,
+        height: 20,
         borderRadius: '50%',
         background: INK.cardCream,
-        border: `2px solid ${ink}`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        lineHeight: 1,
-      }}
-    >
-      <span style={{ fontSize: 8, ...mono(700) }}>₹{value}</span>
-      <span style={{ fontSize: 5, ...mono(500) }}>Cr</span>
-    </div>
-  );
-}
-
-function Seal() {
-  return (
-    <div
-      title="SAUDA PRESS"
-      style={{
-        position: 'absolute',
-        right: 4,
-        bottom: '13%',
-        width: 26,
-        height: 26,
-        borderRadius: '50%',
-        border: `1.5px solid ${INK.gold}`,
-        color: INK.gold,
-        background: 'rgba(20,18,31,0.55)',
+        border: `1.5px solid ${ink}`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 11,
-        ...display,
-      }}
-    >
-      सौ
-    </div>
-  );
-}
-
-function CornerChip({ value }: { value: number }) {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        right: 4,
-        bottom: 3,
-        padding: '1px 4px',
-        borderRadius: 3,
-        background: INK.gold,
-        color: INK.deepInk,
-        fontSize: 8,
+        whiteSpace: 'nowrap',
+        letterSpacing: '-0.03em',
+        fontSize: 5.5,
         ...mono(700),
       }}
     >
@@ -196,6 +169,44 @@ function CornerChip({ value }: { value: number }) {
   );
 }
 
+// Press seal: a gold line-stamp with the सौ monogram, in the footer band's
+// bottom-right corner, vertically centred on the band, clear of the centred text.
+function Seal() {
+  return (
+    <div
+      title="SAUDA PRESS"
+      style={{
+        position: 'absolute',
+        right: 3,
+        bottom: `${FOOTER_MID_PCT}%`,
+        transform: 'translateY(50%)',
+        width: SEAL_SIZE,
+        height: SEAL_SIZE,
+        borderRadius: '50%',
+        border: `1.5px solid ${INK.gold}`,
+        color: INK.stampRed,
+        background: 'transparent',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 10,
+        ...display,
+      }}
+    >
+      सौ
+    </div>
+  );
+}
+
+// Corner value chip so fanned cards always read. Defaults bottom-right; property
+// cards pass side="left" so it never collides with the seal.
+function CornerChip({ value, side = 'right' }: { value: number; side?: 'left' | 'right' }) {
+  const horizontal = side === 'left' ? { left: 4 } : { right: 4 };
+  return <div style={{ position: 'absolute', bottom: 3, ...horizontal, ...valueChipStyle }}>₹{value} Cr</div>;
+}
+
+// Vintage footer: a warm cream/gold band with dark-ink letterpress text and thin
+// rules top and bottom (not a modern solid-colour UI bar).
 function FooterBand({ set }: { set: SetId }) {
   const theme = SETS[set];
   return (
@@ -205,55 +216,122 @@ function FooterBand({ set }: { set: SetId }) {
         left: 0,
         right: 0,
         bottom: 0,
-        height: '16%',
-        background: theme.hex,
-        color: INK.cardCream,
-        padding: '2px 4px',
+        height: `${FOOTER_HEIGHT_PCT}%`,
+        background: '#E7D3A1',
+        color: INK.deepInk,
+        borderTop: `1px solid ${INK.agedLine}`,
+        borderBottom: `1px solid ${INK.agedLine}`,
+        // generous side padding keeps the centred text inside the corner marks
+        padding: '1px 30px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        gap: 1,
+        alignItems: 'center',
+        gap: 1.5,
+        fontFamily: FONT.serif,
+        textAlign: 'center',
       }}
     >
-      <div style={{ fontSize: 5.2, ...display, letterSpacing: '0.03em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      {/* works line: one line, small fine-print, centred inside the side padding so
+          the corner chip/seal never cover a letter (fits the longest city name). */}
+      <div style={{ fontSize: 3.4, fontWeight: 700, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
         {theme.works}
       </div>
-      <div style={{ fontSize: 4.6, display: 'flex', justifyContent: 'space-between', ...mono(500) }}>
-        <span>SAFETY DEEDS</span>
-        <span>EST. {theme.est}</span>
-      </div>
+      <div style={{ fontSize: 3.8 }}>SAFETY DEEDS · EST. {theme.est}</div>
     </div>
   );
 }
 
-function MatchIcon({ count, ink }: { count: number; ink: string }) {
+// A stacked matchbox-card count icon: `count` cards fanned up-and-right, the front
+// card carrying the red match-tip corner and the count numeral. So a player reads
+// the set size at a glance (1 card, 2 stacked, 3 stacked…). Sized by the caller.
+function MatchIcon({
+  count,
+  ink,
+  w,
+  h,
+  fs,
+  off,
+}: {
+  count: number;
+  ink: string;
+  w: number;
+  h: number;
+  fs: number;
+  off: number;
+}) {
+  const tip = Math.round(w * 0.34);
+  const cards = [];
+  // Draw back-to-front so the front card (i=0, bottom-left) paints on top.
+  for (let i = count - 1; i >= 0; i--) {
+    const isFront = i === 0;
+    cards.push(
+      <span
+        key={i}
+        style={{
+          position: 'absolute',
+          left: i * off,
+          bottom: i * off,
+          width: w,
+          height: h,
+          border: `1px solid ${ink}`,
+          borderRadius: 2,
+          background: INK.cardCream,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: fs,
+          ...mono(700),
+        }}
+      >
+        {isFront && (
+          <span style={{ position: 'absolute', top: 0, right: 0, width: tip, height: tip, background: INK.stampRed }} />
+        )}
+        {isFront ? count : ''}
+      </span>,
+    );
+  }
   return (
     <span
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 14,
-        height: 18,
-        border: `1px solid ${ink}`,
-        borderRadius: 2,
-        background: INK.cardCream,
         position: 'relative',
-        fontSize: 8,
-        ...mono(700),
+        display: 'inline-block',
+        width: w + (count - 1) * off,
+        height: h + (count - 1) * off,
       }}
     >
-      <span style={{ position: 'absolute', top: 0, right: 0, width: 4, height: 4, background: INK.stampRed }} />
-      {count}
+      {cards}
     </span>
   );
 }
 
+// The rent ladder: a confident, horizontally-centred ledger with even rhythm.
+// Each row is one line (icon/label · leader · value); type is kept small enough
+// that "FULL SET" and its value never wrap. The caption/label use the serif voice.
 function RentLadder({ set }: { set: SetId }) {
   const theme = SETS[set];
+  const big = theme.size <= 2;
+  const size3 = theme.size === 3;
+  // Sized so all rows (with the stacked icon) fit the fixed ledger area, even for
+  // 4-row sets (Junctions). Small sets get the boldest icons; 3–4-row sets are
+  // compacted so they always clear the art frame above and the footer below.
+  const iconW = big ? 14 : size3 ? 12 : 10;
+  const iconH = big ? 17 : size3 ? 12 : 10;
+  const iconFs = big ? 8 : size3 ? 7 : 6;
+  const off = big ? 2 : size3 ? 1 : 0.75;
+  const textFs = big ? 8 : size3 ? 7 : 6;
+  const rowGap = big ? 2 : 1;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <div style={{ fontSize: 4.8, fontStyle: 'italic', color: '#5b5344' }}>(deeds held of this colour)</div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: rowGap, width: '100%' }}>
+      {/* The stacked count icons already show "deeds held", so the caption only
+          appears on 2-card sets (where there's room); on 3–4-card sets it is
+          dropped so the extra rows always clear the art frame — no per-city art
+          tuning needed. */}
+      {big && (
+        <div style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 5, color: '#5b5344' }}>
+          deeds held of this colour
+        </div>
+      )}
       {theme.rent.map((rent, index) => {
         const count = index + 1;
         const isFullSet = count === theme.size;
@@ -263,19 +341,24 @@ function RentLadder({ set }: { set: SetId }) {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 3,
+              justifyContent: 'space-between',
+              width: '84%',
+              gap: 2,
               color: isFullSet ? INK.stampRed : INK.deepInk,
-              fontWeight: isFullSet ? 700 : 400,
-              fontSize: isFullSet ? 8 : 7,
             }}
           >
-            {isFullSet ? (
-              <span style={{ ...display, fontSize: 7 }}>FULL SET</span>
-            ) : (
-              <MatchIcon count={count} ink={theme.hex} />
-            )}
-            <span style={{ flex: 1, borderBottom: `1px dotted ${INK.agedLine}`, margin: '0 2px', height: 1 }} />
-            <span style={mono(isFullSet ? 700 : 500)}>₹{rent} Cr</span>
+            {/* every row shows its count icon; the full-set row shows the set size
+                (stacked) plus the FULL SET label */}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              <MatchIcon count={count} ink={theme.hex} w={iconW} h={iconH} fs={iconFs} off={off} />
+              {isFullSet && (
+                <span style={{ fontFamily: FONT.serif, fontWeight: 700, fontSize: textFs, letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
+                  FULL SET
+                </span>
+              )}
+            </span>
+            <span style={{ flex: 1, borderBottom: `1px dotted ${INK.agedLine}`, margin: '0 3px', height: 1 }} />
+            <span style={{ ...mono(700), fontSize: textFs, whiteSpace: 'nowrap' }}>₹{rent} Cr</span>
           </div>
         );
       })}
@@ -290,28 +373,29 @@ function PropertyFull({ card }: { card: Extract<Card, { kind: 'property' }> }) {
       <Plate card={card} />
       <ValueBadge value={card.value} ink={theme.hex} />
 
-      {/* title zone (0.06–0.20 H) */}
-      <div style={{ position: 'absolute', top: '6.5%', left: 0, right: 0, textAlign: 'center', padding: '0 24px' }}>
-        <div style={{ ...display, fontSize: 8.5, lineHeight: 1.05, textTransform: 'uppercase' }}>
+      {/* title zone (0.06–0.20 H) — letterpress name (tight) + serif locality sublabel */}
+      <div style={{ position: 'absolute', top: '6.5%', left: 0, right: 0, textAlign: 'center', padding: '0 26px' }}>
+        <div style={{ ...display, letterSpacing: '0', fontSize: 9, lineHeight: 1.02, textTransform: 'uppercase' }}>
           {propertyName(card)}
         </div>
-        <div style={{ fontSize: 5.5, ...mono(500), color: '#5b5344', textTransform: 'uppercase' }}>
+        <div style={{ fontFamily: FONT.serif, fontWeight: 700, fontSize: 5.5, letterSpacing: '0.08em', color: '#5b5344', textTransform: 'uppercase' }}>
           {theme.label}
         </div>
       </div>
 
-      {/* ledger zone (0.52–0.84 H) with a readability scrim */}
+      {/* ledger zone — sits directly on the paper, centred in the upper-middle,
+          clear of the footer band below (which now starts at ~81%). */}
       <div
         style={{
           position: 'absolute',
           top: '52%',
-          left: '5%',
-          right: '5%',
-          height: '32%',
-          background: 'rgba(242,233,210,0.82)',
-          border: `1px solid ${INK.agedLine}`,
-          borderRadius: 3,
-          padding: '3px 4px',
+          left: '6%',
+          right: '6%',
+          bottom: '22%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
         <RentLadder set={card.set} />
@@ -319,7 +403,25 @@ function PropertyFull({ card }: { card: Extract<Card, { kind: 'property' }> }) {
 
       <FooterBand set={card.set} />
       <Seal />
-      <CornerChip value={card.value} />
+      {/* value chip in the footer band's bottom-LEFT corner, vertically centred on
+          the band — same level as the seal, both clear of the centred footer text. */}
+      <div
+        style={{
+          position: 'absolute',
+          left: 3,
+          bottom: `${FOOTER_MID_PCT}%`,
+          transform: 'translateY(50%)',
+          padding: '0.5px 3px',
+          borderRadius: 2,
+          background: INK.gold,
+          color: INK.deepInk,
+          fontSize: 6,
+          whiteSpace: 'nowrap',
+          ...mono(700),
+        }}
+      >
+        ₹{card.value} Cr
+      </div>
     </div>
   );
 }
