@@ -13,8 +13,9 @@ import { ACTIONS, KIRAYA_DESCRIPTOR, SETS } from '@sauda/engine';
 import type { Card, SetId } from '@sauda/engine';
 import { CARD, FONT, INK, cardWidth } from '../design/tokens';
 import type { CardSize } from '../design/tokens';
-import { cardById, propertyName, setLabels } from '../design/cardData';
+import { cardById, plateKey, propertyName, setLabels } from '../design/cardData';
 import { plateUrl } from '../design/plates';
+import { titleInkForPlate } from '../design/titleInk';
 
 export interface CardFaceProps {
   cardId: string;
@@ -64,7 +65,8 @@ function frameStyle(size: CardSize): CSSProperties {
 // --- plate layer -----------------------------------------------------------
 
 function Plate({ card }: { card: Card }) {
-  const url = plateUrl(card.id);
+  // Action cards resolve to a single per-kind plate; others use their own id.
+  const url = plateUrl(plateKey(card));
   if (url) {
     return (
       <img
@@ -122,6 +124,10 @@ function FullFace({ card }: { card: Card }) {
 
 const mono = (weight = 500): CSSProperties => ({ fontFamily: FONT.mono, fontWeight: weight });
 const display: CSSProperties = { fontFamily: FONT.display, fontWeight: 700, letterSpacing: '0.02em' };
+
+// A thin dark halo (the vintage-label "keyline") so cream title text lifts cleanly
+// off a coloured banner. Only applied when the adaptive ink is cream (§3).
+const TITLE_KEYLINE = '0 0 1.5px rgba(20,18,31,0.85), 0 1px 1px rgba(20,18,31,0.55)';
 
 // Footer band height as a single source, shared by FooterBand and the corner marks.
 const FOOTER_HEIGHT_PCT = 19;
@@ -368,6 +374,9 @@ function RentLadder({ set }: { set: SetId }) {
 
 function PropertyFull({ card }: { card: Extract<Card, { kind: 'property' }> }) {
   const theme = SETS[card.set];
+  // §3: pick cream-vs-dark title ink per plate so the name reads on its banner.
+  const titleInk = titleInkForPlate(card.id, card.set);
+  const keyline = titleInk.keyline ? { textShadow: TITLE_KEYLINE } : {};
   return (
     <div style={frameStyle('full')}>
       <Plate card={card} />
@@ -375,10 +384,10 @@ function PropertyFull({ card }: { card: Extract<Card, { kind: 'property' }> }) {
 
       {/* title zone (0.06–0.20 H) — letterpress name (tight) + serif locality sublabel */}
       <div style={{ position: 'absolute', top: '6.5%', left: 0, right: 0, textAlign: 'center', padding: '0 26px' }}>
-        <div style={{ ...display, letterSpacing: '0', fontSize: 9, lineHeight: 1.02, textTransform: 'uppercase' }}>
+        <div style={{ ...display, letterSpacing: '0', fontSize: 9, lineHeight: 1.02, textTransform: 'uppercase', color: titleInk.name, ...keyline }}>
           {propertyName(card)}
         </div>
-        <div style={{ fontFamily: FONT.serif, fontWeight: 700, fontSize: 5.5, letterSpacing: '0.08em', color: '#5b5344', textTransform: 'uppercase' }}>
+        <div style={{ fontFamily: FONT.serif, fontWeight: 700, fontSize: 5.5, letterSpacing: '0.08em', color: titleInk.sub, textTransform: 'uppercase', ...keyline }}>
           {theme.label}
         </div>
       </div>
@@ -430,63 +439,56 @@ function ActionFull({ card }: { card: Extract<Card, { kind: 'action' }> }) {
   const info = ACTIONS[card.action];
   return (
     <div style={frameStyle('full')}>
-      <FallbackPlate set={null} />
-      {/* ACTION ribbon */}
+      <Plate card={card} />
+      {/* ACTION label on the banner — red reads on the gold band (and the fallback) */}
       <div
         style={{
           position: 'absolute',
-          top: 8,
+          top: '8%',
           left: 0,
           right: 0,
           textAlign: 'center',
-          background: INK.stampRed,
-          color: INK.cardCream,
+          color: INK.stampRed,
           fontSize: 6,
-          padding: '1px 0',
           ...mono(700),
-          letterSpacing: '0.15em',
+          letterSpacing: '0.25em',
         }}
       >
         ACTION
       </div>
-      {/* name as a skewed stamp */}
+      {/* name stamp + descriptor + bank, centred in the clear lower cream below the
+          hero art (keeps the hand/bundle vignette uncovered), clear of the footer. */}
       <div
         style={{
           position: 'absolute',
-          top: '28%',
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-          transform: 'rotate(-8deg)',
-          color: INK.stampRed,
-          ...display,
-          fontSize: 12,
-          textTransform: 'uppercase',
-        }}
-      >
-        {info.name}
-      </div>
-      {/* descriptor + bank value on a scrim */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '54%',
-          left: '6%',
-          right: '6%',
-          height: '30%',
-          background: 'rgba(242,233,210,0.86)',
-          border: `1px solid ${INK.agedLine}`,
-          borderRadius: 3,
-          padding: '4px',
+          top: '62%',
+          left: '8%',
+          right: '8%',
+          bottom: '20%',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          gap: 4,
+          alignItems: 'center',
+          gap: 2,
           textAlign: 'center',
         }}
       >
-        <div style={{ fontSize: 7, lineHeight: 1.15 }}>{info.descriptor}</div>
-        <div style={{ fontSize: 6, color: '#5b5344', ...mono(500) }}>or bank as ₹{info.value} Cr</div>
+        <div
+          style={{
+            transform: 'rotate(-8deg)',
+            color: INK.stampRed,
+            ...display,
+            fontSize: 12,
+            lineHeight: 1,
+            textTransform: 'uppercase',
+          }}
+        >
+          {info.name}
+        </div>
+        <div style={{ fontFamily: FONT.serif, fontSize: 7, lineHeight: 1.15 }}>{info.descriptor}</div>
+        <div style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 5.5, color: '#5b5344' }}>
+          or bank as ₹{info.value} Cr
+        </div>
       </div>
       <div style={actionFooterStyle}>SAUDA ACTION PRESS</div>
       <Seal />
@@ -494,20 +496,23 @@ function ActionFull({ card }: { card: Extract<Card, { kind: 'action' }> }) {
   );
 }
 
+// Action footer: same vintage cream/gold band as property (not a dark UI bar).
 const actionFooterStyle: CSSProperties = {
   position: 'absolute',
   left: 0,
   right: 0,
   bottom: 0,
-  height: '12%',
-  background: INK.deepInk,
-  color: INK.cardCream,
+  height: `${FOOTER_HEIGHT_PCT}%`,
+  background: '#E7D3A1',
+  color: INK.deepInk,
+  borderTop: `1px solid ${INK.agedLine}`,
+  borderBottom: `1px solid ${INK.agedLine}`,
+  fontFamily: FONT.serif,
   fontSize: 5,
+  letterSpacing: '0.08em',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  letterSpacing: '0.12em',
-  ...mono(500),
 };
 
 function KirayaFull({ card }: { card: Extract<Card, { kind: 'kiraya' }> }) {

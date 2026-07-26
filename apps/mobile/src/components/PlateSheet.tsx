@@ -5,13 +5,19 @@
  * plates are checked in as they arrive (the tag flips to "plate" with no code change).
  */
 import { CardFace } from './CardFace';
-import { representativeCardIds } from '../design/cardData';
+import { cardById, plateKey, representativeCardIds } from '../design/cardData';
 import { hasPlate } from '../design/plates';
 import { FONT, INK } from '../design/tokens';
 
+// Does a raster plate exist for this card face? (action cards share a per-kind plate)
+function facePlated(id: string): boolean {
+  const card = cardById(id);
+  return card ? hasPlate(plateKey(card)) : false;
+}
+
 export function PlateSheet() {
   const ids = representativeCardIds();
-  const plateCount = ids.filter(hasPlate).length;
+  const plateCount = ids.filter(facePlated).length;
 
   return (
     <div style={{ minHeight: '100vh', background: INK.tableIndigo, color: INK.cardCream, padding: 16 }}>
@@ -29,7 +35,7 @@ export function PlateSheet() {
               <CardFace cardId={id} size="chip" heldCount={1} />
             </div>
             <div style={{ fontFamily: FONT.mono, fontSize: 11 }}>
-              {id} · <span style={{ color: hasPlate(id) ? INK.gold : INK.lavender }}>{hasPlate(id) ? 'plate' : 'fallback'}</span>
+              {id} · <span style={{ color: facePlated(id) ? INK.gold : INK.lavender }}>{facePlated(id) ? 'plate' : 'fallback'}</span>
             </div>
           </div>
         ))}
