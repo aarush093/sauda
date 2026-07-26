@@ -23,10 +23,26 @@ const SUBLABEL_MUTED = '#5b5344';
 
 // Plates whose printed banner colour differs from their set colour, keyed by
 // plate id. Only exceptions live here; everything else uses the set colour.
-// - prop_mumbai_0: the first Marine Drive plate has a light GOLD banner, not the
-//   set's navy, so its title must stay dark. (Later Mumbai art uses navy.)
 const BANNER_HEX_OVERRIDES: Record<string, string> = {
+  // Early "gold band" plates: painted with a gold title band (a thin set-colour
+  // strip on top) before the banner=set-colour convention settled. Dark ink reads
+  // on gold. Owner is deciding whether to regenerate these for palette consistency.
   prop_mumbai_0: INK.gold,
+  prop_kashi_0: INK.gold,
+  prop_jaipur_0: INK.gold,
+  prop_jaipur_1: INK.gold,
+
+  // TEMPORARY palette-lock stragglers — the set colour changed (or the plate was
+  // painted off-colour), so we pin the ACTUAL painted banner until the regen lands.
+  // Remove each entry when its regenerated plate (with the locked banner) arrives.
+  prop_chennai_0: '#C6342B', // painted red; chennai is now chrome yellow
+  prop_chennai_1: '#C6342B',
+  prop_chennai_2: '#C6342B',
+  prop_bangalore_0: '#E3A81C', // painted amber; bangalore is now azure blue
+  prop_bangalore_1: '#E3A81C',
+  prop_bangalore_2: '#E3A81C',
+  prop_newDelhi_0: '#E6A90E', // painted yellow; newDelhi is leaf green
+  prop_newDelhi_1: '#E6A90E',
 };
 
 export interface TitleInk {
