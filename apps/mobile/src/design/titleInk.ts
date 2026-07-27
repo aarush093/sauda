@@ -3,11 +3,11 @@
  *
  * The property title is drawn by the live layer directly on the plate's top
  * banner — and that banner is painted in the set's colour. Dark banners
- * (Purani Dilli brown, Kashi teal, Mumbai navy…) need a CREAM title with a thin
- * dark keyline; bright banners (Kolkata orange, Bangalore amber, a gold band…)
- * read better with the dark letterpress ink. So we choose the ink PER PLATE by
- * WCAG contrast against the banner colour — the title always reads, and we never
- * need a plaque behind it.
+ * (Purani Dilli brown, Mumbai navy, Kolkata royal violet…) need a CREAM title
+ * with a thin dark keyline; bright banners (Chennai chrome yellow, Bangalore
+ * azure, Kashi kesari saffron…) read better with the dark letterpress ink. So we
+ * choose the ink PER PLATE by WCAG contrast against the banner colour — the title
+ * always reads, and we never need a plaque behind it.
  *
  * The banner colour is normally the set colour. A few early plates were painted
  * with a different banner colour; those are listed in BANNER_HEX_OVERRIDES so the
