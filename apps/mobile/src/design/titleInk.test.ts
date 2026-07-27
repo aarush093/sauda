@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { titleInkForPlate } from './titleInk';
+import { titleInkForPlate, inkForBanner, actionBannerHex, ACTION_BANNER_HEX } from './titleInk';
 import { INK } from './tokens';
 
 // §3 title legibility: the ink is chosen per plate by contrast against the banner
@@ -43,5 +43,25 @@ describe('titleInkForPlate', () => {
   it('adds a keyline only when the ink is cream', () => {
     expect(titleInkForPlate(freshPlate, 'kolkata').keyline).toBe(true); // violet -> cream
     expect(titleInkForPlate(freshPlate, 'chennai').keyline).toBe(false); // chrome yellow -> dark
+  });
+});
+
+// §5: the action-card "ACTION" label reuses the same contrast pick on its banner.
+describe('action banner ink', () => {
+  it('gives cream + keyline on the deep-crimson action banner', () => {
+    const ink = inkForBanner(ACTION_BANNER_HEX);
+    expect(ink.name).toBe(INK.cardCream);
+    expect(ink.keyline).toBe(true);
+  });
+
+  it('keeps dark ink on light banners (gold, cream)', () => {
+    expect(inkForBanner(INK.gold).name).toBe(INK.deepInk);
+    expect(inkForBanner(INK.cardCream).name).toBe(INK.deepInk);
+  });
+
+  it('resolves the action banner colour per plate', () => {
+    expect(actionBannerHex('action_vasooli', true)).toBe(ACTION_BANNER_HEX); // crimson on a raster plate
+    expect(actionBannerHex('action_vasooli', false)).toBe(INK.cardCream); // cream on the SVG fallback
+    expect(actionBannerHex('action_kabza', true)).toBe(INK.gold); // legacy gold kabza pinned
   });
 });

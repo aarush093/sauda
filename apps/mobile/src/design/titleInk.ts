@@ -75,13 +75,37 @@ function contrastRatio(hexA: string, hexB: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-// Pick the title inks for a property plate so its name always reads on the banner.
-export function titleInkForPlate(plateId: string, set: SetId): TitleInk {
-  const bannerHex = BANNER_HEX_OVERRIDES[plateId] ?? SETS[set].hex;
+// The core contrast pick: choose the ink family that reads best on a banner colour.
+// Shared by property titles and the action-card label, so the rule lives in one place.
+export function inkForBanner(bannerHex: string): TitleInk {
   const creamReadsBetter =
     contrastRatio(INK.cardCream, bannerHex) >= contrastRatio(INK.deepInk, bannerHex);
   if (creamReadsBetter) {
     return { name: INK.cardCream, sub: INK.gold, keyline: true };
   }
   return { name: INK.deepInk, sub: SUBLABEL_MUTED, keyline: false };
+}
+
+// Pick the title inks for a property plate so its name always reads on the banner.
+export function titleInkForPlate(plateId: string, set: SetId): TitleInk {
+  const bannerHex = BANNER_HEX_OVERRIDES[plateId] ?? SETS[set].hex;
+  return inkForBanner(bannerHex);
+}
+
+// Action cards (§5) share one flat DEEP-CRIMSON banner; the "ACTION" label is drawn
+// on it and picks its ink by the same contrast rule. The legacy gold-banner kabza is
+// pinned until its crimson regen lands (mirrors BANNER_HEX_OVERRIDES); the SVG
+// fallback leaves the banner area cream, where the original red stamp still reads.
+export const ACTION_BANNER_HEX = '#8C1D1D';
+const ACTION_BANNER_OVERRIDES: Record<string, string> = {
+  action_kabza: INK.gold, // remove when the crimson kabza plate lands
+};
+
+// The banner colour behind an action card's "ACTION" label: crimson on a raster
+// plate (or the pinned legacy colour), cream when only the SVG fallback is present.
+export function actionBannerHex(plateId: string, hasRasterPlate: boolean): string {
+  if (!hasRasterPlate) {
+    return INK.cardCream;
+  }
+  return ACTION_BANNER_OVERRIDES[plateId] ?? ACTION_BANNER_HEX;
 }

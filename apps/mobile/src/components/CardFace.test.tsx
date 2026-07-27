@@ -4,9 +4,9 @@
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import { SETS } from '@sauda/engine';
+import { SETS, buildDeck } from '@sauda/engine';
 import { CardFace } from './CardFace';
-import { representativeCardIds } from '../design/cardData';
+import { representativeCardIds, plateKey } from '../design/cardData';
 
 afterEach(cleanup);
 
@@ -38,9 +38,19 @@ describe('CardFace', () => {
     expect(screen.getByText('Cr')).toBeTruthy(); // unit shown consistently
   });
 
-  it('shows an action’s English descriptor next to its desi name', () => {
+  it('shows an action’s descriptor, ACTION label, and engine bank value badge', () => {
     render(<CardFace cardId="action_kabza_0" size="full" />);
     expect(screen.getByText('Kabza')).toBeTruthy();
-    expect(screen.getByText('Steal a complete set')).toBeTruthy();
+    expect(screen.getByText('Steal a complete set')).toBeTruthy(); // effect text
+    expect(screen.getByText('ACTION')).toBeTruthy();
+    expect(screen.getByText('₹5 Cr')).toBeTruthy(); // value badge, from ACTIONS.kabza.value
+  });
+
+  it('shares one plate across every copy of an action kind', () => {
+    const kabza = buildDeck().filter((card) => card.kind === 'action' && card.action === 'kabza');
+    expect(kabza).toHaveLength(2);
+    for (const card of kabza) {
+      expect(plateKey(card)).toBe('action_kabza');
+    }
   });
 });

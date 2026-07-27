@@ -14,8 +14,8 @@ import type { Card, SetId } from '@sauda/engine';
 import { CARD, FONT, INK, cardWidth } from '../design/tokens';
 import type { CardSize } from '../design/tokens';
 import { cardById, plateKey, propertyName, setLabels } from '../design/cardData';
-import { plateUrl } from '../design/plates';
-import { titleInkForPlate } from '../design/titleInk';
+import { plateUrl, hasPlate } from '../design/plates';
+import { titleInkForPlate, inkForBanner, actionBannerHex, ACTION_BANNER_HEX } from '../design/titleInk';
 
 export interface CardFaceProps {
   cardId: string;
@@ -437,10 +437,17 @@ function PropertyFull({ card }: { card: Extract<Card, { kind: 'property' }> }) {
 
 function ActionFull({ card }: { card: Extract<Card, { kind: 'action' }> }) {
   const info = ACTIONS[card.action];
+  // §5: the ACTION label sits on the plate's deep-crimson banner. Pick its ink by
+  // the same contrast rule as property titles — cream + keyline on the crimson band,
+  // and the original red stamp on the gold/fallback banners where it already reads.
+  const bannerInk = inkForBanner(actionBannerHex(plateKey(card), hasPlate(plateKey(card))));
+  const onDarkBanner = bannerInk.name === INK.cardCream;
   return (
     <div style={frameStyle('full')}>
       <Plate card={card} />
-      {/* ACTION label on the banner — red reads on the gold band (and the fallback) */}
+      {/* bank value in the banner circle, from engine data (ACTIONS[kind].value) */}
+      <ValueBadge value={info.value} ink={ACTION_BANNER_HEX} />
+      {/* ACTION label — cream+keyline on crimson, red stamp on the gold/fallback banner */}
       <div
         style={{
           position: 'absolute',
@@ -448,10 +455,11 @@ function ActionFull({ card }: { card: Extract<Card, { kind: 'action' }> }) {
           left: 0,
           right: 0,
           textAlign: 'center',
-          color: INK.stampRed,
+          color: onDarkBanner ? INK.cardCream : INK.stampRed,
           fontSize: 6,
           ...mono(700),
           letterSpacing: '0.25em',
+          ...(onDarkBanner ? { textShadow: TITLE_KEYLINE } : {}),
         }}
       >
         ACTION
