@@ -11,17 +11,17 @@ const freshPlate = 'freshPlate';
 describe('titleInkForPlate', () => {
   it('uses cream ink on dark set banners', () => {
     expect(titleInkForPlate(freshPlate, 'puraniDilli').name).toBe(INK.cardCream); // brown
-    expect(titleInkForPlate(freshPlate, 'kashi').name).toBe(INK.cardCream); // prussian teal
     expect(titleInkForPlate(freshPlate, 'jaipur').name).toBe(INK.cardCream); // magenta
+    expect(titleInkForPlate(freshPlate, 'kolkata').name).toBe(INK.cardCream); // royal violet (v2)
     expect(titleInkForPlate(freshPlate, 'mumbai').name).toBe(INK.cardCream); // prussian navy
     expect(titleInkForPlate(freshPlate, 'newDelhi').name).toBe(INK.cardCream); // leaf green
     expect(titleInkForPlate(freshPlate, 'junction').name).toBe(INK.cardCream); // press-ink black
   });
 
   it('uses dark ink on light/bright set banners', () => {
-    expect(titleInkForPlate(freshPlate, 'kolkata').name).toBe(INK.deepInk); // vermillion orange
-    expect(titleInkForPlate(freshPlate, 'chennai').name).toBe(INK.deepInk); // chrome yellow (was red)
-    expect(titleInkForPlate(freshPlate, 'bangalore').name).toBe(INK.deepInk); // azure sky blue (was amber)
+    expect(titleInkForPlate(freshPlate, 'kashi').name).toBe(INK.deepInk); // kesari saffron (v2)
+    expect(titleInkForPlate(freshPlate, 'chennai').name).toBe(INK.deepInk); // chrome yellow
+    expect(titleInkForPlate(freshPlate, 'bangalore').name).toBe(INK.deepInk); // azure sky blue
     expect(titleInkForPlate(freshPlate, 'utility').name).toBe(INK.deepInk); // sage green
   });
 
@@ -36,10 +36,12 @@ describe('titleInkForPlate', () => {
     expect(titleInkForPlate('prop_chennai_0', 'chennai').name).toBe(INK.cardCream); // still-red banner
     expect(titleInkForPlate('prop_bangalore_0', 'bangalore').name).toBe(INK.deepInk); // still-amber banner
     expect(titleInkForPlate('prop_newDelhi_0', 'newDelhi').name).toBe(INK.deepInk); // still-yellow banner
+    expect(titleInkForPlate('prop_kashi_1', 'kashi').name).toBe(INK.cardCream); // still-teal banner (v2)
+    expect(titleInkForPlate('prop_kolkata_0', 'kolkata').name).toBe(INK.deepInk); // still-vermillion banner (v2)
   });
 
   it('adds a keyline only when the ink is cream', () => {
-    expect(titleInkForPlate(freshPlate, 'puraniDilli').keyline).toBe(true);
-    expect(titleInkForPlate(freshPlate, 'kolkata').keyline).toBe(false);
+    expect(titleInkForPlate(freshPlate, 'kolkata').keyline).toBe(true); // violet -> cream
+    expect(titleInkForPlate(freshPlate, 'chennai').keyline).toBe(false); // chrome yellow -> dark
   });
 });

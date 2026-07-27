@@ -35,7 +35,7 @@ export const INK = {
 
 ### 2.2 Matchbox ink plate — update `SETS` hexes in `theme.ts` (data-only engine edit)
 
-puraniDilli `#8C4A2F` · kashi `#1F7A8C` · jaipur `#C2367E` · kolkata `#D96C2C` · chennai `#C6342B` (shares stampRed deliberately — vintage plates reused inks) · bangalore `#E3A81C` · newDelhi `#2E7D46` · mumbai `#27408B` · junction `#22222A` · utility `#7C8A6E`. Run the full suite after.
+puraniDilli `#8C4A2F` · kashi `#E1780A` (kesari saffron) · jaipur `#C2367E` · kolkata `#5B3E96` (royal violet) · chennai `#EDB20C` (chrome yellow) · bangalore `#4E9FCE` (azure sky blue) · newDelhi `#2E7D46` · mumbai `#27408B` · junction `#22222A` · utility `#7C8A6E`. Locked palette v2 — see DECISIONS.md. Run the full suite after.
 
 ### 2.3 City tone table (art direction, used by the prompt template §4.2)
 

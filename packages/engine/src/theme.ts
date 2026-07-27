@@ -36,15 +36,17 @@ export interface SetTheme {
 
 // §6.1: the ten sets. Keys are the structural SetIds; values are display/gameplay data.
 // Ink hexes updated per M4 §2.2 (data-only). works/est drive the M4 footer band.
-// M4 palette lock (owner, FINAL): every set has a DISTINCT banner colour. Only
+// M4 palette lock (owner, FINAL v2): every set has a DISTINCT banner colour. Only
 // `hex` values are presentation — engine maths never reads them, so changing a
-// colour cannot affect rules or the deck-composition test. chennai → chrome
-// yellow and bangalore → azure sky blue were the two colours changed at lock.
+// colour cannot affect rules or the deck-composition test. v1 changed chennai →
+// chrome yellow and bangalore → azure sky blue; v2 changes kashi → kesari saffron
+// and kolkata → royal violet (Kashi takes the orange/saffron family, Kolkata moves
+// to a blue-leaning violet kept clearly distinct from Jaipur magenta).
 export const SETS: Record<SetId, SetTheme> = {
   puraniDilli: { label: 'Purani Dilli', hex: '#8C4A2F', icon: 'jalebi', size: 2, value: 1, rent: [1, 2], works: 'OLD DELHI DEEDS & JALEBIWORKS, CHANDNI CHOWK', est: 1893 },
-  kashi: { label: 'Kashi Ghats', hex: '#1F7A8C', icon: 'diya', size: 3, value: 1, rent: [1, 2, 3], works: 'KASHI GHAT DEEDS & LAMPWORKS, DASHASHWAMEDH', est: 1888 },
+  kashi: { label: 'Kashi Ghats', hex: '#E1780A', icon: 'diya', size: 3, value: 1, rent: [1, 2, 3], works: 'KASHI GHAT DEEDS & LAMPWORKS, DASHASHWAMEDH', est: 1888 }, // kesari saffron (M4 palette v2; was #1F7A8C teal)
   jaipur: { label: 'Jaipur', hex: '#C2367E', icon: 'jharokha', size: 3, value: 2, rent: [1, 2, 4], works: 'PINK CITY DEEDS & GEMWORKS, JOHARI BAZAAR', est: 1901 },
-  kolkata: { label: 'Kolkata', hex: '#D96C2C', icon: 'tram', size: 3, value: 2, rent: [1, 3, 5], works: 'TRAM CITY DEEDS & PRESSWORKS, COLLEGE STREET', est: 1907 },
+  kolkata: { label: 'Kolkata', hex: '#5B3E96', icon: 'tram', size: 3, value: 2, rent: [1, 3, 5], works: 'TRAM CITY DEEDS & PRESSWORKS, COLLEGE STREET', est: 1907 }, // royal violet (M4 palette v2; was #D96C2C vermillion)
   chennai: { label: 'Chennai', hex: '#EDB20C', icon: 'filterCoffee', size: 3, value: 3, rent: [2, 3, 6], works: 'COROMANDEL DEEDS & FILTERWORKS, T. NAGAR', est: 1912 }, // chrome yellow (M4 lock; was #C6342B red)
   bangalore: { label: 'Bangalore', hex: '#4E9FCE', icon: 'circuit', size: 3, value: 3, rent: [2, 4, 6], works: 'GARDEN CITY DEEDS & CIRCUITWORKS, MG ROAD', est: 1921 }, // azure sky blue (M4 lock; was #E3A81C amber)
   newDelhi: { label: 'New Delhi', hex: '#2E7D46', icon: 'pillar', size: 3, value: 4, rent: [2, 4, 7], works: 'CAPITAL DEEDS & STONEWORKS, LODHI ROAD', est: 1931 },

@@ -43,6 +43,11 @@ const BANNER_HEX_OVERRIDES: Record<string, string> = {
   prop_bangalore_2: '#E3A81C',
   prop_newDelhi_0: '#E6A90E', // painted yellow; newDelhi is leaf green
   prop_newDelhi_1: '#E6A90E',
+  prop_kashi_1: '#1F7A8C', // painted teal; kashi is now kesari saffron (palette v2)
+  prop_kashi_2: '#1F7A8C',
+  prop_kolkata_0: '#D96C2C', // painted vermillion; kolkata is now royal violet (palette v2)
+  prop_kolkata_1: '#D96C2C',
+  prop_kolkata_2: '#D96C2C',
 };
 
 export interface TitleInk {
