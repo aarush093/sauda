@@ -212,6 +212,12 @@ sauda/
   7. Hard only: track discard pile + played cards to estimate remaining NAHI CHALEGA / KABZA in circulation.
 - Simulator target (M2 gate): over 1,000 seeded games, HeuristicBot(Medium) beats RandomBot ≥ 90%; average game ≤ 25 turns; zero invariant violations.
 
+### 8.4 Munshi (in-game advisor)
+- An **offline, read-only** advisor (vintage-clerk framing, "Munshi"). **3 uses per game, flat** — no ads, purchases, earn-loops, or carry-over between games (no FOMO mechanics, project law).
+- Available at any decision the human owns (their turn, the payment sheet, an interrupt window they answer). One use = evaluate the current legal options → highlight the recommended one (the existing gold legal-action glow) + one short templated line of reasoning. Advisory only; the highlight clears on the next action.
+- **Shares the HeuristicBot brain:** the ranking cascade is extracted into a single `recommend(observation, legalActions, difficulty)` that both the bot and Munshi consume, so they can never disagree. Reasoning lines are a small template set keyed by *why* the top move ranked first (completes / denies / protects a set · best value · preserves a counter). No free-form generation, no LLM — fully offline and deterministic (same state → same recommendation). Structurally read-only: it consumes an observation + `legalActions` and returns a recommendation; it has no access to `reduce` or `GameState`.
+- Ships as `@sauda/bots` `Munshi` (module + unit tests); UI wiring is M4b.
+
 ## 9. ML pipeline (`ml/`, milestone M6 — build only after M5 ships)
 
 Goal: a learned "Boss" difficulty, trained by self-play, running **on-device**.

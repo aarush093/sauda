@@ -131,6 +131,12 @@ screen; only sheets (payment, discard, hand-off) slide over it.
   simply *alive*; off-turn it visibly sleeps. Exception: a card that can legally
   interrupt off-turn (NAHI CHALEGA) stays awake and gently glows when an interrupt
   window opens.
+- **Munshi (advisor):** a small **Munshi chip** sits beside the player avatar showing
+  remaining uses (3 per game, flat — no refills, no carry-over). Tapping it, at any
+  decision you own (your turn, the payment sheet, an interrupt prompt), highlights the
+  recommended legal option with the **existing gold legal-action glow** — no new visual
+  language — and shows one brief line of counsel in the ticker. Advisory only; the
+  highlight clears on your next action. When the 3 uses are spent, the chip greys out.
 
 ---
 

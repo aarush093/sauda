@@ -2,3 +2,4 @@
 export * from './types';
 export * from './random-bot';
 export * from './heuristic-bot';
+export * from './munshi';

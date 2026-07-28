@@ -45,127 +45,160 @@ export class HeuristicBot implements Bot {
     this.name = `HeuristicBot(${difficulty})`;
   }
 
+  // The bot's move IS the shared recommendation's action — the same brain Munshi
+  // uses, so bot and advisor can never disagree. Deterministic: the RNG is unused.
   chooseAction(observation: Observation, legalActions: Action[], _rng: Rng): Action {
-    // Responding to an interrupt? Those actions are only present in that window.
-    if (legalActions.some((a) => a.type.startsWith('RESPOND_'))) {
-      return this.respond(observation, legalActions);
-    }
-    return this.takeTurn(observation, legalActions);
+    return recommend(observation, legalActions, this.difficulty).action;
+  }
+}
+
+// Why the top move ranked first — this keys Munshi's one-line reasoning template.
+export type MunshiReason =
+  | 'completesSet'
+  | 'deniesSet'
+  | 'protectsSet'
+  | 'bestValue'
+  | 'preservesCounter'
+  | 'generic';
+
+export interface Recommendation {
+  action: Action; // one of the offered legalActions — the move to play/highlight
+  reason: MunshiReason;
+}
+
+// THE SHARED BRAIN (§8.3). Ranks the offered legalActions with the exact same
+// priority cascade the bot has always used, and returns the top move plus the
+// reason it won. Both HeuristicBot and Munshi consume this, so they are
+// structurally incapable of disagreeing. Deterministic — no RNG, no mutation.
+export function recommend(
+  observation: Observation,
+  legalActions: Action[],
+  difficulty: Difficulty,
+): Recommendation {
+  // Responding to an interrupt? Those actions are only present in that window.
+  if (legalActions.some((a) => a.type.startsWith('RESPOND_'))) {
+    return recommendResponse(observation, legalActions, difficulty);
+  }
+  return recommendTurn(observation, legalActions);
+}
+
+// --- responding to a charge/steal against me -----------------------------
+function recommendResponse(
+  observation: Observation,
+  legalActions: Action[],
+  difficulty: Difficulty,
+): Recommendation {
+  // §4.5: payment is delegated to the engine — legalActions gives us the one
+  // RESPOND_PAY already computed by suggestPayment. We never build it ourselves.
+  const pay = legalActions.find((a) => a.type === 'RESPOND_PAY');
+  if (pay) {
+    return { action: pay, reason: 'bestValue' };
   }
 
-  // --- responding to a charge/steal against me -----------------------------
-  private respond(observation: Observation, legalActions: Action[]): Action {
-    // §4.5: payment is delegated to the engine — legalActions gives us the one
-    // RESPOND_PAY already computed by suggestPayment. We never build it ourselves.
-    const pay = legalActions.find((a) => a.type === 'RESPOND_PAY');
-    if (pay) {
-      return pay;
-    }
-
-    // Placing a received wildcard: put it where it best advances a set.
-    const placements = legalActions.filter((a) => a.type === 'RESPOND_PLACE_RECEIVED');
-    if (placements.length > 0) {
-      return bestByPlacement(observation, placements, (a) => a.set);
-    }
-
-    // NAHI CHALEGA vs comply.
-    const nahi = legalActions.find((a) => a.type === 'RESPOND_NAHI_CHALEGA');
-    const allow = legalActions.find((a) => a.type === 'RESPOND_ALLOW');
-    if (nahi && allow && this.worthCancelling(observation)) {
-      return nahi;
-    }
-    return allow ?? legalActions[0]!;
+  // Placing a received wildcard: put it where it best advances a set.
+  const placements = legalActions.filter((a) => a.type === 'RESPOND_PLACE_RECEIVED');
+  if (placements.length > 0) {
+    return { action: bestByPlacement(observation, placements, (a) => a.set), reason: 'generic' };
   }
 
-  private worthCancelling(observation: Observation): boolean {
-    const threat = observation.interrupt;
-    if (!threat) {
-      return false;
-    }
-    return estimateThreatLoss(observation, threat) >= NAHI_THRESHOLD[this.difficulty];
+  // NAHI CHALEGA vs comply.
+  const nahi = legalActions.find((a) => a.type === 'RESPOND_NAHI_CHALEGA');
+  const allow = legalActions.find((a) => a.type === 'RESPOND_ALLOW');
+  if (nahi && allow && worthCancelling(observation, difficulty)) {
+    return { action: nahi, reason: 'protectsSet' };
+  }
+  // Comply. If we still hold a NAHI, we're deliberately saving it for a bigger threat.
+  return { action: allow ?? legalActions[0]!, reason: nahi ? 'preservesCounter' : 'generic' };
+}
+
+function worthCancelling(observation: Observation, difficulty: Difficulty): boolean {
+  const threat = observation.interrupt;
+  if (!threat) {
+    return false;
+  }
+  return estimateThreatLoss(observation, threat) >= NAHI_THRESHOLD[difficulty];
+}
+
+// --- a normal turn -------------------------------------------------------
+function recommendTurn(observation: Observation, legalActions: Action[]): Recommendation {
+  // 1. Win the moment we can.
+  const declare = legalActions.find((a) => a.type === 'DECLARE_WIN');
+  if (declare) {
+    return { action: declare, reason: 'completesSet' };
+  }
+  const draw = legalActions.find((a) => a.type === 'DRAW');
+  if (draw) {
+    return { action: draw, reason: 'generic' };
   }
 
-  // --- a normal turn -------------------------------------------------------
-  private takeTurn(observation: Observation, legalActions: Action[]): Action {
-    // 1. Win the moment we can.
-    const declare = legalActions.find((a) => a.type === 'DECLARE_WIN');
-    if (declare) {
-      return declare;
-    }
-    const draw = legalActions.find((a) => a.type === 'DRAW');
-    if (draw) {
-      return draw;
-    }
-
-    // Discard step: never throw away a property/wildcard we are building with.
-    const discards = legalActions.filter((a) => a.type === 'DISCARD');
-    if (discards.length > 0 && discards.length === legalActions.length) {
-      return chooseDiscard(discards);
-    }
-
-    // The whole game is a race to 3 sets, so building comes first (§8.3 #1, #2).
-
-    // 0. Free win: shuffle a wildcard between groups to complete a set at no play cost.
-    const rearrangeToComplete = bestRearrangeToComplete(observation, legalActions);
-    if (rearrangeToComplete) {
-      return rearrangeToComplete;
-    }
-
-    // 1. A placement that completes a set is the best move there is.
-    const placements = legalActions.filter((a) => a.type === 'PLACE_PROPERTY');
-    const completing = placements.find((a) => placementCompletesSet(observation, a.set));
-    if (completing) {
-      return completing;
-    }
-
-    // 2. KABZA hands us a whole complete set at once — a huge shortcut.
-    const kabza = bestKabza(legalActions);
-    if (kabza) {
-      return kabza;
-    }
-
-    // 2b. HAATH KI SAFAI: steal a single property that advances a set of mine.
-    const steal = bestHaath(observation, legalActions);
-    if (steal) {
-      return steal;
-    }
-
-    // 3. Push property toward the set closest to completion.
-    const placement = bestPlacement(observation, placements);
-    if (placement) {
-      return placement;
-    }
-
-    // 4. Out of property to place → dig for more with AAGE BADHO (draw 2).
-    const dig = legalActions.find(
-      (a) => a.type === 'PLAY_ACTION' && a.params.action === 'aageBadho',
-    );
-    if (dig) {
-      return dig;
-    }
-
-    // 5. Only now spend plays on a profitable charge (money, and denial).
-    const charge = bestCharge(observation, legalActions);
-    if (charge) {
-      return charge;
-    }
-
-    // 6. Buildings add rent once a set is complete.
-    const build = legalActions.find(
-      (a) => a.type === 'PLAY_ACTION' && (a.params.action === 'makaan' || a.params.action === 'haveli'),
-    );
-    if (build) {
-      return build;
-    }
-
-    // 7. Nothing left to build → bank a money card as a cash reserve to pay rent.
-    const bankReserve = bankAMoneyCard(legalActions);
-    if (bankReserve) {
-      return bankReserve;
-    }
-
-    return legalActions.find((a) => a.type === 'END_TURN') ?? legalActions[0]!;
+  // Discard step: never throw away a property/wildcard we are building with.
+  const discards = legalActions.filter((a) => a.type === 'DISCARD');
+  if (discards.length > 0 && discards.length === legalActions.length) {
+    return { action: chooseDiscard(discards), reason: 'bestValue' };
   }
+
+  // The whole game is a race to 3 sets, so building comes first (§8.3 #1, #2).
+
+  // 0. Free win: shuffle a wildcard between groups to complete a set at no play cost.
+  const rearrangeToComplete = bestRearrangeToComplete(observation, legalActions);
+  if (rearrangeToComplete) {
+    return { action: rearrangeToComplete, reason: 'completesSet' };
+  }
+
+  // 1. A placement that completes a set is the best move there is.
+  const placements = legalActions.filter((a) => a.type === 'PLACE_PROPERTY');
+  const completing = placements.find((a) => placementCompletesSet(observation, a.set));
+  if (completing) {
+    return { action: completing, reason: 'completesSet' };
+  }
+
+  // 2. KABZA hands us a whole complete set at once — a huge shortcut (and denies it).
+  const kabza = bestKabza(legalActions);
+  if (kabza) {
+    return { action: kabza, reason: 'deniesSet' };
+  }
+
+  // 2b. HAATH KI SAFAI: steal a single property that advances a set of mine.
+  const steal = bestHaath(observation, legalActions);
+  if (steal) {
+    return { action: steal, reason: 'generic' };
+  }
+
+  // 3. Push property toward the set closest to completion.
+  const placement = bestPlacement(observation, placements);
+  if (placement) {
+    return { action: placement, reason: 'generic' };
+  }
+
+  // 4. Out of property to place → dig for more with AAGE BADHO (draw 2).
+  const dig = legalActions.find(
+    (a) => a.type === 'PLAY_ACTION' && a.params.action === 'aageBadho',
+  );
+  if (dig) {
+    return { action: dig, reason: 'generic' };
+  }
+
+  // 5. Only now spend plays on a profitable charge (money, and denial).
+  const charge = bestCharge(observation, legalActions);
+  if (charge) {
+    return { action: charge, reason: 'bestValue' };
+  }
+
+  // 6. Buildings add rent once a set is complete.
+  const build = legalActions.find(
+    (a) => a.type === 'PLAY_ACTION' && (a.params.action === 'makaan' || a.params.action === 'haveli'),
+  );
+  if (build) {
+    return { action: build, reason: 'generic' };
+  }
+
+  // 7. Nothing left to build → bank a money card as a cash reserve to pay rent.
+  const bankReserve = bankAMoneyCard(legalActions);
+  if (bankReserve) {
+    return { action: bankReserve, reason: 'bestValue' };
+  }
+
+  return { action: legalActions.find((a) => a.type === 'END_TURN') ?? legalActions[0]!, reason: 'generic' };
 }
 
 // --- shared read helpers ---------------------------------------------------
