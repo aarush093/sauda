@@ -28,26 +28,19 @@ const BANNER_HEX_OVERRIDES: Record<string, string> = {
   // strip on top) before the banner=set-colour convention settled. Dark ink reads
   // on gold. Owner is deciding whether to regenerate these for palette consistency.
   prop_mumbai_0: INK.gold,
-  prop_kashi_0: INK.gold,
+  prop_kashi_0: INK.gold, // saffron recolour dropped was non-compliant (washed-out, deep hero); pending
   prop_jaipur_0: INK.gold,
   prop_jaipur_1: INK.gold,
 
-  // TEMPORARY palette-lock stragglers — the set colour changed (or the plate was
-  // painted off-colour), so we pin the ACTUAL painted banner until the regen lands.
-  // Remove each entry when its regenerated plate (with the locked banner) arrives.
-  prop_chennai_0: '#C6342B', // painted red; chennai is now chrome yellow
-  prop_chennai_1: '#C6342B',
-  prop_chennai_2: '#C6342B',
+  // TEMPORARY palette-lock stragglers — the set colour changed, so we pin the ACTUAL
+  // painted banner until the regen lands. Remove each entry when its regenerated plate
+  // (with the locked banner) arrives. kashi_1/2, kolkata_0/1/2 and chennai_0/1/2 landed
+  // (palette v2 recolours) and were removed here.
   prop_bangalore_0: '#E3A81C', // painted amber; bangalore is now azure blue
   prop_bangalore_1: '#E3A81C',
   prop_bangalore_2: '#E3A81C',
   prop_newDelhi_0: '#E6A90E', // painted yellow; newDelhi is leaf green
   prop_newDelhi_1: '#E6A90E',
-  prop_kashi_1: '#1F7A8C', // painted teal; kashi is now kesari saffron (palette v2)
-  prop_kashi_2: '#1F7A8C',
-  prop_kolkata_0: '#D96C2C', // painted vermillion; kolkata is now royal violet (palette v2)
-  prop_kolkata_1: '#D96C2C',
-  prop_kolkata_2: '#D96C2C',
 };
 
 export interface TitleInk {

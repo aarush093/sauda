@@ -33,11 +33,17 @@ describe('titleInkForPlate', () => {
   });
 
   it('pins the actual banner for palette-lock stragglers (override)', () => {
-    expect(titleInkForPlate('prop_chennai_0', 'chennai').name).toBe(INK.cardCream); // still-red banner
     expect(titleInkForPlate('prop_bangalore_0', 'bangalore').name).toBe(INK.deepInk); // still-amber banner
     expect(titleInkForPlate('prop_newDelhi_0', 'newDelhi').name).toBe(INK.deepInk); // still-yellow banner
-    expect(titleInkForPlate('prop_kashi_1', 'kashi').name).toBe(INK.cardCream); // still-teal banner (v2)
-    expect(titleInkForPlate('prop_kolkata_0', 'kolkata').name).toBe(INK.deepInk); // still-vermillion banner (v2)
+  });
+
+  it('recoloured kashi/kolkata/chennai plates follow the set colour now (overrides removed)', () => {
+    expect(titleInkForPlate('prop_kashi_1', 'kashi').name).toBe(INK.deepInk); // kesari saffron -> dark
+    expect(titleInkForPlate('prop_kashi_2', 'kashi').name).toBe(INK.deepInk);
+    expect(titleInkForPlate('prop_kolkata_0', 'kolkata').name).toBe(INK.cardCream); // royal violet -> cream
+    expect(titleInkForPlate('prop_kolkata_2', 'kolkata').name).toBe(INK.cardCream);
+    expect(titleInkForPlate('prop_chennai_0', 'chennai').name).toBe(INK.deepInk); // chrome yellow -> dark
+    expect(titleInkForPlate('prop_chennai_2', 'chennai').name).toBe(INK.deepInk);
   });
 
   it('adds a keyline only when the ink is cream', () => {
