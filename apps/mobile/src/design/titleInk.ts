@@ -93,13 +93,13 @@ export function titleInkForPlate(plateId: string, set: SetId): TitleInk {
 }
 
 // Action cards (§5) share one flat DEEP-CRIMSON banner; the "ACTION" label is drawn
-// on it and picks its ink by the same contrast rule. The legacy gold-banner kabza is
-// pinned until its crimson regen lands (mirrors BANNER_HEX_OVERRIDES); the SVG
-// fallback leaves the banner area cream, where the original red stamp still reads.
+// on it and picks its ink by the same contrast rule (cream + keyline on crimson).
+// The SVG fallback leaves the banner area cream, where the original red stamp reads.
 export const ACTION_BANNER_HEX = '#8C1D1D';
-const ACTION_BANNER_OVERRIDES: Record<string, string> = {
-  action_kabza: INK.gold, // remove when the crimson kabza plate lands
-};
+
+// Empty now that kabza uses the crimson banner; retained for any future action plate
+// painted off the crimson spec (mirrors BANNER_HEX_OVERRIDES for properties).
+const ACTION_BANNER_OVERRIDES: Record<string, string> = {};
 
 // The banner colour behind an action card's "ACTION" label: crimson on a raster
 // plate (or the pinned legacy colour), cream when only the SVG fallback is present.

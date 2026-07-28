@@ -62,6 +62,6 @@ describe('action banner ink', () => {
   it('resolves the action banner colour per plate', () => {
     expect(actionBannerHex('action_vasooli', true)).toBe(ACTION_BANNER_HEX); // crimson on a raster plate
     expect(actionBannerHex('action_vasooli', false)).toBe(INK.cardCream); // cream on the SVG fallback
-    expect(actionBannerHex('action_kabza', true)).toBe(INK.gold); // legacy gold kabza pinned
+    expect(actionBannerHex('action_kabza', true)).toBe(ACTION_BANNER_HEX); // kabza now a crimson action plate
   });
 });
