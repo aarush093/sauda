@@ -24,10 +24,12 @@ describe('CardFace', () => {
     }
   });
 
-  it('shows a property’s name, ledger rent and full-set value from the engine', () => {
+  it('shows a property’s set title, locality sublabel, ledger rent and full-set value', () => {
     // mumbai (size 2) — full-set rent is ₹8; the FULL SET row and value come from theme.
     render(<CardFace cardId="prop_mumbai_0" size="full" />);
-    expect(screen.getByText('Marine Drive')).toBeTruthy();
+    // Item B: the LARGE title is the set/city name; the small sublabel is the locality.
+    expect(screen.getByText(SETS.mumbai.label)).toBeTruthy(); // "Mumbai" — set title
+    expect(screen.getByText('Marine Drive')).toBeTruthy(); // locality sublabel
     expect(screen.getByText('FULL SET')).toBeTruthy();
     expect(screen.getByText(`₹${SETS.mumbai.rent[SETS.mumbai.rent.length - 1]} Cr`)).toBeTruthy();
   });

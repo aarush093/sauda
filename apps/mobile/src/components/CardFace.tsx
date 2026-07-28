@@ -147,26 +147,31 @@ const valueChipStyle: CSSProperties = {
   ...mono(700),
 };
 
-// Value badge: sits INSIDE the plate's printed circle (top-left), "₹N Cr" on a
-// single line in small type — never spilling past the circle or the card border.
+// Value badge: a SOLID cream seal that completely covers the plate's printed
+// top-left circle (the empty placeholder disc the art leaves for the value).
+// Owner item C: the disc is fully opaque and sized a touch LARGER than that
+// printed circle. Measured across all 38 plates, the printed circles sit slightly
+// RIGHT of centre (~(20–25, 18–21) card units, up to ~28 wide; Junctions' is the
+// largest/most offset). A 36-unit disc centred ~(23,20) covers the worst case, so
+// no painted ring ever peeks around it.
 function ValueBadge({ value, ink }: { value: number; ink: string }) {
   return (
     <div
       style={{
         position: 'absolute',
-        top: 9,
-        left: 10,
-        width: 20,
-        height: 20,
+        top: 2,
+        left: 5,
+        width: 36,
+        height: 36,
         borderRadius: '50%',
-        background: INK.cardCream,
+        background: INK.cardCream, // opaque hex — no alpha, so the printed disc is hidden
         border: `1.5px solid ${ink}`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         whiteSpace: 'nowrap',
         letterSpacing: '-0.03em',
-        fontSize: 5.5,
+        fontSize: 7,
         ...mono(700),
       }}
     >
@@ -348,7 +353,8 @@ function RentLadder({ set }: { set: SetId }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              width: '84%',
+              width: '90%', // rides inside the ledger slip; wide enough that the big
+              // 2-card "FULL SET ₹N Cr" row never overflows the slip's edge
               gap: 2,
               color: isFullSet ? INK.stampRed : INK.deepInk,
             }}
@@ -372,6 +378,23 @@ function RentLadder({ set }: { set: SetId }) {
   );
 }
 
+// The "ledger slip": a worn aged-cream panel pasted behind the rent ladder, like a
+// ruled parchment slip on a vintage deed. Owner call (DECISIONS.md) — a UNIFORM,
+// subtle ~93%-opaque wash that REVERSES the old no-wash law now that plate QC is
+// complete: robustness (the rent rows always read over any art) now beats the
+// zero-scrim purity that art QC no longer needs. Same treatment on every property
+// card — never per-plate tuning.
+const ledgerSlipStyle: CSSProperties = {
+  width: '96%',
+  boxSizing: 'border-box',
+  padding: '4px 6px',
+  background: 'rgba(238,229,205,0.93)', // aged cream at ~93% — the art only whispers through
+  border: `1px solid ${INK.agedLine}`,
+  borderRadius: 3,
+  // a pasted-slip lift plus a faint inner age-stain for the worn, aged edge
+  boxShadow: '0 1px 2px rgba(20,18,31,0.20), inset 0 0 5px rgba(150,120,60,0.14)',
+};
+
 function PropertyFull({ card }: { card: Extract<Card, { kind: 'property' }> }) {
   const theme = SETS[card.set];
   // §3: pick cream-vs-dark title ink per plate so the name reads on its banner.
@@ -382,18 +405,23 @@ function PropertyFull({ card }: { card: Extract<Card, { kind: 'property' }> }) {
       <Plate card={card} />
       <ValueBadge value={card.value} ink={theme.hex} />
 
-      {/* title zone (0.06–0.20 H) — letterpress name (tight) + serif locality sublabel */}
-      <div style={{ position: 'absolute', top: '6.5%', left: 0, right: 0, textAlign: 'center', padding: '0 26px' }}>
+      {/* title zone (0.06–0.20 H). Owner item B: the LARGE letterpress title is the
+          set / city name (MUMBAI, KOLKATA, JUNCTIONS…); the small serif sublabel is
+          the individual locality (Marine Drive, T. Nagar…). Swapped on every card.
+          Inset from the left so it clears the enlarged value badge (item C) — the two
+          read as an emblem + title header, and cream titles never vanish onto the
+          cream badge. */}
+      <div style={{ position: 'absolute', top: '6.5%', left: 43, right: 5, textAlign: 'center' }}>
         <div style={{ ...display, letterSpacing: '0', fontSize: 9, lineHeight: 1.02, textTransform: 'uppercase', color: titleInk.name, ...keyline }}>
-          {propertyName(card)}
+          {theme.label}
         </div>
         <div style={{ fontFamily: FONT.serif, fontWeight: 700, fontSize: 5.5, letterSpacing: '0.08em', color: titleInk.sub, textTransform: 'uppercase', ...keyline }}>
-          {theme.label}
+          {propertyName(card)}
         </div>
       </div>
 
-      {/* ledger zone — sits directly on the paper, centred in the upper-middle,
-          clear of the footer band below (which now starts at ~81%). */}
+      {/* ledger zone — the rent ladder rides on the aged-cream ledger slip (item A),
+          centred in the upper-middle, clear of the footer band below (~81%). */}
       <div
         style={{
           position: 'absolute',
@@ -407,7 +435,9 @@ function PropertyFull({ card }: { card: Extract<Card, { kind: 'property' }> }) {
           alignItems: 'center',
         }}
       >
-        <RentLadder set={card.set} />
+        <div style={ledgerSlipStyle}>
+          <RentLadder set={card.set} />
+        </div>
       </div>
 
       <FooterBand set={card.set} />
