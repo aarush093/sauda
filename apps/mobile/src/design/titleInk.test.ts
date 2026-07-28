@@ -27,23 +27,19 @@ describe('titleInkForPlate', () => {
 
   it('keeps dark ink on the early gold-band plates (override)', () => {
     expect(titleInkForPlate('prop_mumbai_0', 'mumbai').name).toBe(INK.deepInk);
-    expect(titleInkForPlate('prop_kashi_0', 'kashi').name).toBe(INK.deepInk);
     expect(titleInkForPlate('prop_jaipur_0', 'jaipur').name).toBe(INK.deepInk);
     expect(titleInkForPlate('prop_jaipur_1', 'jaipur').name).toBe(INK.deepInk);
   });
 
-  it('pins the actual banner for palette-lock stragglers (override)', () => {
-    expect(titleInkForPlate('prop_bangalore_0', 'bangalore').name).toBe(INK.deepInk); // still-amber banner
-    expect(titleInkForPlate('prop_newDelhi_0', 'newDelhi').name).toBe(INK.deepInk); // still-yellow banner
-  });
-
-  it('recoloured kashi/kolkata/chennai plates follow the set colour now (overrides removed)', () => {
-    expect(titleInkForPlate('prop_kashi_1', 'kashi').name).toBe(INK.deepInk); // kesari saffron -> dark
+  it('recoloured plates follow the set colour now their overrides are removed', () => {
+    expect(titleInkForPlate('prop_kashi_0', 'kashi').name).toBe(INK.deepInk); // kesari saffron -> dark
     expect(titleInkForPlate('prop_kashi_2', 'kashi').name).toBe(INK.deepInk);
     expect(titleInkForPlate('prop_kolkata_0', 'kolkata').name).toBe(INK.cardCream); // royal violet -> cream
-    expect(titleInkForPlate('prop_kolkata_2', 'kolkata').name).toBe(INK.cardCream);
     expect(titleInkForPlate('prop_chennai_0', 'chennai').name).toBe(INK.deepInk); // chrome yellow -> dark
-    expect(titleInkForPlate('prop_chennai_2', 'chennai').name).toBe(INK.deepInk);
+    expect(titleInkForPlate('prop_bangalore_0', 'bangalore').name).toBe(INK.deepInk); // azure -> dark
+    expect(titleInkForPlate('prop_bangalore_2', 'bangalore').name).toBe(INK.deepInk);
+    expect(titleInkForPlate('prop_newDelhi_0', 'newDelhi').name).toBe(INK.cardCream); // leaf green -> cream
+    expect(titleInkForPlate('prop_newDelhi_2', 'newDelhi').name).toBe(INK.cardCream);
   });
 
   it('adds a keyline only when the ink is cream', () => {
