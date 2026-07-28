@@ -11,6 +11,7 @@ import { legalActions } from './legal';
 import { checkInvariants } from './invariants';
 import { observe } from './observe';
 import { kirayaFor } from './sets';
+import { payableCards } from './payment';
 import { makeState, step } from './testkit';
 import type { Action } from './actions';
 
@@ -87,6 +88,42 @@ describe('plays (§4.4 step 3)', () => {
     const next = step(state, { type: 'PLACE_PROPERTY', cardId: 'prop_mumbai_0', set: 'mumbai' });
     expect(next.players[0]!.properties.mumbai[0]!.cards).toContain('prop_mumbai_0');
     expect(next.playsRemaining).toBe(2);
+  });
+});
+
+describe('banked actions are money forever (rule audit #1)', () => {
+  it('banks NAHI CHALEGA for its ₹ value; once banked it can never be played for its effect', () => {
+    // NAHI CHALEGA (value ₹4) banked from hand → it leaves the hand for the bank.
+    let state = makeState({ players: [{ hand: ['action_nahiChalega_0'] }, {}], phase: 'playing', playsRemaining: 3 });
+    state = step(state, { type: 'BANK_CARD', cardId: 'action_nahiChalega_0' });
+    expect(state.players[0]!.bank).toContain('action_nahiChalega_0');
+    expect(state.players[0]!.hand).toHaveLength(0); // no longer in hand
+    expect(state.playsRemaining).toBe(2); // banking cost one play
+    expect(observe(state, 0).myBankTotal).toBe(4); // banked at its ₹ value
+
+    // A banked NAHI is money: it can NEVER respond to a charge again. Charge a player
+    // whose only NAHI CHALEGA sits in the bank, not the hand.
+    let charged = makeState({
+      players: [
+        { hand: ['action_vasooli_0'] },
+        { bank: ['action_nahiChalega_0', 'money_1_0'] }, // NAHI banked + a ₹1 note
+      ],
+      currentPlayerIndex: 0,
+      playsRemaining: 3,
+    });
+    charged = step(charged, { type: 'PLAY_ACTION', cardId: 'action_vasooli_0', params: { action: 'vasooli', target: 1 } });
+
+    // No RESPOND_NAHI_CHALEGA is offered — the effect is unreachable once banked
+    // (legalActions reads NAHI from the hand only). Comply is the only response.
+    const responses = legalActions(charged, 1);
+    expect(responses.some((a) => a.type === 'RESPOND_NAHI_CHALEGA')).toBe(false);
+    expect(responses.some((a) => a.type === 'RESPOND_ALLOW')).toBe(true);
+
+    // It survives ONLY as payment material: after complying, the banked NAHI is a
+    // payable card (money), never an effect.
+    charged = step(charged, { type: 'RESPOND_ALLOW' });
+    expect(payableCards(charged, 1)).toContain('action_nahiChalega_0');
+    expect(checkInvariants(charged).ok).toBe(true);
   });
 });
 
