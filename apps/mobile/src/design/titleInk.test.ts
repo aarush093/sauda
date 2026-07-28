@@ -25,21 +25,17 @@ describe('titleInkForPlate', () => {
     expect(titleInkForPlate(freshPlate, 'utility').name).toBe(INK.deepInk); // sage green
   });
 
-  it('keeps dark ink on the early gold-band plates (override)', () => {
-    expect(titleInkForPlate('prop_mumbai_0', 'mumbai').name).toBe(INK.deepInk);
-    expect(titleInkForPlate('prop_jaipur_0', 'jaipur').name).toBe(INK.deepInk);
-    expect(titleInkForPlate('prop_jaipur_1', 'jaipur').name).toBe(INK.deepInk);
-  });
-
-  it('recoloured plates follow the set colour now their overrides are removed', () => {
+  it('every plate follows its set colour now — BANNER_HEX_OVERRIDES is empty', () => {
+    // Former gold-band early editions, regenerated to solid set-colour banners:
+    expect(titleInkForPlate('prop_mumbai_0', 'mumbai').name).toBe(INK.cardCream); // navy -> cream
+    expect(titleInkForPlate('prop_jaipur_0', 'jaipur').name).toBe(INK.cardCream); // magenta -> cream
+    expect(titleInkForPlate('prop_jaipur_1', 'jaipur').name).toBe(INK.cardCream);
+    // Palette v2 recolours (one per family):
     expect(titleInkForPlate('prop_kashi_0', 'kashi').name).toBe(INK.deepInk); // kesari saffron -> dark
-    expect(titleInkForPlate('prop_kashi_2', 'kashi').name).toBe(INK.deepInk);
     expect(titleInkForPlate('prop_kolkata_0', 'kolkata').name).toBe(INK.cardCream); // royal violet -> cream
     expect(titleInkForPlate('prop_chennai_0', 'chennai').name).toBe(INK.deepInk); // chrome yellow -> dark
     expect(titleInkForPlate('prop_bangalore_0', 'bangalore').name).toBe(INK.deepInk); // azure -> dark
-    expect(titleInkForPlate('prop_bangalore_2', 'bangalore').name).toBe(INK.deepInk);
     expect(titleInkForPlate('prop_newDelhi_0', 'newDelhi').name).toBe(INK.cardCream); // leaf green -> cream
-    expect(titleInkForPlate('prop_newDelhi_2', 'newDelhi').name).toBe(INK.cardCream);
   });
 
   it('adds a keyline only when the ink is cream', () => {

@@ -21,17 +21,14 @@ import { INK } from './tokens';
 // the existing card-face sublabel colour).
 const SUBLABEL_MUTED = '#5b5344';
 
-// Plates whose printed banner colour differs from their set colour, keyed by
-// plate id. Only exceptions live here; everything else uses the set colour.
-const BANNER_HEX_OVERRIDES: Record<string, string> = {
-  // Early "gold band" plates: painted with a gold title band (a thin set-colour
-  // strip on top) before the banner=set-colour convention settled. Dark ink reads
-  // on gold. Owner is deciding whether to regenerate these for palette consistency.
-  // (All palette-lock stragglers have now landed as v2 recolours and been removed.)
-  prop_mumbai_0: INK.gold,
-  prop_jaipur_0: INK.gold,
-  prop_jaipur_1: INK.gold,
-};
+// Plates whose printed banner colour differs from their set colour, keyed by plate
+// id. Only exceptions would live here; everything else uses the set colour.
+//
+// EMPTY — every property plate now carries its locked set-colour banner (M4a art
+// complete). The last three gold-band early editions (mumbai_0, jaipur_0, jaipur_1)
+// were regenerated to solid navy/magenta banners, so their pins were removed. Kept
+// as the extension point should any future plate ever be painted off-convention.
+const BANNER_HEX_OVERRIDES: Record<string, string> = {};
 
 export interface TitleInk {
   name: string; // colour for the property name
