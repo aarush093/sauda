@@ -55,4 +55,12 @@ describe('CardFace', () => {
       expect(plateKey(card)).toBe('action_kabza');
     }
   });
+
+  it('shares one plate across every copy of a money denomination (item F wiring)', () => {
+    const ones = buildDeck().filter((card) => card.kind === 'money' && card.value === 1);
+    expect(ones).toHaveLength(6); // six ₹1 notes...
+    for (const card of ones) {
+      expect(plateKey(card)).toBe('money_1'); // ...all share one plate, keyed by denomination not per-copy id
+    }
+  });
 });

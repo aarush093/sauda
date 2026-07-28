@@ -609,7 +609,41 @@ function WildcardFull({ card }: { card: Extract<Card, { kind: 'wildcard' }> }) {
   );
 }
 
+// A small denomination numeral for one of the note plate's four corner circles.
+// Bare number (the ₹ reads from the painted note) — also keeps it from colliding
+// with the large centre "₹N" when tests look up the denomination by text.
+function MoneyCorner({ value, corner }: { value: number; corner: CSSProperties }) {
+  return (
+    <div style={{ position: 'absolute', ...corner, fontSize: 7, ...mono(700), color: INK.deepInk }}>
+      {value}
+    </div>
+  );
+}
+
 function MoneyFull({ card }: { card: Extract<Card, { kind: 'money' }> }) {
+  // Note-plate present (money_<value>.webp): the painting carries an empty centre
+  // cartouche + four empty corner circles, and the live layer drops ONLY the
+  // numerals in, like real currency (IBM Plex Mono). Corner positions are best-fit
+  // to the incoming note design and can be nudged when the art lands — same
+  // discipline as the property value badge.
+  if (hasPlate(plateKey(card))) {
+    return (
+      <div style={frameStyle('full')}>
+        <Plate card={card} />
+        {/* centre cartouche: the large denomination */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'baseline', justifyContent: 'center', ...mono(700), color: INK.deepInk }}>
+          <span style={{ fontSize: 28 }}>₹{card.value}</span>
+          <span style={{ fontSize: 11, marginLeft: 2, ...mono(500) }}>Cr</span>
+        </div>
+        {/* four corner circles */}
+        <MoneyCorner value={card.value} corner={{ top: 10, left: 10 }} />
+        <MoneyCorner value={card.value} corner={{ top: 10, right: 10 }} />
+        <MoneyCorner value={card.value} corner={{ bottom: 10, left: 10 }} />
+        <MoneyCorner value={card.value} corner={{ bottom: 10, right: 10 }} />
+      </div>
+    );
+  }
+  // Fallback (no note art yet): the current plain gold-ruled note design.
   const big = card.value === 10;
   return (
     <div style={{ ...frameStyle('full'), border: `2px solid ${INK.gold}` }}>

@@ -13,11 +13,14 @@ export function cardById(id: string): Card | undefined {
   return BY_ID.get(id);
 }
 
-// The filename stem for a card's art plate. Action cards share ONE plate per kind
-// (e.g. every KABZA copy → action_kabza.webp); other cards key by their own id.
-// So the owner generates one painting per action kind, not one per copy.
+// The filename stem for a card's art plate. Two kinds share ONE plate across their
+// copies so the owner paints once, not per copy: action cards key by kind
+// (every KABZA copy → action_kabza.webp) and money notes key by denomination
+// (every ₹5 note → money_5.webp). Everything else keys by its own id.
 export function plateKey(card: Card): string {
-  return card.kind === 'action' ? `action_${card.action}` : card.id;
+  if (card.kind === 'action') return `action_${card.action}`;
+  if (card.kind === 'money') return `money_${card.value}`;
+  return card.id;
 }
 
 // The display name of a property card (from theme, by set + index).
