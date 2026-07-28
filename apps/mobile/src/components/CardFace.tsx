@@ -9,7 +9,7 @@
  * No rules live here; values come from theme/engine data.
  */
 import type { CSSProperties } from 'react';
-import { ACTIONS, KIRAYA_DESCRIPTOR, SETS } from '@sauda/engine';
+import { ACTIONS, KIRAYA_DESCRIPTOR, KIRAYA_NAME, SETS } from '@sauda/engine';
 import type { Card, SetId } from '@sauda/engine';
 import { CARD, FONT, INK, cardWidth } from '../design/tokens';
 import type { CardSize } from '../design/tokens';
@@ -565,7 +565,7 @@ function KirayaFull({ card }: { card: Extract<Card, { kind: 'kiraya' }> }) {
         ))}
       </div>
       <div style={{ position: 'absolute', top: '24%', left: 0, right: 0, textAlign: 'center', ...display, fontSize: 12, color: INK.stampRed }}>
-        KIRAYA
+        {KIRAYA_NAME}
       </div>
       <div style={{ position: 'absolute', top: '46%', left: '8%', right: '8%', textAlign: 'center', fontSize: 7 }}>
         <div>{isWild ? 'One rival pays' : 'All rivals pay'}</div>
@@ -700,7 +700,7 @@ function ChipFace({ card, heldCount }: { card: Card; heldCount: number | undefin
 
 function miniLabel(card: Card): string {
   if (card.kind === 'action') return ACTIONS[card.action].name.slice(0, 3).toUpperCase();
-  if (card.kind === 'kiraya') return 'KIR';
+  if (card.kind === 'kiraya') return KIRAYA_NAME.slice(0, 3).toUpperCase(); // "LAG"
   if (card.kind === 'wildcard') return 'WILD';
   return '?';
 }

@@ -94,12 +94,18 @@ export const ACTIONS: Record<ActionKind, ActionTheme> = {
   aageBadho: { name: 'Aage Badho', descriptor: 'Draw 2 cards', value: 1, count: 10 },
   makaan: { name: 'Makaan', descriptor: 'Add ₹3 Cr rent to a complete set', value: 3, count: 3 },
   haveli: { name: 'Haveli', descriptor: 'Add ₹4 Cr rent (needs a makaan first)', value: 4, count: 2 },
-  dugna: { name: 'Dugna!', descriptor: 'Double a rent charge', value: 1, count: 2 },
+  dugna: { name: 'Dugna Lagaan', descriptor: 'Double a rent charge', value: 1, count: 2 },
 };
 
 // KIRAYA cards are modelled separately (§6.4) but shown to players, so they get an
 // English descriptor too.
 export const KIRAYA_DESCRIPTOR = 'Charge rent for a colour you own';
+
+// The rent card's player-facing NAME (owner rename: was "KIRAYA"). Like the action
+// names it is a desi proper noun; the descriptor above stays clean English. Kept as
+// a single constant so the name lives only here — the structural card kind stays
+// `kiraya`, so IDs, plate files and the deck are unaffected.
+export const KIRAYA_NAME = 'LAGAAN';
 
 // One property-wildcard type: which groups it may join, its value, and how many exist.
 export interface WildcardTheme {

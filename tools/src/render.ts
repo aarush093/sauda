@@ -2,7 +2,7 @@
  * Turns engine data into readable terminal text for `pnpm play`. All player-facing
  * wording comes from the engine's theme (§2 — no third-party names anywhere).
  */
-import { ACTIONS, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
+import { ACTIONS, KIRAYA_NAME, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
 import type { Action, GameEvent, Observation, SetId } from '@sauda/engine';
 
 const CARD_BY_ID = new Map(buildDeck().map((card) => [card.id, card]));
@@ -25,7 +25,7 @@ export function describeCard(id: string): string {
     case 'action':
       return ACTIONS[card.action].name;
     case 'kiraya':
-      return card.colors === 'ANY' ? 'KIRAYA (wild)' : `KIRAYA (${setLabels(card.colors)})`;
+      return card.colors === 'ANY' ? `${KIRAYA_NAME} (wild)` : `${KIRAYA_NAME} (${setLabels(card.colors)})`;
     case 'money':
       return `₹${card.value} Cr`;
     default:
@@ -53,7 +53,7 @@ export function describeAction(action: Action): string {
     case 'PLAY_ACTION':
       return describePlayAction(action);
     case 'PLAY_KIRAYA':
-      return `Play KIRAYA on ${SETS[action.color].label}${action.dugnaCardIds.length ? ` ×${2 ** action.dugnaCardIds.length}` : ''}${action.target !== null ? ` → P${action.target}` : ' (all)'}`;
+      return `Play ${KIRAYA_NAME} on ${SETS[action.color].label}${action.dugnaCardIds.length ? ` ×${2 ** action.dugnaCardIds.length}` : ''}${action.target !== null ? ` → P${action.target}` : ' (all)'}`;
     case 'RESPOND_NAHI_CHALEGA':
       return 'Play NAHI CHALEGA! (cancel)';
     case 'RESPOND_ALLOW':

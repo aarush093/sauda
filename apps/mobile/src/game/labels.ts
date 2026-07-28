@@ -3,7 +3,7 @@
  * readable strings. This is NOT game logic — it only reads the engine's theme.
  * All rules live in @sauda/engine.
  */
-import { ACTIONS, KIRAYA_DESCRIPTOR, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
+import { ACTIONS, KIRAYA_DESCRIPTOR, KIRAYA_NAME, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
 import type { Action, GameEvent, SetId } from '@sauda/engine';
 
 const CARD_BY_ID = new Map(buildDeck().map((card) => [card.id, card]));
@@ -42,7 +42,7 @@ export function describeCard(id: string): string {
     case 'action':
       return ACTIONS[card.action].name;
     case 'kiraya':
-      return card.colors === 'ANY' ? 'KIRAYA (wild)' : `KIRAYA (${labels(card.colors)})`;
+      return card.colors === 'ANY' ? `${KIRAYA_NAME} (wild)` : `${KIRAYA_NAME} (${labels(card.colors)})`;
     case 'money':
       return `₹${card.value} Cr`;
     default:
