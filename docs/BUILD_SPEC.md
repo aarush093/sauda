@@ -48,7 +48,7 @@ Each player has: **Hand** (secret), **Bank** (face-up money pile), **Property ar
    - You may play 0 plays if you wish.
    - **Free (not a play):** rearranging your own wildcards between your color groups, any number of times, but only on your own turn.
    - **Never a play:** NAHI CHALEGA (see §5) — it can be played at any time, even off-turn, and never consumes a play.
-4. **Discard:** if you hold more than 7 cards, discard down to 7 (to the discard pile). Turn ends.
+4. **Discard:** if you hold more than 7 cards, discard down to 7. Overflow discards go **face-down to the bottom of the draw pile** (owner house rule, in the order discarded) — not to the discard pile, so they recycle into future draws. Turn ends.
 
 ### 4.5 Payments (the heart of the game — implement precisely)
 - You may **only pay with cards on the table** (bank and/or property area). Cards can never move from any hand to pay, and paid cards never enter any hand.

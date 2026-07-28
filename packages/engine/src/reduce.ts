@@ -147,7 +147,10 @@ function handleEndTurn(draft: GameState, events: GameEvent[]): Result<void> {
   return ok(undefined);
 }
 
-// §4.4 step 4: discard down to the hand limit, then the turn ends.
+// §4.4 step 4: discard down to the hand limit, then the turn ends. Owner house rule:
+// the overflow cards go FACE-DOWN to the BOTTOM of the draw pile (not the discard
+// pile), so they recycle into future draws. Top of a pile is the last element, so the
+// bottom is the front — unshift buries each discard under the pile, in discard order.
 function handleDiscard(draft: GameState, cardId: CardId, events: GameEvent[]): Result<void> {
   if (draft.pendingInterrupts.length > 0) {
     return fail('INTERRUPT_OPEN', 'resolve the pending action first');
@@ -159,7 +162,7 @@ function handleDiscard(draft: GameState, cardId: CardId, events: GameEvent[]): R
   if (!removeId(player.hand, cardId)) {
     return fail('CARD_NOT_IN_HAND', `card ${cardId} is not in your hand`);
   }
-  draft.discardPile.push(cardId);
+  draft.drawPile.unshift(cardId); // face-down to the BOTTOM of the draw pile (front)
   events.push({ type: 'CardsDiscarded', player: player.id, cardIds: [cardId] });
   if (player.hand.length <= draft.rules.handLimit) {
     startNextTurn(draft, events);

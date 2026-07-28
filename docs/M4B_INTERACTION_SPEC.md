@@ -231,9 +231,10 @@ now?" before the player asks.
 - **Turn end:** "End turn" (thumb-right, always in the same spot) is enabled whenever
   ending is legal. With plays remaining it asks nothing — pips make the tradeoff
   visible. If hand > 7, tapping it enters **discard mode**: the fan lifts, a counter
-  reads "Discard 2", tapped cards fly to the discard pile; the same button (now
-  "Done") finishes. Reversible until Done: tap a discarded-this-turn card on the pile
-  to take it back.
+  reads "Discard 2", tapped cards fly **face-down under the draw pile** (owner house
+  rule — they recycle to the bottom) and the **draw-pile count ticks up**; the same
+  button (now "Done") finishes. Reversible until Done: a this-turn discard can be
+  tapped back into the hand.
 - **Win:** the engine detects; the UI declares only on the winner's own turn — the
   final placement resolves, half a beat, then the M4c stamp-slam ("SAUDA!") over the
   table, then the results screen. Never interrupt an opponent's turn with a win.

@@ -9,6 +9,7 @@ import { createGame } from './setup';
 import { reduce } from './reduce';
 import { legalActions } from './legal';
 import { checkInvariants } from './invariants';
+import { observe } from './observe';
 import { kirayaFor } from './sets';
 import { makeState, step } from './testkit';
 import type { Action } from './actions';
@@ -114,15 +115,16 @@ describe('rearrange wildcards (#17)', () => {
   });
 });
 
-describe('discard to the hand limit (#15)', () => {
-  it('forces discards down to 7 before the turn passes', () => {
+describe('discard to the hand limit (#15) — overflow recycles under the draw pile', () => {
+  it('forces discards down to 7, buries them face-down under the draw pile, and passes the turn', () => {
     const nineCards = [
       'money_1_0', 'money_1_1', 'money_1_2', 'money_1_3', 'money_1_4',
       'money_2_0', 'money_2_1', 'money_2_2', 'money_2_3',
     ];
     let state = makeState({ players: [{ hand: nineCards }, {}], phase: 'playing' });
+    const drawBefore = state.drawPile.length;
     state = step(state, { type: 'END_TURN' });
-    expect(state.phase).toBe('awaitingDiscard');
+    expect(state.phase).toBe('awaitingDiscard'); // hand > 7 blocks the turn from ending
 
     state = step(state, { type: 'DISCARD', cardId: 'money_1_0' });
     expect(state.phase).toBe('awaitingDiscard'); // still 8 in hand
@@ -131,6 +133,21 @@ describe('discard to the hand limit (#15)', () => {
     expect(state.players[0]!.hand).toHaveLength(7);
     expect(state.phase).toBe('awaitingDraw');
     expect(state.currentPlayerIndex).toBe(1); // turn passed
+
+    // Owner house rule: overflow goes FACE-DOWN to the BOTTOM of the draw pile (front),
+    // in discard order — NOT to the discard pile.
+    expect(state.discardPile).not.toContain('money_1_0');
+    expect(state.discardPile).not.toContain('money_1_1');
+    expect(state.drawPile).toHaveLength(drawBefore + 2);
+    expect(state.drawPile.slice(0, 2)).toEqual(['money_1_1', 'money_1_0']); // last discarded at the very bottom
+
+    // Hidden info: an opponent's view never exposes the buried cards' identity or
+    // order — only the draw-pile COUNT reflects them.
+    const opponentView = observe(state, 1);
+    const asJson = JSON.stringify(opponentView);
+    expect(asJson).not.toContain('money_1_0');
+    expect(asJson).not.toContain('money_1_1');
+    expect(opponentView.drawPileCount).toBe(state.drawPile.length);
   });
 });
 

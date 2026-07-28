@@ -113,3 +113,7 @@ One line per rules interpretation, deviation, or engineering choice worth rememb
 ## M4b — Interaction spec
 
 - **M4b/M4c interaction spec LOCKED (owner-approved):** `docs/M4B_INTERACTION_SPEC.md` (v1.0) added verbatim as the interaction-side twin of `M4_DESIGN_SPEC.md` — reference only, NOT implemented yet (M4a art still in progress).
+
+## Rules — owner house rules (post-M4 freeze)
+
+- **Overflow discards recycle under the draw pile (owner house rule):** end-of-turn hand-overflow discards (§4.4 step 4) go **FACE-DOWN to the BOTTOM of the draw pile** (in discard order), not the shared discard pile — so they recycle into future draws. The phase is unchanged: still mandatory + blocking (`handleEndTurn` forces `awaitingDiscard` while hand > `handLimit`), player still chooses the cards. **Scope guard:** ONLY end-of-turn overflow changes destination; played action cards still go to the discard pile, payments unchanged. First engine change since the M4 freeze — `reduce.ts` `handleDiscard` now `drawPile.unshift(cardId)` (top = last element, so front = bottom). **Hidden info preserved:** `observe` exposes only `drawPileCount`, never the buried cards' identity or order (asserted in `turn.test` #15). **Sims:** 1000-game bot sim unchanged vs baseline (95.8% win, 20.27 avg turns, longest 39, 0 violations, 0 unfinished — bots rarely reach the discard step, so self-play is unperturbed); the 500-game property run terminates < 500 turns with zero invariant violations (no deck-recycling infinite-game risk). `BUILD_SPEC §4.4` + `M4B_INTERACTION_SPEC §8` updated.
