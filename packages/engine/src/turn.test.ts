@@ -253,4 +253,126 @@ describe('kiraya rules (§5)', () => {
     });
     expect(kirayaFor(incomplete, 0, 'mumbai', 0)).toBe(3);
   });
+
+  // B14 (VERIFY-ledger): LAGAAN target scope. A wild (ANY, targeted) LAGAAN charges ONE
+  // chosen opponent; a colour-pair (targeted:false) charges ALL opponents. The engine
+  // rejects the wrong target shape for each with BAD_TARGET (reduce.ts:513–526).
+  it('wild LAGAAN charges ONE chosen opponent; rejects a null/self target (B14)', () => {
+    const state = makeState({
+      players: [
+        { hand: ['kiraya_any_0'], properties: { jaipur: { cards: ['prop_jaipur_0'] } } },
+        {},
+        {},
+      ],
+      currentPlayerIndex: 0,
+      playsRemaining: 3,
+    });
+    // A wild LAGAAN must name exactly one opponent — null and self are rejected.
+    const noTarget = reduce(state, { type: 'PLAY_KIRAYA', cardId: 'kiraya_any_0', color: 'jaipur', target: null, dugnaCardIds: [] });
+    expect(noTarget.ok).toBe(false);
+    if (!noTarget.ok) {
+      expect(noTarget.error.code).toBe('BAD_TARGET');
+    }
+    const selfTarget = reduce(state, { type: 'PLAY_KIRAYA', cardId: 'kiraya_any_0', color: 'jaipur', target: 0, dugnaCardIds: [] });
+    expect(selfTarget.ok).toBe(false);
+    if (!selfTarget.ok) {
+      expect(selfTarget.error.code).toBe('BAD_TARGET');
+    }
+    // A valid opponent target opens exactly ONE charge, on that opponent.
+    const good = reduce(state, { type: 'PLAY_KIRAYA', cardId: 'kiraya_any_0', color: 'jaipur', target: 1, dugnaCardIds: [] });
+    expect(good.ok).toBe(true);
+    if (good.ok) {
+      expect(good.value.state.pendingInterrupts).toHaveLength(1);
+      expect(good.value.state.pendingInterrupts[0]!.target).toBe(1);
+    }
+  });
+
+  it('paired LAGAAN charges ALL opponents; rejects a named target (B14)', () => {
+    const state = makeState({
+      players: [
+        { hand: ['kiraya_jaipur_kolkata_0'], properties: { jaipur: { cards: ['prop_jaipur_0'] } } },
+        {},
+        {},
+      ],
+      currentPlayerIndex: 0,
+      playsRemaining: 3,
+    });
+    // A colour-pair LAGAAN may not single out a target.
+    const named = reduce(state, { type: 'PLAY_KIRAYA', cardId: 'kiraya_jaipur_kolkata_0', color: 'jaipur', target: 1, dugnaCardIds: [] });
+    expect(named.ok).toBe(false);
+    if (!named.ok) {
+      expect(named.error.code).toBe('BAD_TARGET');
+    }
+    // target:null opens one charge PER opponent — both P1 and P2 here.
+    const all = reduce(state, { type: 'PLAY_KIRAYA', cardId: 'kiraya_jaipur_kolkata_0', color: 'jaipur', target: null, dugnaCardIds: [] });
+    expect(all.ok).toBe(true);
+    if (all.ok) {
+      expect(all.value.state.pendingInterrupts.map((frame) => frame.target)).toEqual([1, 2]);
+    }
+  });
+});
+
+// B19 (VERIFY-ledger): building-placement prerequisites, exercised through reduce (NOT
+// pre-placed state). MAKAAN needs a COMPLETE set and never Junctions/Utilities; HAVELI
+// needs that complete set to ALREADY hold a MAKAAN (reduce.ts:337–367).
+describe('building placement (§5, B19)', () => {
+  it('MAKAAN is rejected on an incomplete set (NO_MAKAAN_SPOT)', () => {
+    const state = makeState({
+      players: [{ hand: ['action_makaan_0'], properties: { mumbai: { cards: ['prop_mumbai_0'] } } }, {}],
+      currentPlayerIndex: 0,
+      playsRemaining: 3,
+    });
+    const result = reduce(state, { type: 'PLAY_ACTION', cardId: 'action_makaan_0', params: { action: 'makaan', set: 'mumbai' } });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('NO_MAKAAN_SPOT');
+    }
+  });
+
+  it('MAKAAN cannot go on Junctions even when complete (NO_BUILDING_HERE)', () => {
+    const state = makeState({
+      players: [
+        {
+          hand: ['action_makaan_0'],
+          properties: { junction: { cards: ['prop_junction_0', 'prop_junction_1', 'prop_junction_2', 'prop_junction_3'] } },
+        },
+        {},
+      ],
+      currentPlayerIndex: 0,
+      playsRemaining: 3,
+    });
+    const result = reduce(state, { type: 'PLAY_ACTION', cardId: 'action_makaan_0', params: { action: 'makaan', set: 'junction' } });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('NO_BUILDING_HERE');
+    }
+  });
+
+  it('HAVELI needs a MAKAAN on the set first (NO_HAVELI_SPOT)', () => {
+    const state = makeState({
+      players: [{ hand: ['action_haveli_0'], properties: { mumbai: { cards: ['prop_mumbai_0', 'prop_mumbai_1'] } } }, {}],
+      currentPlayerIndex: 0,
+      playsRemaining: 3,
+    });
+    const result = reduce(state, { type: 'PLAY_ACTION', cardId: 'action_haveli_0', params: { action: 'haveli', set: 'mumbai' } });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('NO_HAVELI_SPOT');
+    }
+  });
+
+  it('MAKAAN then HAVELI both attach to a complete set via reduce', () => {
+    let state = makeState({
+      players: [
+        { hand: ['action_makaan_0', 'action_haveli_0'], properties: { mumbai: { cards: ['prop_mumbai_0', 'prop_mumbai_1'] } } },
+        {},
+      ],
+      currentPlayerIndex: 0,
+      playsRemaining: 3,
+    });
+    state = step(state, { type: 'PLAY_ACTION', cardId: 'action_makaan_0', params: { action: 'makaan', set: 'mumbai' } });
+    state = step(state, { type: 'PLAY_ACTION', cardId: 'action_haveli_0', params: { action: 'haveli', set: 'mumbai' } });
+    expect(state.players[0]!.properties.mumbai[0]!.buildings).toEqual(['action_makaan_0', 'action_haveli_0']);
+    expect(checkInvariants(state).ok).toBe(true);
+  });
 });

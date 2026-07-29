@@ -248,3 +248,33 @@ describe('DUGNA stacking (#11)', () => {
     expect(result.ok).toBe(false);
   });
 });
+
+// C4 (VERIFY-ledger): a charge against a player with NOTHING on the table does NOT
+// auto-resolve — the engine still opens a payment step whose sole legal move is an
+// empty RESPOND_PAY, which settles the interrupt (reduce.ts:635–639, 737–765).
+describe('zero-payable charge (C4)', () => {
+  it('opens a payment step on an empty table; an empty RESPOND_PAY resolves it', () => {
+    // P1 has nothing on the table (empty bank + no properties).
+    let state = makeState({
+      players: [{ hand: ['action_vasooli_0'] }, {}],
+      currentPlayerIndex: 0,
+      playsRemaining: 3,
+    });
+    state = step(state, { type: 'PLAY_ACTION', cardId: 'action_vasooli_0', params: { action: 'vasooli', target: 1 } });
+    state = step(state, { type: 'RESPOND_ALLOW' });
+
+    // No auto-skip: the standing charge advances to a payment step, and the only legal
+    // move is a single empty RESPOND_PAY (there is nothing to hand over).
+    expect(state.pendingInterrupts[0]!.status).toBe('awaitingPayment');
+    expect(legalActions(state, 1)).toEqual([{ type: 'RESPOND_PAY', cardIds: [] }]);
+
+    // Submitting it settles the interrupt with a no-card Paid event; nothing leaks.
+    const result = reduce(state, { type: 'RESPOND_PAY', cardIds: [] });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.state.pendingInterrupts).toHaveLength(0);
+      expect(result.value.events.some((e) => e.type === 'Paid' && e.cardIds.length === 0)).toBe(true);
+      expect(checkInvariants(result.value.state).ok).toBe(true);
+    }
+  });
+});
