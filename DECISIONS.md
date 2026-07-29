@@ -113,6 +113,7 @@ One line per rules interpretation, deviation, or engineering choice worth rememb
 ## M4b — Interaction spec
 
 - **M4b/M4c interaction spec LOCKED (owner-approved):** `docs/M4B_INTERACTION_SPEC.md` (v1.0) added verbatim as the interaction-side twin of `M4_DESIGN_SPEC.md` — reference only, NOT implemented yet (M4a art still in progress).
+- **M4b spec set LOCKED at v1.2 (owner-approved) — reference-only until M4b starts:** added verbatim `docs/M4B_STATE_MATRIX.md` (every player-facing situation × UI treatment + visual-constancy laws + the six-question VERIFY ledger) and `docs/M4B_SPEC_v1.2.md` (amendment layer superseding v1.0 §5 — tap→centre-stage→rail model, locked screens, universal wildcards, Learn screen: Niyam + Munshi ki Salah). One correction: STATE_MATRIX §2 column-key now reads "spec v1.2 direction" (was v1.1). `M4B_INTERACTION_SPEC.md` (v1.0) already committed — left as-is; note the on-disk Downloads copy has since drifted (adds the Munshi chip paragraph + the face-down-under-draw-pile overflow wording that matches the current house rule), so a future refresh of the v1.0 base may be warranted. Nothing implemented yet.
 
 ## Rules — owner house rules (post-M4 freeze)
 
