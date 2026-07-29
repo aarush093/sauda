@@ -27,9 +27,10 @@ describe('App', () => {
   it('starts a game and shows the board', () => {
     render(<App />);
     fireEvent.click(screen.getByText('Start game'));
-    // The Table renders the play-table skeleton straight from the engine observation
-    // (the hand is now a visual CardFace fan, so we assert a stable structural label).
-    expect(screen.getByText('centre stage')).toBeTruthy();
+    // The Table renders the play table straight from the engine observation. Assert the
+    // turn chip — a stable label shown on the human's turn (solo mode seats the human at
+    // index 0, whose turn it is at game start).
+    expect(screen.getByText('Your turn')).toBeTruthy();
     expect(errorSpy).not.toHaveBeenCalled();
   });
 });

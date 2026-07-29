@@ -16,7 +16,6 @@ import type { SeatConfig } from '../game/store';
 import { CardBack } from './CardBack';
 import { CardFace } from './CardFace';
 import { StagedCard } from './StagedCard';
-import { inkForBanner } from '../design/titleInk';
 import { STAGE, INK, SHADOW, FONT, CARD } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
@@ -49,7 +48,6 @@ function MiniGroup({ set, group, rent, width }: { set: SetId; group: PropertyGro
   const theme = SETS[set];
   const complete = isSetComplete(group);
   const height = Math.round(width * 1.4);
-  const bannerInk = inkForBanner(theme.hex).name;
   return (
     <div
       style={{
@@ -65,11 +63,10 @@ function MiniGroup({ set, group, rent, width }: { set: SetId; group: PropertyGro
       }}
       title={`${theme.label} ${group.cards.length}/${theme.size}`}
     >
-      <div style={{ height: '44%', background: theme.hex, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: Math.round(width * 0.3), color: bannerInk }}>
-          {theme.label[0]}
-        </span>
-      </div>
+      {/* A2: mini-cards are a coloured banner strip + count badge ONLY — no letter
+          monogram. The set colour is the identity; the readable name lives on the full
+          CardFace, never at this size. */}
+      <div style={{ height: '44%', background: theme.hex }} />
       {complete && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: STAGE.accentGold }} />}
       <div style={{ position: 'absolute', bottom: 1, left: 0, right: 0, textAlign: 'center', fontFamily: FONT.mono, fontWeight: 700, fontSize: Math.round(width * 0.22), color: INK.deepInk }}>
         {complete ? '✓' : `${group.cards.length}/${theme.size}`}
@@ -396,26 +393,10 @@ export function Board({
         </div>
       </div>
 
-      {/* centre stage (30%) — reserved; Phase 2 fills it with the tapped card + rail */}
-      <div style={zone(30, { display: 'flex', alignItems: 'center', justifyContent: 'center' })}>
-        <div
-          style={{
-            width: '70%',
-            height: '80%',
-            border: `1px dashed ${STAGE.scrimSheet}`,
-            borderRadius: 10,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: 0.4,
-            fontFamily: FONT.serif,
-            fontStyle: 'italic',
-            fontSize: 12,
-          }}
-        >
-          centre stage
-        </div>
-      </div>
+      {/* centre stage (30%) — open felt at rest. The tapped hand card's overlay (rendered
+          at the end of this component) rises here with its rail; Phase-2 turn-flow adds the
+          Declare SAUDA! button here when a win is available (A11). */}
+      <div style={zone(30, { display: 'flex', alignItems: 'center', justifyContent: 'center' })} />
 
       {/* my area (38%) — the largest zone; sleeps when it isn't my turn */}
       <div style={zone(38, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
