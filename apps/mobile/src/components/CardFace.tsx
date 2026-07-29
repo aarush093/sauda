@@ -609,10 +609,11 @@ function WildcardFull({ card }: { card: Extract<Card, { kind: 'wildcard' }> }) {
   );
 }
 
-// A denomination numeral centred in one of the note plate's four corner circles.
-// Bare number (the ₹ reads from the painted note) — and distinct from the centre
-// "₹N" so a text lookup of the denomination finds exactly one match. `at` is the
-// circle's centre (% of the card); translate(-50%,-50%) centres the glyph on it.
+// A denomination numeral OPTICALLY centred in one of the note plate's four painted
+// rosette circles. ONE shared rule for any digit count (1 or 2 digits): a flex box
+// centred on the circle's TRUE measured centre (`at`) via translate(-50%,-50%), with
+// the glyph centred inside it (flex + lineHeight:1). Bare number (the ₹ reads from
+// the note) — and distinct from the centre "₹N" so a text lookup finds one match.
 function MoneyCorner({ value, at }: { value: number; at: { left: string; top: string } }) {
   return (
     <div
@@ -621,6 +622,10 @@ function MoneyCorner({ value, at }: { value: number; at: { left: string; top: st
         left: at.left,
         top: at.top,
         transform: 'translate(-50%, -50%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        lineHeight: 1,
         fontSize: 8,
         ...mono(700),
         color: INK.deepInk,
@@ -658,12 +663,12 @@ function MoneyFull({ card }: { card: Extract<Card, { kind: 'money' }> }) {
           <span style={{ fontSize: 30 }}>₹{card.value}</span>
           <span style={{ fontSize: 11, marginTop: 1, ...mono(500) }}>Cr</span>
         </div>
-        {/* four corner circles — numerals centred on each (circle centres measured
-            off the art: ~15.5/84.5% across, ~11.5/88% down) */}
-        <MoneyCorner value={card.value} at={{ left: '15.5%', top: '11.5%' }} />
-        <MoneyCorner value={card.value} at={{ left: '84.5%', top: '11.5%' }} />
-        <MoneyCorner value={card.value} at={{ left: '15.5%', top: '88%' }} />
-        <MoneyCorner value={card.value} at={{ left: '84.5%', top: '88%' }} />
+        {/* four corner circles — numerals centred on each rosette's TRUE disc centre,
+            measured off the art and consistent across all six notes (spread ≤0.1%) */}
+        <MoneyCorner value={card.value} at={{ left: '18.1%', top: '11.3%' }} />
+        <MoneyCorner value={card.value} at={{ left: '81.9%', top: '11.3%' }} />
+        <MoneyCorner value={card.value} at={{ left: '17.7%', top: '89%' }} />
+        <MoneyCorner value={card.value} at={{ left: '82.3%', top: '89%' }} />
       </div>
     );
   }
