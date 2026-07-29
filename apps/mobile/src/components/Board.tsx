@@ -17,12 +17,14 @@ import { useState } from 'react';
 import type { CSSProperties, DOMAttributes } from 'react';
 import type { Action, Observation, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
-import { dropZonesForCard } from '../game/interaction';
+import { dropZonesForCard, rearrangeDestinations } from '../game/interaction';
 import type { DropZone } from '../game/interaction';
 import { useHandDrag } from '../game/useHandDrag';
+import { describeCard } from '../game/labels';
 import { CardFace } from './CardFace';
 import { StagedCard } from './StagedCard';
 import { TargetingOverlay } from './TargetingOverlay';
+import { RearrangeChooser } from './RearrangeChooser';
 import { Ticker } from './Ticker';
 import { HandFan } from './HandFan';
 import { BankStack, DiscardTop, DrawPile, GroupRow, PlayerHeader, seatName } from './BoardParts';
@@ -52,6 +54,19 @@ const goldOutlineButton: CSSProperties = {
   fontWeight: 700,
   fontSize: 14,
   cursor: 'pointer',
+};
+// A placed wildcard's rearrange handle (B8): drag it onto a group, or tap for the chooser.
+const rearrangeToken: CSSProperties = {
+  padding: '4px 10px',
+  borderRadius: 999,
+  border: `1px solid ${INK.gold}`,
+  color: STAGE.accentGold,
+  fontFamily: FONT.display,
+  fontWeight: 700,
+  fontSize: 11,
+  cursor: 'grab',
+  touchAction: 'none',
+  userSelect: 'none',
 };
 
 // The stable id each drop zone carries in the DOM (`data-drop`), so the drag hit-test and
@@ -111,7 +126,24 @@ export function Board({
   const [targetingCardId, setTargetingCardId] = useState<string | null>(null);
   const targeting = targetingCardId !== null && observation.myHand.includes(targetingCardId) ? targetingCardId : null;
 
-  function onTapHandCard(cardId: string): void {
+  // Placed wildcards I may move this turn (free, matrix B8). Each rearrange token can be
+  // dragged onto a legal group or tapped to open the destination chooser.
+  const rearrangeableIds = new Set<string>();
+  for (const action of actions) {
+    if (action.type === 'REARRANGE_WILDCARD') {
+      rearrangeableIds.add(action.cardId);
+    }
+  }
+  const [rearrangingCardId, setRearrangingCardId] = useState<string | null>(null);
+  const rearranging = rearrangingCardId !== null && rearrangeableIds.has(rearrangingCardId) ? rearrangingCardId : null;
+
+  // A tap either buries (discard step), opens the rearrange chooser (a placed wildcard), or
+  // stages a hand card (A1 fallback). A drop routes the same three kinds to their commit.
+  function onTapCard(cardId: string): void {
+    if (rearrangeableIds.has(cardId)) {
+      setRearrangingCardId(cardId);
+      return;
+    }
     if (inDiscardMode) {
       const discard = discardByCardId.get(cardId);
       if (discard && onAct) {
@@ -119,12 +151,22 @@ export function Board({
       }
       return;
     }
-    setStagedCardId(cardId); // A1 fallback: rise to centre stage with its rail
+    setStagedCardId(cardId);
   }
 
-  function onDropHandCard(cardId: string, zoneId: string): void {
+  function onDropCard(cardId: string, zoneId: string): void {
+    if (!onAct) {
+      return;
+    }
+    if (rearrangeableIds.has(cardId)) {
+      const destination = rearrangeDestinations(actions, cardId).find((target) => `set:${target.set}` === zoneId);
+      if (destination) {
+        onAct(destination.action); // B8: move the placed wildcard, free
+      }
+      return;
+    }
     const zone = dropZonesForCard(actions, cardId).find((candidate) => dropZoneId(candidate) === zoneId);
-    if (!zone || !onAct) {
+    if (!zone) {
       return;
     }
     if (zone.action) {
@@ -134,26 +176,34 @@ export function Board({
     }
   }
 
-  // Drag is disabled off-turn and in the discard step (there tapping buries a card).
   function eligibleZones(cardId: string): Set<string> {
+    if (rearrangeableIds.has(cardId)) {
+      return new Set(rearrangeDestinations(actions, cardId).map((target) => `set:${target.set}`));
+    }
     if (inDiscardMode || !myTurn) {
-      return new Set();
+      return new Set(); // drag disabled off-turn and in the discard step (tapping buries there)
     }
     return new Set(dropZonesForCard(actions, cardId).map(dropZoneId));
   }
 
-  const { drag, cardHandlers } = useHandDrag({ eligibleZones, onTap: onTapHandCard, onDrop: onDropHandCard });
+  const { drag, cardHandlers } = useHandDrag({ eligibleZones, onTap: onTapCard, onDrop: onDropCard });
   const handlersFor = (cardId: string): DOMAttributes<HTMLDivElement> => cardHandlers(cardId);
 
   // Which zones glow while a card is in the air (soft = eligible, hot = under the pointer).
-  const dragZones = drag ? dropZonesForCard(actions, drag.cardId) : [];
+  // A placed wildcard being dragged lights only its legal destination groups (B8).
   const eligibleSets = new Set<SetId>();
   let bankEligible = false;
   let playEligible = false;
-  for (const zone of dragZones) {
-    if (zone.kind === 'bank') bankEligible = true;
-    else if (zone.kind === 'play') playEligible = true;
-    else if (zone.set) eligibleSets.add(zone.set);
+  if (drag && rearrangeableIds.has(drag.cardId)) {
+    for (const target of rearrangeDestinations(actions, drag.cardId)) {
+      eligibleSets.add(target.set);
+    }
+  } else if (drag) {
+    for (const zone of dropZonesForCard(actions, drag.cardId)) {
+      if (zone.kind === 'bank') bankEligible = true;
+      else if (zone.kind === 'play') playEligible = true;
+      else if (zone.set) eligibleSets.add(zone.set);
+    }
   }
   const hotZoneId = drag?.hotZoneId ?? null;
 
@@ -217,6 +267,16 @@ export function Board({
         <div style={{ minHeight: 0, overflow: 'hidden' }}>
           <GroupRow properties={observation.myProperties} kiraya={observation.myKiraya} width={38} mine dropSets={eligibleSets} hotZoneId={hotZoneId} />
         </div>
+        {rearrangeableIds.size > 0 && (
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: FONT.serif, fontSize: 11, opacity: 0.8 }}>Move wildcard:</span>
+            {[...rearrangeableIds].map((id) => (
+              <div key={id} {...cardHandlers(id)} onContextMenu={(event) => event.preventDefault()} style={{ ...rearrangeToken, opacity: drag?.cardId === id ? 0.3 : 1 }}>
+                ◈ {describeCard(id).replace('Wildcard ', '')}
+              </div>
+            ))}
+          </div>
+        )}
         {inDiscardMode && (
           <div style={{ textAlign: 'center', fontFamily: FONT.display, fontWeight: 700, fontSize: 13, color: STAGE.accentGold }}>
             Over the limit — tap {observation.myHand.length - HAND_LIMIT} to discard
@@ -246,6 +306,19 @@ export function Board({
             </div>
           </div>
         </div>
+      )}
+
+      {/* rearrange (B8): the tap fallback — a placed wildcard's legal destination groups. */}
+      {rearranging !== null && onAct && (
+        <RearrangeChooser
+          cardId={rearranging}
+          destinations={rearrangeDestinations(actions, rearranging)}
+          onChoose={(action) => {
+            onAct(action);
+            setRearrangingCardId(null);
+          }}
+          onCancel={() => setRearrangingCardId(null)}
+        />
       )}
 
       {/* targeting: a dragged targeted action plants on stage and its legal targets glow;
