@@ -20,6 +20,7 @@ import type { SeatConfig } from '../game/store';
 import { CardBack } from './CardBack';
 import { CardFace } from './CardFace';
 import { StagedCard } from './StagedCard';
+import { Ticker } from './Ticker';
 import { STAGE, INK, SHADOW, FONT, CARD } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
@@ -345,11 +346,13 @@ export function Board({
   seats,
   actions = [],
   onAct,
+  tickerLines = [],
 }: {
   observation: Observation;
   seats: SeatConfig[];
   actions?: Action[];
   onAct?: (action: Action) => void;
+  tickerLines?: string[];
 }) {
   const myTurn = observation.currentPlayer === observation.me;
   const topDiscard = observation.discardPile[observation.discardPile.length - 1];
@@ -357,7 +360,7 @@ export function Board({
   // Turn-flow actions the engine offers directly (not tied to a staged hand card). Each is
   // a single legal move; the matching control below dispatches it. `undefined` = not legal
   // now, so the control simply isn't rendered — legality drives the UI, never the reverse.
-  const drawAction = actions.find((action) => action.type === 'DRAW');
+  // DRAW is NOT among these: it is auto-played at turn start (L4), never a tap.
   const endTurnAction = actions.find((action) => action.type === 'END_TURN');
   const declareWinAction = actions.find((action) => action.type === 'DECLARE_WIN');
 
@@ -443,14 +446,9 @@ export function Board({
       {/* table band (10%) — draw pile · turn chip · discard */}
       <div style={zone(10, { display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${STAGE.scrimSheet}`, borderBottom: `1px solid ${STAGE.scrimSheet}` })}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {/* A2: draw by tapping the pile itself — no separate Draw button. It wears the
-              gold glow only while DRAW is legal (law 3: a zone glows iff it's actionable). */}
-          <div
-            onClick={drawAction && onAct ? () => onAct(drawAction) : undefined}
-            style={{ borderRadius: 6, cursor: drawAction ? 'pointer' : 'default', boxShadow: drawAction ? STAGE.glowGold : 'none' }}
-          >
-            <DrawPile count={observation.drawPileCount} />
-          </div>
+          {/* L4: the pile is display only — the turn-start draw is automatic, never a tap.
+              It is also the face-down destination for buried discards (house rule). */}
+          <DrawPile count={observation.drawPileCount} />
           <span style={{ fontFamily: FONT.mono, fontSize: 12 }}>{observation.drawPileCount}</span>
         </div>
         <div style={{ textAlign: 'center' }}>
@@ -465,15 +463,18 @@ export function Board({
         </div>
       </div>
 
-      {/* centre stage (30%) — open felt at rest; the tapped card's overlay (rendered at the
-          end of this component) rises here with its rail. A11: when the engine offers a win,
-          the stage carries the single gold Declare SAUDA! button — the one celebration. */}
-      <div style={zone(30, { display: 'flex', alignItems: 'center', justifyContent: 'center' })}>
-        {declareWinAction && onAct && (
-          <button onClick={() => onAct(declareWinAction)} style={goldFilledButton}>
-            Declare SAUDA!
-          </button>
-        )}
+      {/* centre stage (30%) — the 2-line ticker sits under the table band (§8); below it is
+          open felt at rest, the tapped card's overlay on stage, or the single gold Declare
+          SAUDA! button when the engine offers a win (A11 — the one celebration). */}
+      <div style={zone(30, { display: 'flex', flexDirection: 'column' })}>
+        <Ticker lines={tickerLines} />
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {declareWinAction && onAct && (
+            <button onClick={() => onAct(declareWinAction)} style={goldFilledButton}>
+              Declare SAUDA!
+            </button>
+          )}
+        </div>
       </div>
 
       {/* my area (38%) — the largest zone (hierarchy law A2); sleeps when it isn't my turn.
