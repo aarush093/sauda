@@ -5,7 +5,7 @@
  * so orientation never matters. Falls back to a plain table-indigo card + seal if the
  * plate is missing.
  */
-import { CARD, INK, FONT } from '../design/tokens';
+import { CARD, INK, FONT, SHADOW } from '../design/tokens';
 import { cardBackUrl } from '../design/plates';
 
 export function CardBack({ width, seal = true }: { width: number; seal?: boolean }) {
@@ -22,7 +22,7 @@ export function CardBack({ width, seal = true }: { width: number; seal?: boolean
         overflow: 'hidden',
         border: `1px solid ${INK.agedLine}`,
         background: INK.tableIndigo,
-        boxShadow: '0 1px 2px rgba(0,0,0,0.35)',
+        boxShadow: SHADOW.cardBack,
       }}
     >
       {url && (

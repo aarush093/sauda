@@ -11,7 +11,7 @@
 import type { CSSProperties } from 'react';
 import { ACTIONS, KIRAYA_DESCRIPTOR, KIRAYA_NAME, SETS } from '@sauda/engine';
 import type { Card, SetId } from '@sauda/engine';
-import { CARD, FONT, INK, cardWidth } from '../design/tokens';
+import { CARD, FONT, INK, SHADOW, cardWidth } from '../design/tokens';
 import type { CardSize } from '../design/tokens';
 import { cardById, plateKey, propertyName, setLabels } from '../design/cardData';
 import { plateUrl, hasPlate } from '../design/plates';
@@ -127,7 +127,7 @@ const display: CSSProperties = { fontFamily: FONT.display, fontWeight: 700, lett
 
 // A thin dark halo (the vintage-label "keyline") so cream title text lifts cleanly
 // off a coloured banner. Only applied when the adaptive ink is cream (§3).
-const TITLE_KEYLINE = '0 0 1.5px rgba(20,18,31,0.85), 0 1px 1px rgba(20,18,31,0.55)';
+const TITLE_KEYLINE = SHADOW.titleKeyline;
 
 // Footer band height as a single source, shared by FooterBand and the corner marks.
 const FOOTER_HEIGHT_PCT = 19;
@@ -228,7 +228,7 @@ function FooterBand({ set }: { set: SetId }) {
         right: 0,
         bottom: 0,
         height: `${FOOTER_HEIGHT_PCT}%`,
-        background: '#E7D3A1',
+        background: INK.footerBand,
         color: INK.deepInk,
         borderTop: `1px solid ${INK.agedLine}`,
         borderBottom: `1px solid ${INK.agedLine}`,
@@ -339,7 +339,7 @@ function RentLadder({ set }: { set: SetId }) {
           dropped so the extra rows always clear the art frame — no per-city art
           tuning needed. */}
       {big && (
-        <div style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 5, color: '#5b5344' }}>
+        <div style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 5, color: INK.mutedBrown }}>
           deeds held of this colour
         </div>
       )}
@@ -388,11 +388,11 @@ const ledgerSlipStyle: CSSProperties = {
   width: '96%',
   boxSizing: 'border-box',
   padding: '4px 6px',
-  background: 'rgba(238,229,205,0.93)', // aged cream at ~93% — the art only whispers through
+  background: INK.ledgerSlip, // aged cream at ~93% — the art only whispers through
   border: `1px solid ${INK.agedLine}`,
   borderRadius: 3,
   // a pasted-slip lift plus a faint inner age-stain for the worn, aged edge
-  boxShadow: '0 1px 2px rgba(20,18,31,0.20), inset 0 0 5px rgba(150,120,60,0.14)',
+  boxShadow: SHADOW.ledgerSlip,
 };
 
 function PropertyFull({ card }: { card: Extract<Card, { kind: 'property' }> }) {
@@ -524,7 +524,7 @@ function ActionFull({ card }: { card: Extract<Card, { kind: 'action' }> }) {
           {info.name}
         </div>
         <div style={{ fontFamily: FONT.serif, fontSize: 7, lineHeight: 1.15 }}>{info.descriptor}</div>
-        <div style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 5.5, color: '#5b5344' }}>
+        <div style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 5.5, color: INK.mutedBrown }}>
           or bank as ₹{info.value} Cr
         </div>
       </div>
@@ -541,7 +541,7 @@ const actionFooterStyle: CSSProperties = {
   right: 0,
   bottom: 0,
   height: `${FOOTER_HEIGHT_PCT}%`,
-  background: '#E7D3A1',
+  background: INK.footerBand,
   color: INK.deepInk,
   borderTop: `1px solid ${INK.agedLine}`,
   borderBottom: `1px solid ${INK.agedLine}`,
@@ -569,8 +569,8 @@ function KirayaFull({ card }: { card: Extract<Card, { kind: 'kiraya' }> }) {
       </div>
       <div style={{ position: 'absolute', top: '46%', left: '8%', right: '8%', textAlign: 'center', fontSize: 7 }}>
         <div>{isWild ? 'One rival pays' : 'All rivals pay'}</div>
-        <div style={{ fontSize: 6, color: '#5b5344', marginTop: 3 }}>{KIRAYA_DESCRIPTOR}</div>
-        <div style={{ fontSize: 6, color: '#5b5344', marginTop: 3 }}>
+        <div style={{ fontSize: 6, color: INK.mutedBrown, marginTop: 3 }}>{KIRAYA_DESCRIPTOR}</div>
+        <div style={{ fontSize: 6, color: INK.mutedBrown, marginTop: 3 }}>
           {card.colors === 'ANY' ? 'any colour' : setLabels(card.colors)}
         </div>
       </div>

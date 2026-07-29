@@ -19,7 +19,7 @@ import { INK } from './tokens';
 
 // Muted brown used for the locality sublabel when the title is dark ink (matches
 // the existing card-face sublabel colour).
-const SUBLABEL_MUTED = '#5b5344';
+const SUBLABEL_MUTED = INK.mutedBrown;
 
 // Plates whose printed banner colour differs from their set colour, keyed by plate
 // id. Only exceptions would live here; everything else uses the set colour.
@@ -75,7 +75,7 @@ export function titleInkForPlate(plateId: string, set: SetId): TitleInk {
 // Action cards (§5) share one flat DEEP-CRIMSON banner; the "ACTION" label is drawn
 // on it and picks its ink by the same contrast rule (cream + keyline on crimson).
 // The SVG fallback leaves the banner area cream, where the original red stamp reads.
-export const ACTION_BANNER_HEX = '#8C1D1D';
+export const ACTION_BANNER_HEX = INK.actionBanner;
 
 // Empty now that kabza uses the crimson banner; retained for any future action plate
 // painted off the crimson spec (mirrors BANNER_HEX_OVERRIDES for properties).

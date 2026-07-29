@@ -14,6 +14,33 @@ export const INK = {
   stampRed: '#C6342B', // stamps, FULL SET row, danger
   lavender: '#B8B4CE',
   creamBlue: '#C9D4F0',
+  // card-art inks — cards are the "bright object class" and carry their own palette.
+  mutedBrown: '#5b5344', // serif sublabel / caption on cream
+  footerBand: '#E7D3A1', // vintage cream/gold footer band
+  actionBanner: '#8C1D1D', // deep-crimson action-card banner
+  ledgerSlip: 'rgba(238,229,205,0.93)', // aged-cream ledger-slip fill (~93% opaque)
+} as const;
+
+// §M4b visual-constancy tokens (STATE_MATRIX §1 · v1.2 A5). One lighting condition:
+// felt background · cream cards · a single gold accent · one glow · one sleep filter ·
+// two scrims. No screen may invent a fifth visual state or a second accent.
+export const STAGE = {
+  felt: INK.tableIndigo, // the only background, everywhere in play
+  cardCream: INK.cardCream, // the only bright object class
+  accentGold: INK.gold, // the only accent, everywhere
+  textOnFelt: 'rgba(242,233,210,0.88)', // cream at ~88% for labels/totals on felt (§2)
+  // one glow spec — active-player ring · legal-action glow · selection · Munshi (no variants)
+  glowGold: `0 0 0 2px ${INK.gold}, 0 0 10px 1px rgba(232,184,75,0.5)`,
+  dimSleep: 'saturate(0.7) brightness(0.9)', // off-turn hand/board only
+  scrimDrag: 'rgba(20,18,31,0.08)', // ~8% behind a lifted/staged card (Phase 2)
+  scrimSheet: 'rgba(20,18,31,0.35)', // ~35% behind bottom sheets / handoff (Phase 3)
+} as const;
+
+// Soft elevation only (2–8 dp) — the vintage-paper world has weight, not neon.
+export const SHADOW = {
+  titleKeyline: '0 0 1.5px rgba(20,18,31,0.85), 0 1px 1px rgba(20,18,31,0.55)', // cream title halo
+  ledgerSlip: '0 1px 2px rgba(20,18,31,0.20), inset 0 0 5px rgba(150,120,60,0.14)', // pasted-slip lift
+  cardBack: '0 1px 2px rgba(0,0,0,0.35)', // face-down card lift
 } as const;
 
 // §2.4 typography. Families resolve to the self-hosted faces in fonts.css.
