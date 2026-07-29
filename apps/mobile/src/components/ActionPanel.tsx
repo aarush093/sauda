@@ -3,25 +3,8 @@
  * button comes straight from the engine's legalActions — the panel decides
  * nothing about the rules, it only groups the offered actions for readability.
  */
-import { SETS } from '@sauda/engine';
 import type { Action, Observation } from '@sauda/engine';
-import { actionCardId, describeAction, describeCard } from '../game/labels';
-
-function describeThreat(interrupt: NonNullable<Observation['interrupt']>): string {
-  const effect = interrupt.effect;
-  switch (effect.kind) {
-    case 'charge':
-      return `Player ${interrupt.origin} charges you ₹${effect.amount} Cr.`;
-    case 'stealSet':
-      return `Player ${interrupt.origin} is grabbing your ${SETS[effect.set].label} set (KABZA).`;
-    case 'stealProperty':
-      return `Player ${interrupt.origin} is taking your ${describeCard(effect.cardId)}.`;
-    case 'swap':
-      return `Player ${interrupt.origin} wants to swap ${describeCard(effect.theirCardId)} for your ${describeCard(effect.myCardId)}.`;
-    default:
-      return `Player ${interrupt.origin} played something against you.`;
-  }
-}
+import { actionCardId, describeAction, describeCard, describeThreat } from '../game/labels';
 
 export function ActionPanel({
   actions,

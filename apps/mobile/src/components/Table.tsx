@@ -12,6 +12,7 @@ import { actorOf, useGame, viewSeat } from '../game/store';
 import { Board } from './Board';
 import { ActionPanel } from './ActionPanel';
 import { PaymentSheet } from './PaymentSheet';
+import { InterruptPrompt } from './InterruptPrompt';
 import { HandoffOverlay } from './HandoffOverlay';
 import { STAGE } from '../design/tokens';
 
@@ -59,6 +60,8 @@ export function Table() {
   const humanActions = !isBotTurn && !gameOver ? legalActions(state, actor) : [];
   const isResponse = humanActions.some((action) => action.type.startsWith('RESPOND_'));
   const payAction = humanActions.find((action) => action.type === 'RESPOND_PAY');
+  const allowAction = humanActions.find((action) => action.type === 'RESPOND_ALLOW');
+  const nahiAction = humanActions.find((action) => action.type === 'RESPOND_NAHI_CHALEGA');
 
   return (
     <div className="table" style={{ background: STAGE.felt, color: STAGE.textOnFelt, minHeight: '100vh', paddingBottom: 24 }}>
@@ -79,13 +82,28 @@ export function Table() {
         <ActionPanel actions={humanActions} observation={actorObservation} onAct={dispatch} />
       )}
 
-      {/* a standing charge raises the payment sheet over the table (INTERACTION_SPEC §6) */}
-      {payAction?.type === 'RESPOND_PAY' && (
+      {/* a standing charge raises the payment sheet over the table (INTERACTION_SPEC §6).
+          Private response UI waits until any pass-and-play hand-off is acked (E2). */}
+      {handoffSeat === null && payAction?.type === 'RESPOND_PAY' && (
         <PaymentSheet
           observation={actorObservation}
           seats={seats}
           suggestion={payAction.cardIds}
           onPay={(cardIds) => dispatch({ type: 'RESPOND_PAY', cardIds })}
+        />
+      )}
+
+      {/* an action played against me opens the NAHI CHALEGA window (INTERACTION_SPEC §7) */}
+      {handoffSeat === null && allowAction && actorObservation.interrupt && (
+        <InterruptPrompt
+          interrupt={actorObservation.interrupt}
+          canNahi={nahiAction !== undefined}
+          onNahi={() => {
+            if (nahiAction) {
+              dispatch(nahiAction);
+            }
+          }}
+          onAllow={() => dispatch({ type: 'RESPOND_ALLOW' })}
         />
       )}
 

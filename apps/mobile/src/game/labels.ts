@@ -4,7 +4,7 @@
  * All rules live in @sauda/engine.
  */
 import { ACTIONS, KIRAYA_DESCRIPTOR, KIRAYA_NAME, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
-import type { Action, GameEvent, SetId } from '@sauda/engine';
+import type { Action, GameEvent, InterruptView, SetId } from '@sauda/engine';
 
 const CARD_BY_ID = new Map(buildDeck().map((card) => [card.id, card]));
 
@@ -156,5 +156,23 @@ export function describeEvent(event: GameEvent): string | null {
       return `★ Player ${event.player} wins!`;
     default:
       return null;
+  }
+}
+
+// The threat an open interrupt poses to me, in one line — shared by the interim panel
+// and the interrupt prompt (D1). Reads the public interrupt effect; decides nothing.
+export function describeThreat(interrupt: InterruptView): string {
+  const effect = interrupt.effect;
+  switch (effect.kind) {
+    case 'charge':
+      return `Player ${interrupt.origin} charges you ₹${effect.amount} Cr.`;
+    case 'stealSet':
+      return `Player ${interrupt.origin} is grabbing your ${SETS[effect.set].label} set (KABZA).`;
+    case 'stealProperty':
+      return `Player ${interrupt.origin} is taking your ${describeCard(effect.cardId)}.`;
+    case 'swap':
+      return `Player ${interrupt.origin} wants to swap ${describeCard(effect.theirCardId)} for your ${describeCard(effect.myCardId)}.`;
+    default:
+      return `Player ${interrupt.origin} played something against you.`;
   }
 }
