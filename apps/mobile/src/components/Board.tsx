@@ -7,8 +7,45 @@ import { SETS, isSetComplete } from '@sauda/engine';
 import type { Observation, PropertyGroup, SetId } from '@sauda/engine';
 import { cardDescriptor, describeCard } from '../game/labels';
 import type { SeatConfig } from '../game/store';
+import { CardBack } from './CardBack';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
+
+// A hidden hand shown as face-down pips: one small card back per card, overlapped so
+// even a big hand stays compact. The exact count is printed alongside.
+function HandPips({ count }: { count: number }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center' }} title={`${count} cards in hand`}>
+      {Array.from({ length: count }).map((_, index) => (
+        <div key={index} style={{ marginLeft: index === 0 ? 0 : -9 }}>
+          <CardBack width={18} seal={false} />
+        </div>
+      ))}
+      <span style={{ marginLeft: count > 0 ? 6 : 0, fontSize: 12, opacity: 0.85 }}>hand {count}</span>
+    </div>
+  );
+}
+
+// The face-down draw pile: up to three card backs offset to read as a stack, the top
+// one carrying the seal. Purely a pile motif — the exact size is the "Draw: N" label.
+function DrawPile({ count }: { count: number }) {
+  if (count === 0) {
+    return null;
+  }
+  const layers = Math.min(count, 3); // 1–3 backs, deepest first
+  return (
+    <div style={{ position: 'relative', width: 44 + 6, height: Math.round(44 * 1.45) + 6 }}>
+      {Array.from({ length: layers }).map((_, index) => {
+        const offset = (layers - 1 - index) * 3; // back layers sit down-right
+        return (
+          <div key={index} style={{ position: 'absolute', top: offset, left: offset }}>
+            <CardBack width={44} seal={index === layers - 1} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function seatLabel(seats: SeatConfig[], id: number): string {
   const seat = seats[id];
@@ -68,16 +105,19 @@ export function Board({
         {observation.opponents.map((opponent) => (
           <div key={opponent.id} className="opponent">
             <span>
-              {seatLabel(seats, opponent.id)} · hand {opponent.handCount} · bank ₹
-              {opponent.bankTotal} Cr
+              {seatLabel(seats, opponent.id)} · bank ₹{opponent.bankTotal} Cr
             </span>
+            <HandPips count={opponent.handCount} />
             <SetChips properties={opponent.properties} />
           </div>
         ))}
       </div>
 
       <div className="zone center">
-        <span>Draw: {observation.drawPileCount}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <DrawPile count={observation.drawPileCount} />
+          <span>Draw: {observation.drawPileCount}</span>
+        </div>
         <span>Discard: {observation.discardPile.length}</span>
       </div>
 

@@ -23,3 +23,10 @@ export function plateUrl(cardId: string): string | null {
 export function hasPlate(cardId: string): boolean {
   return plateUrl(cardId) !== null;
 }
+
+// The vintage card-BACK image (shown for face-down cards: draw pile, opponent hands,
+// pass-and-play handoff). It lives in the same plates/ folder so the glob picks it up
+// with zero config, but it is NOT a card face — no card id maps to it.
+export function cardBackUrl(): string | null {
+  return plateUrl('card_back');
+}
