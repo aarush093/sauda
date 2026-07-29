@@ -609,12 +609,23 @@ function WildcardFull({ card }: { card: Extract<Card, { kind: 'wildcard' }> }) {
   );
 }
 
-// A small denomination numeral for one of the note plate's four corner circles.
-// Bare number (the ₹ reads from the painted note) — also keeps it from colliding
-// with the large centre "₹N" when tests look up the denomination by text.
-function MoneyCorner({ value, corner }: { value: number; corner: CSSProperties }) {
+// A denomination numeral centred in one of the note plate's four corner circles.
+// Bare number (the ₹ reads from the painted note) — and distinct from the centre
+// "₹N" so a text lookup of the denomination finds exactly one match. `at` is the
+// circle's centre (% of the card); translate(-50%,-50%) centres the glyph on it.
+function MoneyCorner({ value, at }: { value: number; at: { left: string; top: string } }) {
   return (
-    <div style={{ position: 'absolute', ...corner, fontSize: 7, ...mono(700), color: INK.deepInk }}>
+    <div
+      style={{
+        position: 'absolute',
+        left: at.left,
+        top: at.top,
+        transform: 'translate(-50%, -50%)',
+        fontSize: 8,
+        ...mono(700),
+        color: INK.deepInk,
+      }}
+    >
       {value}
     </div>
   );
@@ -630,16 +641,29 @@ function MoneyFull({ card }: { card: Extract<Card, { kind: 'money' }> }) {
     return (
       <div style={frameStyle('full')}>
         <Plate card={card} />
-        {/* centre cartouche: the large denomination */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'baseline', justifyContent: 'center', ...mono(700), color: INK.deepInk }}>
-          <span style={{ fontSize: 28 }}>₹{card.value}</span>
-          <span style={{ fontSize: 11, marginLeft: 2, ...mono(500) }}>Cr</span>
+        {/* centre cartouche: big ₹N over a small Cr, centred in the painted oval */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            lineHeight: 1,
+            ...mono(700),
+            color: INK.deepInk,
+          }}
+        >
+          <span style={{ fontSize: 30 }}>₹{card.value}</span>
+          <span style={{ fontSize: 11, marginTop: 1, ...mono(500) }}>Cr</span>
         </div>
-        {/* four corner circles */}
-        <MoneyCorner value={card.value} corner={{ top: 10, left: 10 }} />
-        <MoneyCorner value={card.value} corner={{ top: 10, right: 10 }} />
-        <MoneyCorner value={card.value} corner={{ bottom: 10, left: 10 }} />
-        <MoneyCorner value={card.value} corner={{ bottom: 10, right: 10 }} />
+        {/* four corner circles — numerals centred on each (circle centres measured
+            off the art: ~15.5/84.5% across, ~11.5/88% down) */}
+        <MoneyCorner value={card.value} at={{ left: '15.5%', top: '11.5%' }} />
+        <MoneyCorner value={card.value} at={{ left: '84.5%', top: '11.5%' }} />
+        <MoneyCorner value={card.value} at={{ left: '15.5%', top: '88%' }} />
+        <MoneyCorner value={card.value} at={{ left: '84.5%', top: '88%' }} />
       </div>
     );
   }
