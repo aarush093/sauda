@@ -1,35 +1,35 @@
 /**
- * The play table (v1.2 A1/A2/A10). A portrait, one-screen surface driven entirely by the
+ * The play table (v1.2 A2/A10). A portrait, one-screen surface driven entirely by the
  * engine: every number comes from an Observation, every legal move from legalActions
- * (passed in as `actions`), every colour from design/tokens. The UI decides no rules — it
- * renders what the engine offers and dispatches the player's choice back.
+ * (passed in as `actions`), every colour from design/tokens. The UI decides no rules.
  *
- * Four zones by the spec's percentages (A2): opponent row 22% · table band 10% · centre
- * stage 30% · my area 38% (always the largest — the hierarchy law). Interaction is
- * tap → centre stage → rail (A1): tapping a legal hand card raises it into the overlay
- * with its verb rail. Turn-flow lives on the table itself — tap the glowing draw pile to
- * draw, End turn sits bottom-right (right thumb), Declare SAUDA! appears centre when a win
- * is offered (A11), and a discard step (A8/A9) turns the hand tappable when it's over the
- * limit. Two visual states (A5): rest, and DIM_SLEEP on my board/hand when off-turn.
+ * Interaction is DRAG-first (A10 L3), tap as the equal fallback (A1): drag a hand card onto
+ * a glowing zone — bank, a set group / ghost slot, or centre PLAY — to commit; tap it to
+ * raise it onto the stage with its verb rail instead. Which zones glow, and what a drop
+ * fires, is `dropZonesForCard(legalActions)` — nothing else lifts, glows, or commits (L5).
+ * Turn-flow lives on the table: auto-draw at turn start (L4), End turn in its reserved
+ * right column, Declare SAUDA! centre when offered (A11), and the A8/A9 discard step.
+ *
+ * The static parts (groups, bank, pile, header) live in BoardParts; the hand fan and the
+ * drag gesture in HandFan / useHandDrag — this file is the composer.
  */
 import { useState } from 'react';
-import type { CSSProperties } from 'react';
-import { SETS, isSetComplete } from '@sauda/engine';
-import type { Action, Observation, PropertyGroup, SetId } from '@sauda/engine';
+import type { CSSProperties, DOMAttributes } from 'react';
+import type { Action, Observation, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
-import { CardBack } from './CardBack';
+import { dropZonesForCard } from '../game/interaction';
+import type { DropZone } from '../game/interaction';
+import { useHandDrag } from '../game/useHandDrag';
 import { CardFace } from './CardFace';
 import { StagedCard } from './StagedCard';
 import { Ticker } from './Ticker';
-import { STAGE, INK, SHADOW, FONT, CARD } from '../design/tokens';
+import { HandFan } from './HandFan';
+import { BankStack, DiscardTop, DrawPile, GroupRow, PlayerHeader, seatName } from './BoardParts';
+import { STAGE, INK, SHADOW, FONT, GLOW } from '../design/tokens';
 
-const ALL_SETS = Object.keys(SETS) as SetId[];
-const PLAYS_PER_TURN = 3; // §7 rules default; pips render 3 slots
 const HAND_LIMIT = 7; // §4.4 / Niyam Card 3: end a turn over 7 cards and you discard down
+const END_TURN_COLUMN_PX = 88; // reserved right column so the hand fan never underlaps it
 
-// Turn-flow buttons. Gold-filled = a committing/celebratory action (Declare SAUDA!);
-// gold-outline = a quiet, always-available control (End turn, A6 "never pulses/nags").
-// Same gold tokens as the action rail — one accent, no variants (A5).
 const goldFilledButton: CSSProperties = {
   padding: '12px 22px',
   borderRadius: 999,
@@ -42,7 +42,7 @@ const goldFilledButton: CSSProperties = {
   cursor: 'pointer',
 };
 const goldOutlineButton: CSSProperties = {
-  padding: '9px 16px',
+  padding: '9px 14px',
   borderRadius: 999,
   background: 'transparent',
   color: STAGE.accentGold,
@@ -52,293 +52,13 @@ const goldOutlineButton: CSSProperties = {
   fontSize: 14,
   cursor: 'pointer',
 };
-const endTurnButtonStyle: CSSProperties = { ...goldOutlineButton, position: 'absolute', right: 10, bottom: 10 };
 
-function seatName(seats: SeatConfig[], id: number): string {
-  const seat = seats[id];
-  if (seat?.kind === 'bot') {
-    return `Bot ${id} · ${seat.difficulty}`;
-  }
-  return `Player ${id}`;
-}
-
-function nonEmptyGroups(properties: Record<SetId, PropertyGroup[]>): { set: SetId; group: PropertyGroup; index: number }[] {
-  const out: { set: SetId; group: PropertyGroup; index: number }[] = [];
-  for (const set of ALL_SETS) {
-    properties[set].forEach((group, index) => {
-      if (group.cards.length > 0) {
-        out.push({ set, group, index });
-      }
-    });
-  }
-  return out;
-}
-
-// A property GROUP shown as a simplified mini-card: a set-colour banner strip + a
-// count badge, a gold FULL ribbon when complete, and (for my own groups) the engine's
-// current rent. No detailed art at this size — the colour is the identity.
-function MiniGroup({ set, group, rent, width }: { set: SetId; group: PropertyGroup; rent?: number | undefined; width: number }) {
-  const theme = SETS[set];
-  const complete = isSetComplete(group);
-  const height = Math.round(width * 1.4);
-  return (
-    <div
-      style={{
-        width,
-        height,
-        flex: '0 0 auto',
-        position: 'relative',
-        borderRadius: 4,
-        overflow: 'hidden',
-        background: STAGE.cardCream,
-        border: `1px solid ${INK.agedLine}`,
-        boxShadow: SHADOW.cardBack,
-      }}
-      title={`${theme.label} ${group.cards.length}/${theme.size}`}
-    >
-      {/* A2: mini-cards are a coloured banner strip + count badge ONLY — no letter
-          monogram. The set colour is the identity; the readable name lives on the full
-          CardFace, never at this size. */}
-      <div style={{ height: '44%', background: theme.hex }} />
-      {complete && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: STAGE.accentGold }} />}
-      <div style={{ position: 'absolute', bottom: 1, left: 0, right: 0, textAlign: 'center', fontFamily: FONT.mono, fontWeight: 700, fontSize: Math.round(width * 0.22), color: INK.deepInk }}>
-        {complete ? '✓' : `${group.cards.length}/${theme.size}`}
-        {group.buildings.length > 0 ? `+${group.buildings.length}` : ''}
-      </div>
-      {rent !== undefined && (
-        <div style={{ position: 'absolute', top: '46%', left: 0, right: 0, textAlign: 'center', fontFamily: FONT.mono, fontSize: Math.round(width * 0.19), color: INK.deepInk }}>
-          ₹{rent}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// A row of a player's groups. For my own empty area, the inviting G1 empty state.
-function GroupRow({
-  properties,
-  kiraya,
-  width,
-  mine,
-}: {
-  properties: Record<SetId, PropertyGroup[]>;
-  kiraya?: Record<SetId, number[]>;
-  width: number;
-  mine?: boolean;
-}) {
-  const groups = nonEmptyGroups(properties);
-  if (groups.length === 0) {
-    if (!mine) {
-      return null;
-    }
-    return (
-      <div
-        style={{
-          height: Math.round(width * 1.4),
-          border: `1px dashed ${INK.agedLine}`,
-          borderRadius: 6,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: STAGE.textOnFelt,
-          fontFamily: FONT.serif,
-          fontSize: 13,
-          opacity: 0.75,
-        }}
-      >
-        Place your first deed
-      </div>
-    );
-  }
-  return (
-    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignContent: 'flex-start' }}>
-      {groups.map(({ set, group, index }) => (
-        <MiniGroup key={`${set}-${index}`} set={set} group={group} width={width} rent={mine ? kiraya?.[set]?.[index] : undefined} />
-      ))}
-    </div>
-  );
-}
-
-// My bank: an overlapping note stack (motif, sized by note count) + a mono ₹ total.
-// Empty → the faint note outline (G2).
-function BankStack({ count, total }: { count: number; total: number }) {
-  if (count === 0) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ width: 34, height: 22, border: `1px dashed ${INK.agedLine}`, borderRadius: 3, opacity: 0.6 }} />
-        <span style={{ fontFamily: FONT.mono, fontWeight: 700, color: STAGE.textOnFelt }}>₹0 Cr</span>
-      </div>
-    );
-  }
-  const layers = Math.min(count, 5);
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{ position: 'relative', width: 34 + (layers - 1) * 4, height: 24 }}>
-        {Array.from({ length: layers }).map((_, index) => (
-          <div
-            key={index}
-            style={{
-              position: 'absolute',
-              left: index * 4,
-              top: index * -1,
-              width: 34,
-              height: 22,
-              borderRadius: 3,
-              background: STAGE.cardCream,
-              border: `1px solid ${INK.gold}`,
-            }}
-          />
-        ))}
-      </div>
-      <span style={{ fontFamily: FONT.mono, fontWeight: 700, fontSize: 16, color: STAGE.accentGold }}>₹{total} Cr</span>
-    </div>
-  );
-}
-
-// My hand: a wide overlapping arc of real CardFace cards (reused, scaled to the zone).
-// Readable at rest for up to 7; 8 (pre-discard) compresses, never scrolls.
-const HAND_SCALE = 0.6;
-function HandFan({
-  cards,
-  tappableIds,
-  onTapCard,
-}: {
-  cards: string[];
-  tappableIds: Set<string>;
-  onTapCard: (cardId: string) => void;
-}) {
-  const cardWidth = Math.round(CARD.fullWidth * HAND_SCALE);
-  const cardHeight = Math.round(CARD.fullWidth * CARD.ratio * HAND_SCALE);
-  const advance = Math.round(cardWidth * 0.68); // ~68% step → ~7–8 fit the portrait width
-  const count = cards.length;
-  if (count === 0) {
-    return <div style={{ height: cardHeight, display: 'flex', alignItems: 'center', justifyContent: 'center', color: STAGE.textOnFelt, opacity: 0.6 }}>—</div>;
-  }
-  const spread = cardWidth + advance * (count - 1);
-  const mid = (count - 1) / 2;
-  return (
-    <div style={{ height: cardHeight + 10, display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
-      <div style={{ position: 'relative', width: spread, height: cardHeight }}>
-        {cards.map((id, i) => {
-          // Only cards the engine offers an action for right now respond to a tap (§4
-          // legality-at-a-glance) — a play to stage, or a discard when over the limit.
-          const tappable = tappableIds.has(id);
-          return (
-            <div
-              key={id}
-              onClick={tappable ? () => onTapCard(id) : undefined}
-              style={{
-                position: 'absolute',
-                left: i * advance,
-                bottom: Math.abs(i - mid) * -1.5, // shallow arc — ends dip slightly
-                transform: `rotate(${(i - mid) * 2.5}deg)`,
-                transformOrigin: 'bottom center',
-                cursor: tappable ? 'pointer' : 'default',
-              }}
-            >
-              <div style={{ width: cardWidth, height: cardHeight }}>
-                <div style={{ transform: `scale(${HAND_SCALE})`, transformOrigin: 'top left' }}>
-                  <CardFace cardId={id} size="full" />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// The face-down draw pile: up to three card backs offset to read as a stack.
-function DrawPile({ count }: { count: number }) {
-  const layers = Math.min(Math.max(count, 1), 3);
-  return (
-    <div style={{ position: 'relative', width: 38 + 6, height: Math.round(38 * CARD.ratio) + 6 }}>
-      {Array.from({ length: layers }).map((_, index) => {
-        const offset = (layers - 1 - index) * 3;
-        return (
-          <div key={index} style={{ position: 'absolute', top: offset, left: offset }}>
-            <CardBack width={38} seal={index === layers - 1} />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// The discard pile: its top card face, quiet and desaturated (a spent card).
-function DiscardTop({ topId }: { topId: string | undefined }) {
-  const width = 38;
-  const height = Math.round(width * CARD.ratio);
-  if (!topId) {
-    return <div style={{ width, height, border: `1px dashed ${INK.agedLine}`, borderRadius: 4, opacity: 0.5 }} />;
-  }
-  return (
-    <div style={{ width, height, filter: STAGE.dimSleep }}>
-      <div style={{ transform: `scale(${width / CARD.fullWidth})`, transformOrigin: 'top left' }}>
-        <CardFace cardId={topId} size="full" />
-      </div>
-    </div>
-  );
-}
-
-// A player's header pill: name, gold ₹ bank total, hidden-hand pips, and (the active
-// player) the single gold ring + play pips. Inactive players sit dim.
-function PlayerHeader({
-  name,
-  bankTotal,
-  handCount,
-  active,
-  showPips,
-  playsRemaining,
-}: {
-  name: string;
-  bankTotal: number;
-  handCount: number;
-  active: boolean;
-  showPips?: boolean;
-  playsRemaining?: number;
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '3px 8px',
-        borderRadius: 999,
-        background: STAGE.scrimDrag,
-        boxShadow: active ? STAGE.glowGold : 'none',
-        opacity: active ? 1 : 0.6,
-      }}
-    >
-      <span style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 13, color: STAGE.cardCream }}>{name}</span>
-      <span style={{ fontFamily: FONT.mono, fontWeight: 700, fontSize: 12, color: STAGE.accentGold }}>₹{bankTotal}</span>
-      <span style={{ display: 'flex', alignItems: 'center' }} title={`${handCount} cards in hand`}>
-        {Array.from({ length: Math.min(handCount, 7) }).map((_, index) => (
-          <span key={index} style={{ marginLeft: index === 0 ? 0 : -8 }}>
-            <CardBack width={14} seal={false} />
-          </span>
-        ))}
-      </span>
-      {showPips && (
-        <span style={{ display: 'flex', gap: 3, marginLeft: 'auto' }}>
-          {Array.from({ length: PLAYS_PER_TURN }).map((_, index) => (
-            <span
-              key={index}
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: index < (playsRemaining ?? 0) ? STAGE.accentGold : 'transparent',
-                border: `1.5px solid ${INK.gold}`,
-              }}
-            />
-          ))}
-        </span>
-      )}
-    </div>
-  );
+// The stable id each drop zone carries in the DOM (`data-drop`), so the drag hit-test and
+// the commit both name zones the same way.
+function dropZoneId(zone: DropZone): string {
+  if (zone.kind === 'bank') return 'bank';
+  if (zone.kind === 'play') return 'play';
+  return `set:${zone.set}`;
 }
 
 export function Board({
@@ -357,16 +77,13 @@ export function Board({
   const myTurn = observation.currentPlayer === observation.me;
   const topDiscard = observation.discardPile[observation.discardPile.length - 1];
 
-  // Turn-flow actions the engine offers directly (not tied to a staged hand card). Each is
-  // a single legal move; the matching control below dispatches it. `undefined` = not legal
-  // now, so the control simply isn't rendered — legality drives the UI, never the reverse.
-  // DRAW is NOT among these: it is auto-played at turn start (L4), never a tap.
+  // Turn-flow actions the engine offers directly (not tied to a staged hand card). DRAW is
+  // NOT among them: it is auto-played at turn start (L4), never a tap.
   const endTurnAction = actions.find((action) => action.type === 'END_TURN');
   const declareWinAction = actions.find((action) => action.type === 'DECLARE_WIN');
 
   // Discard step (A8/A9): while over the hand limit the engine offers a DISCARD per hand
-  // card and nothing else. Collect them so a tap on the fan buries that card; a non-empty
-  // map means we are in discard mode and the hand taps discard instead of staging.
+  // card and nothing else; a non-empty map means the hand taps to bury instead of playing.
   const discardByCardId = new Map<string, Action>();
   for (const action of actions) {
     if (action.type === 'DISCARD') {
@@ -375,10 +92,8 @@ export function Board({
   }
   const inDiscardMode = discardByCardId.size > 0;
 
-  // Which hand cards respond to a tap, and what the tap does. In normal play it stages a
-  // card that has a legal play (money to bank, property to place, action/kiraya to play);
-  // in the discard step it buries the tapped card. Off-turn `actions` is empty, so the
-  // hand is inert (and already sleeps under DIM_SLEEP).
+  // Which hand cards respond right now: cards with a play (drag or tap → stage), or every
+  // card in the discard step. Off-turn `actions` is empty, so the hand is inert.
   const stageableIds = new Set<string>();
   for (const action of actions) {
     if (action.type === 'BANK_CARD' || action.type === 'PLACE_PROPERTY' || action.type === 'PLAY_ACTION' || action.type === 'PLAY_KIRAYA') {
@@ -387,8 +102,6 @@ export function Board({
   }
   const handTappableIds = inDiscardMode ? new Set(discardByCardId.keys()) : stageableIds;
 
-  // The tapped card, held in local UI state. Derive `staged` so the overlay clears itself
-  // once the card leaves the hand (committed) or the turn passes — never a stale card.
   const [stagedCardId, setStagedCardId] = useState<string | null>(null);
   const staged = stagedCardId !== null && observation.myHand.includes(stagedCardId) ? stagedCardId : null;
 
@@ -396,46 +109,57 @@ export function Board({
     if (inDiscardMode) {
       const discard = discardByCardId.get(cardId);
       if (discard && onAct) {
-        onAct(discard); // bury it under the draw pile (house rule A9); engine ends the turn at the limit
+        onAct(discard); // bury it under the draw pile (A9); engine ends the turn at the limit
       }
       return;
     }
-    setStagedCardId(cardId); // rise to centre stage with its rail (A1)
+    setStagedCardId(cardId); // A1 fallback: rise to centre stage with its rail
   }
 
-  const zone = (basisPct: number, extra?: CSSProperties): CSSProperties => ({
-    flex: `0 0 ${basisPct}%`,
-    minHeight: 0,
-    padding: 8,
-    ...extra,
-  });
+  function onDropHandCard(cardId: string, zoneId: string): void {
+    const zone = dropZonesForCard(actions, cardId).find((candidate) => dropZoneId(candidate) === zoneId);
+    if (!zone || !onAct) {
+      return;
+    }
+    if (zone.action) {
+      onAct(zone.action); // bank / place / build / an untargeted play — commits immediately
+    } else {
+      setStagedCardId(cardId); // a play that still needs a target → stage (rail picks it)
+    }
+  }
+
+  // Drag is disabled off-turn and in the discard step (there tapping buries a card).
+  function eligibleZones(cardId: string): Set<string> {
+    if (inDiscardMode || !myTurn) {
+      return new Set();
+    }
+    return new Set(dropZonesForCard(actions, cardId).map(dropZoneId));
+  }
+
+  const { drag, cardHandlers } = useHandDrag({ eligibleZones, onTap: onTapHandCard, onDrop: onDropHandCard });
+  const handlersFor = (cardId: string): DOMAttributes<HTMLDivElement> => cardHandlers(cardId);
+
+  // Which zones glow while a card is in the air (soft = eligible, hot = under the pointer).
+  const dragZones = drag ? dropZonesForCard(actions, drag.cardId) : [];
+  const eligibleSets = new Set<SetId>();
+  let bankEligible = false;
+  let playEligible = false;
+  for (const zone of dragZones) {
+    if (zone.kind === 'bank') bankEligible = true;
+    else if (zone.kind === 'play') playEligible = true;
+    else if (zone.set) eligibleSets.add(zone.set);
+  }
+  const hotZoneId = drag?.hotZoneId ?? null;
+
+  const zone = (basisPct: number, extra?: CSSProperties): CSSProperties => ({ flex: `0 0 ${basisPct}%`, minHeight: 0, padding: 8, ...extra });
 
   return (
-    <div
-      style={{
-        width: 'min(96vw, 460px)',
-        height: 'min(90vh, 780px)',
-        margin: '0 auto',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        background: STAGE.felt,
-        color: STAGE.textOnFelt,
-        borderRadius: 12,
-        overflow: 'hidden',
-        fontFamily: FONT.serif,
-      }}
-    >
+    <div style={boardStyle}>
       {/* opponent row (22%) — pills + their mini group stacks */}
       <div style={zone(22, { display: 'flex', gap: 8, overflow: 'hidden' })}>
         {observation.opponents.map((opponent) => (
           <div key={opponent.id} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, opacity: opponent.id === observation.currentPlayer ? 1 : 0.75 }}>
-            <PlayerHeader
-              name={seatName(seats, opponent.id)}
-              bankTotal={opponent.bankTotal}
-              handCount={opponent.handCount}
-              active={opponent.id === observation.currentPlayer}
-            />
+            <PlayerHeader name={seatName(seats, opponent.id)} bankTotal={opponent.bankTotal} handCount={opponent.handCount} active={opponent.id === observation.currentPlayer} />
             <div style={{ overflow: 'hidden' }}>
               <GroupRow properties={opponent.properties} width={30} />
             </div>
@@ -446,8 +170,7 @@ export function Board({
       {/* table band (10%) — draw pile · turn chip · discard */}
       <div style={zone(10, { display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${STAGE.scrimSheet}`, borderBottom: `1px solid ${STAGE.scrimSheet}` })}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {/* L4: the pile is display only — the turn-start draw is automatic, never a tap.
-              It is also the face-down destination for buried discards (house rule). */}
+          {/* L4: the pile is display only — the turn-start draw is automatic, never a tap. */}
           <DrawPile count={observation.drawPileCount} />
           <span style={{ fontFamily: FONT.mono, fontSize: 12 }}>{observation.drawPileCount}</span>
         </div>
@@ -463,55 +186,63 @@ export function Board({
         </div>
       </div>
 
-      {/* centre stage (30%) — the 2-line ticker sits under the table band (§8); below it is
-          open felt at rest, the tapped card's overlay on stage, or the single gold Declare
-          SAUDA! button when the engine offers a win (A11 — the one celebration). */}
+      {/* centre stage (30%) — the 2-line ticker (§8), then open felt / the tapped card's
+          overlay / the centre PLAY drop zone / the Declare SAUDA! button (A11). */}
       <div style={zone(30, { display: 'flex', flexDirection: 'column' })}>
         <Ticker lines={tickerLines} />
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {declareWinAction && onAct && (
-            <button onClick={() => onAct(declareWinAction)} style={goldFilledButton}>
-              Declare SAUDA!
-            </button>
-          )}
+        <div data-drop="play" style={{ flex: 1, minHeight: 0, margin: '0 8px 6px', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hotZoneId === 'play' ? GLOW.hot : playEligible ? GLOW.soft : 'none' }}>
+          {declareWinAction && onAct ? (
+            <button onClick={() => onAct(declareWinAction)} style={goldFilledButton}>Declare SAUDA!</button>
+          ) : playEligible ? (
+            <span style={{ fontFamily: FONT.display, fontWeight: 700, color: STAGE.accentGold }}>Play</span>
+          ) : null}
         </div>
       </div>
 
-      {/* my area (38%) — the largest zone (hierarchy law A2); sleeps when it isn't my turn.
-          position:relative so the End turn button can float bottom-right (right thumb). */}
-      <div style={zone(38, { position: 'relative', display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
+      {/* my area (38%) — the largest zone (hierarchy law A2); sleeps when it isn't my turn. */}
+      <div style={zone(38, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <PlayerHeader
-            name="You"
-            bankTotal={observation.myBankTotal}
-            handCount={observation.myHand.length}
-            active={myTurn}
-            showPips
-            playsRemaining={observation.playsRemaining}
-          />
-          <BankStack count={observation.myBank.length} total={observation.myBankTotal} />
+          <PlayerHeader name="You" bankTotal={observation.myBankTotal} handCount={observation.myHand.length} active={myTurn} showPips playsRemaining={observation.playsRemaining} />
+          {/* the bank is a drop zone for money / bankable actions (never a wildcard). */}
+          <div data-drop="bank" style={{ borderRadius: 8, padding: 3, boxShadow: hotZoneId === 'bank' ? GLOW.hot : bankEligible ? GLOW.soft : 'none' }}>
+            <BankStack count={observation.myBank.length} total={observation.myBankTotal} />
+          </div>
         </div>
         <div style={{ minHeight: 0, overflow: 'hidden' }}>
-          <GroupRow properties={observation.myProperties} kiraya={observation.myKiraya} width={38} mine />
+          <GroupRow properties={observation.myProperties} kiraya={observation.myKiraya} width={38} mine dropSets={eligibleSets} hotZoneId={hotZoneId} />
         </div>
         {inDiscardMode && (
           <div style={{ textAlign: 'center', fontFamily: FONT.display, fontWeight: 700, fontSize: 13, color: STAGE.accentGold }}>
             Over the limit — tap {observation.myHand.length - HAND_LIMIT} to discard
           </div>
         )}
-        <div style={{ marginTop: 'auto' }}>
-          <HandFan cards={observation.myHand} tappableIds={handTappableIds} onTapCard={onTapHandCard} />
+        {/* bottom row: the hand fan (flex) + a reserved column for End turn (right thumb, A2)
+            so the fan never underlaps the control. */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, marginTop: 'auto' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <HandFan cards={observation.myHand} interactiveIds={handTappableIds} draggingId={drag?.cardId ?? null} handlersFor={handlersFor} />
+          </div>
+          <div style={{ width: END_TURN_COLUMN_PX, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 8 }}>
+            {endTurnAction && onAct && (
+              <button onClick={() => onAct(endTurnAction)} style={goldOutlineButton}>End turn</button>
+            )}
+          </div>
         </div>
-        {/* End turn — always available while it's a legal move (A6: enabled, never nags);
-            hidden during the forced discard step, where the engine ends the turn for you. */}
-        {endTurnAction && onAct && (
-          <button onClick={() => onAct(endTurnAction)} style={endTurnButtonStyle}>
-            End turn
-          </button>
-        )}
       </div>
 
-      {/* centre-stage overlay: the tapped card rises here with its action rail (v1.2 A1) */}
+      {/* the floating drag preview — lifted above the finger, pointer-events:none so it never
+          hides the drop zone beneath it from the hit-test. */}
+      {drag && (
+        <div style={{ position: 'fixed', left: drag.x, top: drag.y, pointerEvents: 'none', zIndex: 50 }}>
+          <div style={{ transform: 'translate(-50%, -100%) translateY(-32px) scale(0.62)', transformOrigin: 'bottom center' }}>
+            <div style={{ boxShadow: SHADOW.dragLift, borderRadius: 8 }}>
+              <CardFace cardId={drag.cardId} size="full" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* centre-stage overlay: a tapped card rises here with its action rail (A1 fallback). */}
       {staged !== null && onAct && (
         <StagedCard
           cardId={staged}
@@ -526,3 +257,17 @@ export function Board({
     </div>
   );
 }
+
+const boardStyle: CSSProperties = {
+  width: 'min(96vw, 460px)',
+  height: 'min(90vh, 780px)',
+  margin: '0 auto',
+  position: 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+  background: STAGE.felt,
+  color: STAGE.textOnFelt,
+  borderRadius: 12,
+  overflow: 'hidden',
+  fontFamily: FONT.serif,
+};

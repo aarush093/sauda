@@ -41,6 +41,15 @@ export const SHADOW = {
   titleKeyline: '0 0 1.5px rgba(20,18,31,0.85), 0 1px 1px rgba(20,18,31,0.55)', // cream title halo
   ledgerSlip: '0 1px 2px rgba(20,18,31,0.20), inset 0 0 5px rgba(150,120,60,0.14)', // pasted-slip lift
   cardBack: '0 1px 2px rgba(0,0,0,0.35)', // face-down card lift
+  dragLift: '0 12px 20px rgba(20,18,31,0.45)', // a card lifted out of the hand mid-drag (A10 L3)
+} as const;
+
+// Drop-zone glow (A10 · STATE_MATRIX §1). The one GLOW_GOLD marks the zone UNDER the
+// pointer (hot); an eligible-but-not-hot zone wears just a gold keyline (soft) — same
+// accent, no second colour, so "one glow" still holds.
+export const GLOW = {
+  soft: `0 0 0 2px ${INK.gold}`, // eligible drop zone
+  hot: STAGE.glowGold, // the zone under the dragged card
 } as const;
 
 // §2.4 typography. Families resolve to the self-hosted faces in fonts.css.
