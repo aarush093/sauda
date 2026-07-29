@@ -13,7 +13,7 @@
  */
 import { useEffect, useRef } from 'react';
 import { legalActions, observe } from '@sauda/engine';
-import type { Action } from '@sauda/engine';
+import type { Action, GameEvent } from '@sauda/engine';
 import { actorOf, useGame, viewSeat } from '../game/store';
 import { paymentDetails } from '../game/paymentModel';
 import { zeroPayableResponse } from '../game/interaction';
@@ -25,7 +25,7 @@ import { ReceivePrompt } from './ReceivePrompt';
 import { HandoffOverlay } from './HandoffOverlay';
 import { STAGE, INK, FONT } from '../design/tokens';
 
-const BOT_MOVE_DELAY_MS = 300;
+const BOT_MOVE_DELAY_MS = 700; // §8/I1: each bot play holds ~700 ms so it is watchable
 const BEAT_MS = 500; // L1: the pause before an auto-resolve so the player reads it
 
 // A move the UI plays for the human because there is nothing to decide (|legalActions|==1):
@@ -35,12 +35,25 @@ interface AutoResolve {
   note: string;
 }
 
+// The card a just-moved bot played, to spotlight on centre stage so the turn is watchable
+// (§8/I1). Reads the most recent events; the last placed / banked / played card wins.
+function spotlightCard(events: GameEvent[]): string | null {
+  for (let index = events.length - 1; index >= 0; index--) {
+    const event = events[index]!;
+    if (event.type === 'ActionPlayed' || event.type === 'CardBanked' || event.type === 'PropertyPlaced') {
+      return event.cardId;
+    }
+  }
+  return null;
+}
+
 export function Table() {
   const state = useGame((store) => store.state);
   const seats = useGame((store) => store.seats);
   const revealedSeat = useGame((store) => store.revealedSeat);
   const handoffSeat = useGame((store) => store.handoffSeat);
   const log = useGame((store) => store.log);
+  const lastEvents = useGame((store) => store.lastEvents);
   const dispatch = useGame((store) => store.dispatch);
   const stepBot = useGame((store) => store.stepBot);
   const ackHandoff = useGame((store) => store.ackHandoff);
@@ -121,6 +134,8 @@ export function Table() {
   const isBotTurn = seats[actor]?.kind === 'bot';
   const gameOver = state.phase === 'gameOver';
   const tickerLines = log.slice(-2).map((line) => line.text);
+  // Spotlight the acting bot's last card on centre stage so its turn is watchable (I1).
+  const botSpotlightCardId = isBotTurn && handoffSeat === null ? spotlightCard(lastEvents) : null;
 
   // The human actor's legal moves (empty on a bot's turn / at game over). Turn plays feed
   // the board's drag/tap→stage→rail; the RESPOND_* moves each raise their own surface.
@@ -144,6 +159,7 @@ export function Table() {
         actions={isResponse ? [] : humanActions}
         onAct={dispatch}
         tickerLines={tickerLines}
+        botSpotlightCardId={botSpotlightCardId}
       />
 
       {gameOver && (

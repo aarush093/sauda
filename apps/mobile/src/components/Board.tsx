@@ -83,12 +83,14 @@ export function Board({
   actions = [],
   onAct,
   tickerLines = [],
+  botSpotlightCardId = null,
 }: {
   observation: Observation;
   seats: SeatConfig[];
   actions?: Action[];
   onAct?: (action: Action) => void;
   tickerLines?: string[];
+  botSpotlightCardId?: string | null;
 }) {
   const myTurn = observation.currentPlayer === observation.me;
   const topDiscard = observation.discardPile[observation.discardPile.length - 1];
@@ -247,7 +249,12 @@ export function Board({
       <div style={zone(30, { display: 'flex', flexDirection: 'column' })}>
         <Ticker lines={tickerLines} />
         <div data-drop="play" style={{ flex: 1, minHeight: 0, margin: '0 8px 6px', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hotZoneId === 'play' ? GLOW.hot : playEligible ? GLOW.soft : 'none' }}>
-          {declareWinAction && onAct ? (
+          {botSpotlightCardId ? (
+            // I1: the acting bot's card, held on stage so its turn is watchable.
+            <div style={{ boxShadow: STAGE.glowGold, borderRadius: 8 }}>
+              <CardFace cardId={botSpotlightCardId} size="mid" />
+            </div>
+          ) : declareWinAction && onAct ? (
             <button onClick={() => onAct(declareWinAction)} style={goldFilledButton}>Declare SAUDA!</button>
           ) : playEligible ? (
             <span style={{ fontFamily: FONT.display, fontWeight: 700, color: STAGE.accentGold }}>Play</span>

@@ -9,7 +9,7 @@
  */
 import { create } from 'zustand';
 import { createGame, legalActions, mulberry32, observe, reduce } from '@sauda/engine';
-import type { Action, GameState, Rng } from '@sauda/engine';
+import type { Action, GameEvent, GameState, Rng } from '@sauda/engine';
 import { HeuristicBot } from '@sauda/bots';
 import type { Bot, Difficulty } from '@sauda/bots';
 import { describeEvent } from './labels';
@@ -32,6 +32,7 @@ export interface GameStore {
   revealedSeat: number | null; // which human currently sees the board
   handoffSeat: number | null; // if set, show the pass-the-device overlay for this seat
   log: LogLine[];
+  lastEvents: GameEvent[]; // events from the most recent applied action (drives the bot spotlight)
   newGame: (config: GameConfig) => void;
   dispatch: (action: Action) => void;
   stepBot: () => void;
@@ -103,7 +104,7 @@ export const useGame = create<GameStore>((set, get) => {
     const texts = result.value.events
       .map(describeEvent)
       .filter((text): text is string => text !== null);
-    set({ state: result.value.state, log: extendLog(log, texts) });
+    set({ state: result.value.state, log: extendLog(log, texts), lastEvents: result.value.events });
     syncHandoff();
   }
 
@@ -113,6 +114,7 @@ export const useGame = create<GameStore>((set, get) => {
     revealedSeat: null,
     handoffSeat: null,
     log: [],
+    lastEvents: [],
 
     newGame: (config) => {
       botRng = mulberry32(config.seed);
@@ -126,6 +128,7 @@ export const useGame = create<GameStore>((set, get) => {
         revealedSeat: null,
         handoffSeat: null,
         log: extendLog([], texts),
+        lastEvents: created.events,
       });
       syncHandoff();
     },
@@ -160,7 +163,7 @@ export const useGame = create<GameStore>((set, get) => {
       set({ revealedSeat: handoffSeat, handoffSeat: null });
     },
 
-    reset: () => set({ state: null, seats: [], revealedSeat: null, handoffSeat: null, log: [] }),
+    reset: () => set({ state: null, seats: [], revealedSeat: null, handoffSeat: null, log: [], lastEvents: [] }),
   };
 });
 
