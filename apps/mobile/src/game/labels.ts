@@ -58,63 +58,6 @@ export function describeCard(id: string): string {
   }
 }
 
-export function describeAction(action: Action): string {
-  switch (action.type) {
-    case 'DRAW':
-      return 'Draw';
-    case 'END_TURN':
-      return 'End turn';
-    case 'DECLARE_WIN':
-      return 'DECLARE WIN!';
-    case 'DISCARD':
-      return `Discard ${describeCard(action.cardId)}`;
-    case 'BANK_CARD':
-      return `Bank ${describeCard(action.cardId)}`;
-    case 'PLACE_PROPERTY':
-      return `Place in ${SETS[action.set].label}`;
-    case 'REARRANGE_WILDCARD':
-      return `Move to ${SETS[action.toSet].label}`;
-    case 'PLAY_ACTION':
-      return describePlayAction(action);
-    case 'PLAY_KIRAYA':
-      return `Charge ${SETS[action.color].label}${action.dugnaCardIds.length ? ` ×${2 ** action.dugnaCardIds.length}` : ''}${action.target !== null ? ` on P${action.target}` : ' (all)'}`;
-    case 'RESPOND_NAHI_CHALEGA':
-      return 'Play NAHI CHALEGA!';
-    case 'RESPOND_ALLOW':
-      return 'Allow it';
-    case 'RESPOND_PAY':
-      return `Pay: ${action.cardIds.map(describeCard).join(', ') || 'nothing'}`;
-    case 'RESPOND_PLACE_RECEIVED':
-      return `Keep in ${SETS[action.set].label}`;
-    default:
-      return 'Action';
-  }
-}
-
-function describePlayAction(action: Extract<Action, { type: 'PLAY_ACTION' }>): string {
-  const p = action.params;
-  switch (p.action) {
-    case 'aageBadho':
-      return 'Aage Badho (draw 2)';
-    case 'makaan':
-      return `Build Makaan on ${SETS[p.set].label}`;
-    case 'haveli':
-      return `Build Haveli on ${SETS[p.set].label}`;
-    case 'vasooli':
-      return `Vasooli on P${p.target}`;
-    case 'shagun':
-      return 'Shagun (all pay ₹2)';
-    case 'kabza':
-      return `Kabza P${p.target}'s ${SETS[p.set].label}`;
-    case 'haathKiSafai':
-      return `Haath Ki Safai on P${p.target}`;
-    case 'adlaBadli':
-      return `Adla-Badli with P${p.target}`;
-    default:
-      return 'Play';
-  }
-}
-
 // The hand card an action operates on (for grouping in the UI), or null.
 export function actionCardId(action: Action): string | null {
   switch (action.type) {

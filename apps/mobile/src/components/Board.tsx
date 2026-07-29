@@ -1,12 +1,16 @@
 /**
- * The play-table SKELETON (M4b Phase 1 · v1.2 A2). A read-only, portrait, one-screen
- * layout of real cards in the right places — NO interaction yet (tap-to-stage, rail,
- * drag and animation are Phase 2+). It renders an engine Observation only; every number
- * comes from the engine, every colour from design/tokens.
+ * The play table (v1.2 A1/A2/A10). A portrait, one-screen surface driven entirely by the
+ * engine: every number comes from an Observation, every legal move from legalActions
+ * (passed in as `actions`), every colour from design/tokens. The UI decides no rules — it
+ * renders what the engine offers and dispatches the player's choice back.
  *
- * Four zones by the spec's percentages: opponent row 22% · table band 10% · centre
- * stage 30% (reserved, empty for now) · my area 38% (the largest — the hierarchy law).
- * Two visual states only (v1.2 A5): rest, and DIM_SLEEP on my board/hand when off-turn.
+ * Four zones by the spec's percentages (A2): opponent row 22% · table band 10% · centre
+ * stage 30% · my area 38% (always the largest — the hierarchy law). Interaction is
+ * tap → centre stage → rail (A1): tapping a legal hand card raises it into the overlay
+ * with its verb rail. Turn-flow lives on the table itself — tap the glowing draw pile to
+ * draw, End turn sits bottom-right (right thumb), Declare SAUDA! appears centre when a win
+ * is offered (A11), and a discard step (A8/A9) turns the hand tappable when it's over the
+ * limit. Two visual states (A5): rest, and DIM_SLEEP on my board/hand when off-turn.
  */
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
@@ -20,6 +24,34 @@ import { STAGE, INK, SHADOW, FONT, CARD } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 const PLAYS_PER_TURN = 3; // §7 rules default; pips render 3 slots
+const HAND_LIMIT = 7; // §4.4 / Niyam Card 3: end a turn over 7 cards and you discard down
+
+// Turn-flow buttons. Gold-filled = a committing/celebratory action (Declare SAUDA!);
+// gold-outline = a quiet, always-available control (End turn, A6 "never pulses/nags").
+// Same gold tokens as the action rail — one accent, no variants (A5).
+const goldFilledButton: CSSProperties = {
+  padding: '12px 22px',
+  borderRadius: 999,
+  border: 'none',
+  background: STAGE.accentGold,
+  color: INK.deepInk,
+  fontFamily: FONT.display,
+  fontWeight: 700,
+  fontSize: 16,
+  cursor: 'pointer',
+};
+const goldOutlineButton: CSSProperties = {
+  padding: '9px 16px',
+  borderRadius: 999,
+  background: 'transparent',
+  color: STAGE.accentGold,
+  border: `1.5px solid ${INK.gold}`,
+  fontFamily: FONT.display,
+  fontWeight: 700,
+  fontSize: 14,
+  cursor: 'pointer',
+};
+const endTurnButtonStyle: CSSProperties = { ...goldOutlineButton, position: 'absolute', right: 10, bottom: 10 };
 
 function seatName(seats: SeatConfig[], id: number): string {
   const seat = seats[id];
@@ -167,12 +199,12 @@ function BankStack({ count, total }: { count: number; total: number }) {
 const HAND_SCALE = 0.6;
 function HandFan({
   cards,
-  stageableIds,
-  onStage,
+  tappableIds,
+  onTapCard,
 }: {
   cards: string[];
-  stageableIds: Set<string>;
-  onStage: (cardId: string) => void;
+  tappableIds: Set<string>;
+  onTapCard: (cardId: string) => void;
 }) {
   const cardWidth = Math.round(CARD.fullWidth * HAND_SCALE);
   const cardHeight = Math.round(CARD.fullWidth * CARD.ratio * HAND_SCALE);
@@ -187,19 +219,20 @@ function HandFan({
     <div style={{ height: cardHeight + 10, display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
       <div style={{ position: 'relative', width: spread, height: cardHeight }}>
         {cards.map((id, i) => {
-          // Only cards with a legal play right now respond to a tap (§4 legality-at-a-glance).
-          const stageable = stageableIds.has(id);
+          // Only cards the engine offers an action for right now respond to a tap (§4
+          // legality-at-a-glance) — a play to stage, or a discard when over the limit.
+          const tappable = tappableIds.has(id);
           return (
             <div
               key={id}
-              onClick={stageable ? () => onStage(id) : undefined}
+              onClick={tappable ? () => onTapCard(id) : undefined}
               style={{
                 position: 'absolute',
                 left: i * advance,
                 bottom: Math.abs(i - mid) * -1.5, // shallow arc — ends dip slightly
                 transform: `rotate(${(i - mid) * 2.5}deg)`,
                 transformOrigin: 'bottom center',
-                cursor: stageable ? 'pointer' : 'default',
+                cursor: tappable ? 'pointer' : 'default',
               }}
             >
               <div style={{ width: cardWidth, height: cardHeight }}>
@@ -321,19 +354,51 @@ export function Board({
   const myTurn = observation.currentPlayer === observation.me;
   const topDiscard = observation.discardPile[observation.discardPile.length - 1];
 
-  // Which hand cards can be tapped to stage — those with a play action offered right now.
-  // Off-turn `actions` is empty, so the hand is inert (it already sleeps under DIM_SLEEP).
+  // Turn-flow actions the engine offers directly (not tied to a staged hand card). Each is
+  // a single legal move; the matching control below dispatches it. `undefined` = not legal
+  // now, so the control simply isn't rendered — legality drives the UI, never the reverse.
+  const drawAction = actions.find((action) => action.type === 'DRAW');
+  const endTurnAction = actions.find((action) => action.type === 'END_TURN');
+  const declareWinAction = actions.find((action) => action.type === 'DECLARE_WIN');
+
+  // Discard step (A8/A9): while over the hand limit the engine offers a DISCARD per hand
+  // card and nothing else. Collect them so a tap on the fan buries that card; a non-empty
+  // map means we are in discard mode and the hand taps discard instead of staging.
+  const discardByCardId = new Map<string, Action>();
+  for (const action of actions) {
+    if (action.type === 'DISCARD') {
+      discardByCardId.set(action.cardId, action);
+    }
+  }
+  const inDiscardMode = discardByCardId.size > 0;
+
+  // Which hand cards respond to a tap, and what the tap does. In normal play it stages a
+  // card that has a legal play (money to bank, property to place, action/kiraya to play);
+  // in the discard step it buries the tapped card. Off-turn `actions` is empty, so the
+  // hand is inert (and already sleeps under DIM_SLEEP).
   const stageableIds = new Set<string>();
   for (const action of actions) {
     if (action.type === 'BANK_CARD' || action.type === 'PLACE_PROPERTY' || action.type === 'PLAY_ACTION' || action.type === 'PLAY_KIRAYA') {
       stageableIds.add(action.cardId);
     }
   }
+  const handTappableIds = inDiscardMode ? new Set(discardByCardId.keys()) : stageableIds;
 
   // The tapped card, held in local UI state. Derive `staged` so the overlay clears itself
   // once the card leaves the hand (committed) or the turn passes — never a stale card.
   const [stagedCardId, setStagedCardId] = useState<string | null>(null);
   const staged = stagedCardId !== null && observation.myHand.includes(stagedCardId) ? stagedCardId : null;
+
+  function onTapHandCard(cardId: string): void {
+    if (inDiscardMode) {
+      const discard = discardByCardId.get(cardId);
+      if (discard && onAct) {
+        onAct(discard); // bury it under the draw pile (house rule A9); engine ends the turn at the limit
+      }
+      return;
+    }
+    setStagedCardId(cardId); // rise to centre stage with its rail (A1)
+  }
 
   const zone = (basisPct: number, extra?: CSSProperties): CSSProperties => ({
     flex: `0 0 ${basisPct}%`,
@@ -378,7 +443,14 @@ export function Board({
       {/* table band (10%) — draw pile · turn chip · discard */}
       <div style={zone(10, { display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${STAGE.scrimSheet}`, borderBottom: `1px solid ${STAGE.scrimSheet}` })}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <DrawPile count={observation.drawPileCount} />
+          {/* A2: draw by tapping the pile itself — no separate Draw button. It wears the
+              gold glow only while DRAW is legal (law 3: a zone glows iff it's actionable). */}
+          <div
+            onClick={drawAction && onAct ? () => onAct(drawAction) : undefined}
+            style={{ borderRadius: 6, cursor: drawAction ? 'pointer' : 'default', boxShadow: drawAction ? STAGE.glowGold : 'none' }}
+          >
+            <DrawPile count={observation.drawPileCount} />
+          </div>
           <span style={{ fontFamily: FONT.mono, fontSize: 12 }}>{observation.drawPileCount}</span>
         </div>
         <div style={{ textAlign: 'center' }}>
@@ -393,13 +465,20 @@ export function Board({
         </div>
       </div>
 
-      {/* centre stage (30%) — open felt at rest. The tapped hand card's overlay (rendered
-          at the end of this component) rises here with its rail; Phase-2 turn-flow adds the
-          Declare SAUDA! button here when a win is available (A11). */}
-      <div style={zone(30, { display: 'flex', alignItems: 'center', justifyContent: 'center' })} />
+      {/* centre stage (30%) — open felt at rest; the tapped card's overlay (rendered at the
+          end of this component) rises here with its rail. A11: when the engine offers a win,
+          the stage carries the single gold Declare SAUDA! button — the one celebration. */}
+      <div style={zone(30, { display: 'flex', alignItems: 'center', justifyContent: 'center' })}>
+        {declareWinAction && onAct && (
+          <button onClick={() => onAct(declareWinAction)} style={goldFilledButton}>
+            Declare SAUDA!
+          </button>
+        )}
+      </div>
 
-      {/* my area (38%) — the largest zone; sleeps when it isn't my turn */}
-      <div style={zone(38, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
+      {/* my area (38%) — the largest zone (hierarchy law A2); sleeps when it isn't my turn.
+          position:relative so the End turn button can float bottom-right (right thumb). */}
+      <div style={zone(38, { position: 'relative', display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <PlayerHeader
             name="You"
@@ -414,9 +493,21 @@ export function Board({
         <div style={{ minHeight: 0, overflow: 'hidden' }}>
           <GroupRow properties={observation.myProperties} kiraya={observation.myKiraya} width={38} mine />
         </div>
+        {inDiscardMode && (
+          <div style={{ textAlign: 'center', fontFamily: FONT.display, fontWeight: 700, fontSize: 13, color: STAGE.accentGold }}>
+            Over the limit — tap {observation.myHand.length - HAND_LIMIT} to discard
+          </div>
+        )}
         <div style={{ marginTop: 'auto' }}>
-          <HandFan cards={observation.myHand} stageableIds={stageableIds} onStage={setStagedCardId} />
+          <HandFan cards={observation.myHand} tappableIds={handTappableIds} onTapCard={onTapHandCard} />
         </div>
+        {/* End turn — always available while it's a legal move (A6: enabled, never nags);
+            hidden during the forced discard step, where the engine ends the turn for you. */}
+        {endTurnAction && onAct && (
+          <button onClick={() => onAct(endTurnAction)} style={endTurnButtonStyle}>
+            End turn
+          </button>
+        )}
       </div>
 
       {/* centre-stage overlay: the tapped card rises here with its action rail (v1.2 A1) */}
