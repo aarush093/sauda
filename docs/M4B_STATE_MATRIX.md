@@ -23,9 +23,10 @@ This is guaranteed by construction, not by enumeration:
    that is a spec bug to file — the engine will still have handled it legally.
 
 Rows once marked **VERIFY** held engine semantics not yet confirmed from source. **RESOLVED
-(§3):** a read-only engine pass has replaced all six (B14, B15, B17, B19, C4, F4) with
-engine-true wording + the proving test; three lack a dedicated test and are flagged as
-findings there. The engine remains the truth — never implement a row that conflicts with it.
+(§3):** a read-only engine pass replaced all six (B14, B15, B17, B19, C4, F4) with engine-true
+wording + the proving test — and all six are now backed by a dedicated test (the last three
+added in commit `443e62f`). The engine remains the truth — never implement a row that
+conflicts with it.
 
 ---
 
@@ -90,7 +91,7 @@ rail-commit model (spec v1.2 direction).
 | B4 | Property staged | `PLACE_PROPERTY` | rail: **Place**; my matching group (or ghost "new group" slot) glows | — |
 | B5 | Property completes a set | placement makes set full | on land: gold **FULL** ribbon slides on | ribbon + medium haptic |
 | B6 | 4th+ card of a full colour | overflow rule | auto-routes to a **second same-colour group**; ticker notes it | — |
-| B7 | Wildcard staged | multiple `PLACE_PROPERTY` sets | rail: **Place**; every legal group glows; tap one to choose | — |
+| B7 | Wildcard staged | multiple `PLACE_PROPERTY` sets | rail: **Place**; only the card's **legal** groups glow — a **dual** wildcard's two colours, an **ANY** wildcard's every set (`placeableSets`, `sets.ts:30`); tap one to choose | — |
 | B8 | Rearrange wildcard (free) | rearrange legal, own turn | drag a placed wildcard between groups; ghost slot; **no pip dims** | slide |
 | B9 | Action staged | `PLAY_ACTION` + `BANK_CARD` | rail: **Play** and **Bank** — the duality as two labelled buttons | — |
 | B10 | Banked action | `BANK_CARD` on action | flies to bank at ₹ value; first time ever: 3-s inline hint "Banked actions stay money" | note shuffle |
@@ -185,10 +186,10 @@ Each answer cites file:line and the proving test — or names the missing proof 
    (`reduce.ts:491–497`; `legal.ts:263–266`). **Paired (`targeted:false`) charges ALL
    opponents** (target must be `null` — `reduce.ts:521–525`); **wild (ANY, `targeted:true`)
    charges ONE chosen opponent** (target required — `reduce.ts:516–520`). Proof: colour
-   ownership — `turn.test.ts:222–235` (#12, `COLOR_NOT_OWNED`, paired card). **⚠ MISSING
-   PROOF:** no test exercises the wild/targeted path or the `BAD_TARGET` guards; the
-   target-scope split rests on `reduce.ts:513–526` + the 500-game sim (`tools driver.test`,
-   invariants only). → finding.
+   ownership — `turn.test.ts:222–235` (#12, `COLOR_NOT_OWNED`, paired card); **wild/paired
+   target scope + `BAD_TARGET` — `turn.test.ts` "kiraya rules (§5)" B14 cases (commit
+   `443e62f`): wild charges one chosen opponent and rejects null/self; paired charges all
+   opponents and rejects a named target.** ✓ **proven.**
 
 2. **B15 — DUGNA LAGAAN pairing.** A same-turn **ATTACH**, carried in
    `PLAY_KIRAYA.dugnaCardIds` — never a standalone play (`legal.ts:248, 268–291`). **Each
@@ -206,21 +207,21 @@ Each answer cites file:line and the proving test — or names the missing proof 
    (`reduce.ts:356–357`; `legal.ts:346`). **Both MAKAAN and HAVELI require the set to be
    COMPLETE** (`reduce.ts:342, 356`; `legal.ts:341`), and neither may sit on
    Junctions/Utilities (`reduce.ts:339`; `legal.ts:336`). Proof: `turn.test.ts:237–255`
-   (#13) proves the RENT BONUS counts only on a complete set — but that is `kirayaForGroup`,
-   not placement. **⚠ MISSING PROOF:** no test places a MAKAAN/HAVELI through `reduce` to
-   exercise the prerequisites (`NO_MAKAAN_SPOT` / `NO_HAVELI_SPOT` / junction block); every
-   building test uses pre-placed buildings via `makeState`. Code + legal + sim only. → finding.
+   (#13) proves the RENT BONUS counts only on a complete set (`kirayaForGroup`); **placement
+   prerequisites through `reduce` — `turn.test.ts` "building placement (§5, B19)" (commit
+   `443e62f`): `NO_MAKAAN_SPOT` on an incomplete set, `NO_BUILDING_HERE` on Junctions,
+   `NO_HAVELI_SPOT` without a MAKAAN, plus a MAKAAN-then-HAVELI happy path.** ✓ **proven.**
 
 5. **C4 — zero-payable path.** **No engine auto-resolve.** A standing charge always advances
    to `awaitingPayment` regardless of the debtor's table (`reduce.ts:635–639`); the only legal
    action is one `RESPOND_PAY` with an **empty** list (`suggestPayment` returns `[]` when
    table ≤ debt — `payment.ts:258–259`; `legal.ts:70–80`), which `validatePayment` accepts
    (empty ok when payable is empty — `payment.ts:86–92`) and `applyPayment` settles as a
-   `Paid` event with no cards. Proof: `payment.test.ts:55–60` (#3, `validatePayment([])` ok +
-   `totalPayableValue` 0). **⚠ PARTIAL PROOF:** the empty-selection VALIDATION is tested, but
-   no named test drives the full flow (charge on an empty table → `awaitingPayment` → empty
-   pay → `InterruptResolved`); code-proven (`reduce.ts:635–639, 737–765`) + sim only. → finding.
-   *UI note: the engine opens the step; the UI auto-resolves it — it is not an engine skip.*
+   `Paid` event with no cards. Proof: `payment.test.ts:55–60` (#3, empty-selection validation);
+   **full flow — `interrupts.test.ts` "zero-payable charge (C4)" (commit `443e62f`): a charge
+   on an empty table opens `awaitingPayment`, `legalActions` offers exactly one empty
+   `RESPOND_PAY`, and submitting it resolves the interrupt with a no-card `Paid` event.** ✓
+   **proven.** *UI note: the engine opens the step; the UI auto-resolves it — not an engine skip.*
 
 6. **F4 — reshuffle trigger + order.** During a draw, when `drawPile` is empty **and**
    `discardPile` is non-empty, the whole discard pile is **seed-shuffled** (`shuffleWithState`,
@@ -241,18 +242,19 @@ Each answer cites file:line and the proving test — or names the missing proof 
   RESPOND_PAY to present "no sheet" (row C4).
 - B17 / B19 / F4 tightened their rows; no treatment reversal.
 
-**Findings (engine is CORRECT; the gap is test coverage):** B14 (wild-LAGAAN target scope +
-`BAD_TARGET`), B19 (building-placement prerequisites), and C4 (full empty-pay flow) have no
-dedicated named test — each is exercised by the 500-game sim without a targeted assertion.
-Recommend three small unit tests when M4b begins (not blocking).
+**Test-gap findings — RESOLVED:** B14 (wild-LAGAAN target scope + `BAD_TARGET`), B19
+(building-placement prerequisites), and C4 (full empty-pay flow) each now have a dedicated
+test, added in commit `443e62f` and cited in their rows above. No open test gaps remain in
+this ledger.
 
 **A8 Learn cards:** none of the six existing Niyam cards state LAGAAN / DUGNA / MAKAAN-HAVELI
 mechanics, so **no card needs a wording fix from these six answers**; the engine-true details
 above are the material for the optional **Card 7 — "Lagaan aur imaarat"** noted in
-`M4B_SPEC_v1.2.md` A8 (add at M4d). *Separately flagged to the owner (outside this VERIFY
-scope): A4 + Niyam Card 6 state that wildcards are universal and bankable, which the current
-engine does not do — `placeableSets` gives dual wildcards only their two colours (`sets.ts:30`)
-and `BANK_CARD` excludes wildcards (`legal.ts:166`).*
+`M4B_SPEC_v1.2.md` A8 (add at M4d). *`M4B_SPEC_v1.2.md` A4 + Niyam Card 6 have since been
+CORRECTED to match the engine — an owner-side "universal wildcards" claim (commit `4055711`)
+that was never real: dual wildcards place only in their two colours (`sets.ts:30`), ANY
+wildcards are ₹0 and non-payable, and no wildcard is bankable (`legal.ts:166`). Row B7 was
+checked — it already defers to the legal groups, now stated explicitly.*
 
 ---
 

@@ -77,13 +77,25 @@ Five approved references exist; M4b builds them in code (mockup text/art is plac
    avatar with gold ring, their three completed sets as small ribboned fans, three
    quiet stat chips, "Play again" (gold) + "Home" (outlined). No confetti.
 
-## A4 — Wildcards are UNIVERSAL (rules change shipped, `4055711`)
+## A4 — Wildcards are NOT universal (corrects an earlier draft's error)
 
-All 11 wildcards place on ANY set (`placeableSets` returns every set). Each keeps its ₹
-value badge and is bankable. **Card face:** every wildcard renders the same unmistakable
-**all-colours (rainbow) band** — no two-colour splits. A wildcard must never visually
-imply a restriction the engine doesn't enforce. Re-sim confirmed balance held
-(95.7% win / 20.1 turns).
+An earlier draft of this section claimed all 11 wildcards were universal — a "rules change
+shipped" under commit `4055711`, with re-sim figures. **That was an owner-side error:
+commit `4055711` never existed and the engine never shipped any such change.** The engine,
+unchanged since M1, is:
+
+- **9 dual wildcards** place **only in their two colours** (`placeableSets` returns the
+  card's own `colors` for a dual — `sets.ts:30`) and carry a **₹ value** — a dual wildcard
+  on the table can be handed over as payment at that value.
+- **2 ANY wildcards** place in **any set** (`placeableSets` returns every set for `'ANY'`)
+  but are **valueless (₹0)** and can **never be used as payment** (`isAnyWildcard` → ₹0,
+  excluded from `payableCards` — `sets.ts`, `payment.ts`).
+- **No wildcard is ever banked** — `BANK_CARD` accepts only money / action / kiraya cards
+  (`legal.ts:166`); every wildcard is placed as property.
+- **Card faces are already correct — do NOT unify them.** A **dual** wildcard shows its true
+  **two-colour split + ₹ value chip**; an **ANY** wildcard shows the **all-colours band +
+  "no value"**. A wildcard must never visually imply a placement the engine forbids, so the
+  two-colour split is required — not a defect to "fix".
 
 ## A5 — Visual constancy (reaffirms STATE_MATRIX §1, adjusted for tap model)
 
@@ -136,8 +148,9 @@ When an action is played against you, a window opens: play NAHI CHALEGA from you
 to cancel it. It costs no play and works even off-turn. A counter can be countered.
 
 **Card 6 — Wildcards**
-A wildcard joins ANY colour set and carries a ₹ value (it can be banked or paid). On
-your own turn, moving a placed wildcard between your sets is free.
+A dual wildcard joins **either of its two colours** and carries a ₹ value (it can be used to
+pay). The two ANY wildcards join **any** colour but are worth **nothing** and can never pay.
+Moving a placed wildcard between your own sets on your turn is free.
 
 *(If the VERIFY pass surfaces LAGAAN/DUGNA-LAGAAN/MAKAAN-HAVELI details worth a seventh
 card, add "Card 7 — Lagaan aur imaarat" with engine-true wording at that time.)*
