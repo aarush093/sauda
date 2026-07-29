@@ -201,6 +201,94 @@ turn over 7 cards and the extras get buried under the draw pile. Hoard with a pl
 
 ---
 
+## A10 — Drag-first interaction layer (Phase B · owner-approved)
+
+**Supersedes A1 as the PRIMARY path; A1 tap→stage→rail survives verbatim as the fallback.**
+The approved play muscle memory is drag: lift a card, drop it on a glowing zone. Everything
+A1 said still holds for the tap path; this section adds the drag layer, the auto-draw model,
+and the wildcard-rearrange drag, and states the six laws (L1–L6) governing the whole play
+surface. The engine is frozen; every zone, target, and glow derives from `legalActions` only.
+
+### The six UX laws (A10 · L1–L6)
+
+- **L1 — Nothing resolves silently.** Every auto-resolve — a window whose `legalActions` holds
+  exactly one move (D2 auto-allow, C4 zero-payable, a forced discard) — plays a ~500 ms beat and
+  appends one ticker line. The player always sees what the game did on their behalf.
+- **L2 — One live surface.** At most one interactive surface is active at any moment (stage,
+  targeting, sheet, prompt, discard, handoff); everything else sleeps under DIM. Two decisions
+  never compete for one tap.
+- **L3 — One gesture commits.** A play is one continuous drag from a hand card to a glowing drop
+  zone, reversible until release (drop in dead space = spring home, no state change). Tap→stage→
+  rail (A1) is the equal fallback. Only irreversible moments (payment, declare win) carry an
+  explicit confirm — the pay/declare button itself; never a second dialog.
+- **L4 — Auto-draw.** The turn-start draw is automatic — no zero-choice tap. On entering
+  `awaitingDraw` for the seat holding the device the UI dispatches `DRAW`; the pile count ticks,
+  pips refill. In pass-and-play it fires after the handoff interstitial is dismissed, so the
+  incoming player watches their own draw. The pile is display + the face-down under-pile discard
+  destination only; it is never tapped to draw.
+- **L5 — Legality is the only oracle.** A card lifts, a zone glows, a target highlights **iff**
+  `legalActions` offers that move. Illegal is impossible, never punished; the UI re-implements no
+  rule. (Restates §1 law 3 / §11 for the drag layer.)
+- **L6 — Modifiers attach, never stand alone.** A card that only modifies another play (DUGNA
+  LAGAAN) is never an independent verb: while a LAGAAN is staged/targeting it appears as a ×2 / ×4
+  attach chip (or a drop onto the staged LAGAAN), each attach spending one extra play at commit
+  per the engine (matrix B15). It has no drop zone of its own.
+
+### Interaction state machine (UI-only; engine untouched)
+
+States: **REST · PRESSED · DRAG · STAGED · TARGETING · SHEET · PROMPT · SLEEP · DISCARD · HANDOFF.**
+
+- **REST** — my turn, nothing active; centre stage empty.
+- **PRESSED(card)** — pointerdown on a hand card; it peeks above its neighbours. Release within an
+  8 px slop = tap → **STAGED** (A1). Move beyond 8 px → **DRAG**.
+- **DRAG(card)** — pointer captured; the card rides the pointer at ~1.12×, lifted ~32 px above the
+  touch point (never under the finger), top z-index, strong shadow. Every legal drop zone glows
+  soft; the zone under the pointer glows hot. Release on a hot zone commits its verb; release
+  elsewhere springs home to REST. Reversible until release.
+- **STAGED(card)** — the A1 rail, unchanged: one gold-focused primary verb; tapping the staged
+  card again commits the primary; Cancel or tap-off = REST.
+- **TARGETING(action)** — a committed action still needs a target (KABZA, HAATH KI SAFAI,
+  ADLA-BADLI, VASOOLI, wild LAGAAN). The card sits on stage; only legal targets (from
+  `legalActions`) glow; one tap fires the exact enumerated action. Cancel returns the card to
+  hand, no play consumed. Multi-pick actions glow one dimension at a time (ADLA-BADLI mine→theirs;
+  wild LAGAAN colour→target). Untargeted actions (SHAGUN, AAGE BADHO) commit on drop. **The UI can
+  never send a BAD_TARGET** — it only ever fires an action the engine already enumerated.
+- **REARRANGE (matrix B8)** — on my turn a placed wildcard drags from its group to any group
+  `legalActions` allows (`REARRANGE_WILDCARD`) — free, no play consumed. Tap fallback: tap the
+  placed wildcard → legal destination groups glow → tap one. A wildcard with no legal move does
+  not lift.
+- **SHEET / PROMPT / SLEEP / DISCARD / HANDOFF** — per §6–§8; one at a time (L2).
+
+### Drop map (zones light ONLY from `legalActions`)
+
+| Dragged card | Glowing drop zones | Result |
+|---|---|---|
+| Money | my bank | `BANK_CARD` |
+| Property | its legal set group(s) | `PLACE_PROPERTY` |
+| Wildcard | its legal groups (dual = its 2 colours · ANY = every set) | `PLACE_PROPERTY` |
+| Action | centre PLAY zone **and** my bank | `PLAY_ACTION` / `BANK_CARD` (dual-drop) |
+| MAKAAN / HAVELI | a legal complete set (matrix B19) | `PLAY_ACTION` build |
+| LAGAAN | centre PLAY zone (then B14 flow) **and** my bank | `PLAY_KIRAYA` / `BANK_CARD` |
+| DUGNA LAGAAN | the staged LAGAAN (attach chip) | attaches, never standalone (L6) |
+| placed wildcard | another legal group | `REARRANGE_WILDCARD` (free) |
+
+**Wildcards are never banked** (engine truth: `BANK_CARD` excludes every wildcard — `legal.ts:166`;
+A4). Nine dual wildcards place in their two colours and carry a ₹ value usable as *payment* on the
+table; two ANY wildcards place in any set, are ₹0, never payable. The bank zone therefore never
+lights for a wildcard — the drop map is derived from `legalActions`, so this holds by construction,
+not by a hardcoded rule. **Flag:** an early Phase-B drop-map draft called dual wildcards "bankable";
+the frozen engine says otherwise and wins — the UI follows `legalActions`.
+
+### Draw model conversion (L4)
+
+Auto-draw replaces draw-by-pile-tap — the sole zero-choice tap left in play. The pile becomes
+display + the under-pile discard destination. End turn stays always-manual (wildcard moves are
+free and wins must be declared, so a turn never auto-ends).
+
+*End of A10 (Phase B amendment).*
+
+---
+
 ## Unchanged and still binding from v1.0 / STATE_MATRIX
 
 Turn flow rhythm (§8), motion timings (§9), sound/haptic map (§10), error-prevention
