@@ -8,12 +8,14 @@
  * stage 30% (reserved, empty for now) · my area 38% (the largest — the hierarchy law).
  * Two visual states only (v1.2 A5): rest, and DIM_SLEEP on my board/hand when off-turn.
  */
+import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { SETS, isSetComplete } from '@sauda/engine';
-import type { Observation, PropertyGroup, SetId } from '@sauda/engine';
+import type { Action, Observation, PropertyGroup, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
 import { CardBack } from './CardBack';
 import { CardFace } from './CardFace';
+import { StagedCard } from './StagedCard';
 import { inkForBanner } from '../design/titleInk';
 import { STAGE, INK, SHADOW, FONT, CARD } from '../design/tokens';
 
@@ -166,7 +168,15 @@ function BankStack({ count, total }: { count: number; total: number }) {
 // My hand: a wide overlapping arc of real CardFace cards (reused, scaled to the zone).
 // Readable at rest for up to 7; 8 (pre-discard) compresses, never scrolls.
 const HAND_SCALE = 0.6;
-function HandFan({ cards }: { cards: string[] }) {
+function HandFan({
+  cards,
+  stageableIds,
+  onStage,
+}: {
+  cards: string[];
+  stageableIds: Set<string>;
+  onStage: (cardId: string) => void;
+}) {
   const cardWidth = Math.round(CARD.fullWidth * HAND_SCALE);
   const cardHeight = Math.round(CARD.fullWidth * CARD.ratio * HAND_SCALE);
   const advance = Math.round(cardWidth * 0.68); // ~68% step → ~7–8 fit the portrait width
@@ -179,24 +189,30 @@ function HandFan({ cards }: { cards: string[] }) {
   return (
     <div style={{ height: cardHeight + 10, display: 'flex', justifyContent: 'center', alignItems: 'flex-end' }}>
       <div style={{ position: 'relative', width: spread, height: cardHeight }}>
-        {cards.map((id, i) => (
-          <div
-            key={id}
-            style={{
-              position: 'absolute',
-              left: i * advance,
-              bottom: Math.abs(i - mid) * -1.5, // shallow arc — ends dip slightly
-              transform: `rotate(${(i - mid) * 2.5}deg)`,
-              transformOrigin: 'bottom center',
-            }}
-          >
-            <div style={{ width: cardWidth, height: cardHeight }}>
-              <div style={{ transform: `scale(${HAND_SCALE})`, transformOrigin: 'top left' }}>
-                <CardFace cardId={id} size="full" />
+        {cards.map((id, i) => {
+          // Only cards with a legal play right now respond to a tap (§4 legality-at-a-glance).
+          const stageable = stageableIds.has(id);
+          return (
+            <div
+              key={id}
+              onClick={stageable ? () => onStage(id) : undefined}
+              style={{
+                position: 'absolute',
+                left: i * advance,
+                bottom: Math.abs(i - mid) * -1.5, // shallow arc — ends dip slightly
+                transform: `rotate(${(i - mid) * 2.5}deg)`,
+                transformOrigin: 'bottom center',
+                cursor: stageable ? 'pointer' : 'default',
+              }}
+            >
+              <div style={{ width: cardWidth, height: cardHeight }}>
+                <div style={{ transform: `scale(${HAND_SCALE})`, transformOrigin: 'top left' }}>
+                  <CardFace cardId={id} size="full" />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -294,9 +310,33 @@ function PlayerHeader({
   );
 }
 
-export function Board({ observation, seats }: { observation: Observation; seats: SeatConfig[] }) {
+export function Board({
+  observation,
+  seats,
+  actions = [],
+  onAct,
+}: {
+  observation: Observation;
+  seats: SeatConfig[];
+  actions?: Action[];
+  onAct?: (action: Action) => void;
+}) {
   const myTurn = observation.currentPlayer === observation.me;
   const topDiscard = observation.discardPile[observation.discardPile.length - 1];
+
+  // Which hand cards can be tapped to stage — those with a play action offered right now.
+  // Off-turn `actions` is empty, so the hand is inert (it already sleeps under DIM_SLEEP).
+  const stageableIds = new Set<string>();
+  for (const action of actions) {
+    if (action.type === 'BANK_CARD' || action.type === 'PLACE_PROPERTY' || action.type === 'PLAY_ACTION' || action.type === 'PLAY_KIRAYA') {
+      stageableIds.add(action.cardId);
+    }
+  }
+
+  // The tapped card, held in local UI state. Derive `staged` so the overlay clears itself
+  // once the card leaves the hand (committed) or the turn passes — never a stale card.
+  const [stagedCardId, setStagedCardId] = useState<string | null>(null);
+  const staged = stagedCardId !== null && observation.myHand.includes(stagedCardId) ? stagedCardId : null;
 
   const zone = (basisPct: number, extra?: CSSProperties): CSSProperties => ({
     flex: `0 0 ${basisPct}%`,
@@ -311,6 +351,7 @@ export function Board({ observation, seats }: { observation: Observation; seats:
         width: 'min(96vw, 460px)',
         height: 'min(90vh, 780px)',
         margin: '0 auto',
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         background: STAGE.felt,
@@ -393,9 +434,22 @@ export function Board({ observation, seats }: { observation: Observation; seats:
           <GroupRow properties={observation.myProperties} kiraya={observation.myKiraya} width={38} mine />
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <HandFan cards={observation.myHand} />
+          <HandFan cards={observation.myHand} stageableIds={stageableIds} onStage={setStagedCardId} />
         </div>
       </div>
+
+      {/* centre-stage overlay: the tapped card rises here with its action rail (v1.2 A1) */}
+      {staged !== null && onAct && (
+        <StagedCard
+          cardId={staged}
+          actions={actions}
+          onAct={(action) => {
+            onAct(action);
+            setStagedCardId(null);
+          }}
+          onCancel={() => setStagedCardId(null)}
+        />
+      )}
     </div>
   );
 }

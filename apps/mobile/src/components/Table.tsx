@@ -48,23 +48,31 @@ export function Table() {
   const view = viewSeat({ revealedSeat, seats });
   const observation = observe(state, view);
   const isBotTurn = seats[actor]?.kind === 'bot';
+  const gameOver = state.phase === 'gameOver';
+
+  // The human actor's legal moves (empty on a bot's turn / at game over). Turn plays feed
+  // the board's tap→stage→rail; a response (RESPOND_*) is left to the interim panel below,
+  // which stays functional until the payment-sheet and interrupt-prompt screens land.
+  const humanActions = !isBotTurn && !gameOver ? legalActions(state, actor) : [];
+  const isResponse = humanActions.some((action) => action.type.startsWith('RESPOND_'));
 
   return (
     <div className="table" style={{ background: STAGE.felt, color: STAGE.textOnFelt, minHeight: '100vh', paddingBottom: 24 }}>
-      <Board observation={observation} seats={seats} />
+      <Board
+        observation={observation}
+        seats={seats}
+        actions={isResponse ? [] : humanActions}
+        onAct={dispatch}
+      />
 
-      {state.phase === 'gameOver' ? (
+      {gameOver ? (
         <div className="winner">
           Player {state.winnerIndex} wins! <button onClick={reset}>New game</button>
         </div>
       ) : isBotTurn ? (
         <div className="waiting">Player {actor} is thinking…</div>
       ) : (
-        <ActionPanel
-          actions={legalActions(state, actor)}
-          observation={observe(state, actor)}
-          onAct={dispatch}
-        />
+        <ActionPanel actions={humanActions} observation={observe(state, actor)} onAct={dispatch} />
       )}
 
       <div className="zone">

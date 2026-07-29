@@ -29,6 +29,14 @@ export function cardDescriptor(id: string): string | null {
   return null;
 }
 
+// The ₹ Cr value a card is worth if banked — a money card's face value, or an
+// action/kiraya card's bank value. Every card kind carries a `value`. Used to label
+// the Bank button on the action rail ("Bank ₹N Cr", row B10).
+export function cardValue(id: string): number | null {
+  const card = CARD_BY_ID.get(id);
+  return card ? card.value : null;
+}
+
 export function describeCard(id: string): string {
   const card = CARD_BY_ID.get(id);
   if (!card) {
