@@ -22,6 +22,7 @@ import type { DropZone } from '../game/interaction';
 import { useHandDrag } from '../game/useHandDrag';
 import { CardFace } from './CardFace';
 import { StagedCard } from './StagedCard';
+import { TargetingOverlay } from './TargetingOverlay';
 import { Ticker } from './Ticker';
 import { HandFan } from './HandFan';
 import { BankStack, DiscardTop, DrawPile, GroupRow, PlayerHeader, seatName } from './BoardParts';
@@ -105,6 +106,11 @@ export function Board({
   const [stagedCardId, setStagedCardId] = useState<string | null>(null);
   const staged = stagedCardId !== null && observation.myHand.includes(stagedCardId) ? stagedCardId : null;
 
+  // A targeted action mid-play: its card is on stage and legal targets glow (A10 targeting).
+  // Cleared automatically once the card leaves the hand (committed) or the turn passes.
+  const [targetingCardId, setTargetingCardId] = useState<string | null>(null);
+  const targeting = targetingCardId !== null && observation.myHand.includes(targetingCardId) ? targetingCardId : null;
+
   function onTapHandCard(cardId: string): void {
     if (inDiscardMode) {
       const discard = discardByCardId.get(cardId);
@@ -124,7 +130,7 @@ export function Board({
     if (zone.action) {
       onAct(zone.action); // bank / place / build / an untargeted play — commits immediately
     } else {
-      setStagedCardId(cardId); // a play that still needs a target → stage (rail picks it)
+      setTargetingCardId(cardId); // a play that still needs a target → glow the legal targets
     }
   }
 
@@ -242,8 +248,23 @@ export function Board({
         </div>
       )}
 
+      {/* targeting: a dragged targeted action plants on stage and its legal targets glow;
+          one tap fires the exact enumerated move (BAD_TARGET unreachable), Cancel = no play. */}
+      {targeting !== null && onAct && (
+        <TargetingOverlay
+          cardId={targeting}
+          actions={actions}
+          me={observation.me}
+          onCommit={(action) => {
+            onAct(action);
+            setTargetingCardId(null);
+          }}
+          onCancel={() => setTargetingCardId(null)}
+        />
+      )}
+
       {/* centre-stage overlay: a tapped card rises here with its action rail (A1 fallback). */}
-      {staged !== null && onAct && (
+      {staged !== null && targeting === null && onAct && (
         <StagedCard
           cardId={staged}
           actions={actions}
