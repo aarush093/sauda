@@ -27,8 +27,9 @@ describe('App', () => {
   it('starts a game and shows the board', () => {
     render(<App />);
     fireEvent.click(screen.getByText('Start game'));
-    // The Table renders your hand and a set view straight from the engine.
-    expect(screen.getByText(/Your hand/)).toBeTruthy();
+    // The Table renders the play-table skeleton straight from the engine observation
+    // (the hand is now a visual CardFace fan, so we assert a stable structural label).
+    expect(screen.getByText('centre stage')).toBeTruthy();
     expect(errorSpy).not.toHaveBeenCalled();
   });
 });

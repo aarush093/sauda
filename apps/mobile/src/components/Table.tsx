@@ -12,6 +12,7 @@ import { actorOf, useGame, viewSeat } from '../game/store';
 import { Board } from './Board';
 import { ActionPanel } from './ActionPanel';
 import { HandoffOverlay } from './HandoffOverlay';
+import { STAGE } from '../design/tokens';
 
 const BOT_MOVE_DELAY_MS = 300;
 
@@ -49,8 +50,7 @@ export function Table() {
   const isBotTurn = seats[actor]?.kind === 'bot';
 
   return (
-    <div className="table">
-      <h2>SAUDA</h2>
+    <div className="table" style={{ background: STAGE.felt, color: STAGE.textOnFelt, minHeight: '100vh', paddingBottom: 24 }}>
       <Board observation={observation} seats={seats} />
 
       {state.phase === 'gameOver' ? (
