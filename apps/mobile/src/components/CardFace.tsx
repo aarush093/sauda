@@ -643,6 +643,10 @@ function MoneyFull({ card }: { card: Extract<Card, { kind: 'money' }> }) {
   // to the incoming note design and can be nudged when the art lands — same
   // discipline as the property value badge.
   if (hasPlate(plateKey(card))) {
+    // Two-digit denominations (₹10) take a smaller centre so "₹10 Cr" keeps clear
+    // breathing room inside the oval; single digits stay large. A digit-count rule,
+    // not a per-note hack (measured: "₹10"@30 = 105% of the oval, @22 = 77%).
+    const centreSize = String(card.value).length >= 2 ? 22 : 30;
     return (
       <div style={frameStyle('full')}>
         <Plate card={card} />
@@ -660,7 +664,7 @@ function MoneyFull({ card }: { card: Extract<Card, { kind: 'money' }> }) {
             color: INK.deepInk,
           }}
         >
-          <span style={{ fontSize: 30 }}>₹{card.value}</span>
+          <span style={{ fontSize: centreSize }}>₹{card.value}</span>
           <span style={{ fontSize: 11, marginTop: 1, ...mono(500) }}>Cr</span>
         </div>
         {/* four corner circles — numerals centred on each rosette's TRUE disc centre,
