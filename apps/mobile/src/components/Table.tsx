@@ -11,6 +11,7 @@ import { legalActions, observe } from '@sauda/engine';
 import { actorOf, useGame, viewSeat } from '../game/store';
 import { Board } from './Board';
 import { ActionPanel } from './ActionPanel';
+import { PaymentSheet } from './PaymentSheet';
 import { HandoffOverlay } from './HandoffOverlay';
 import { STAGE } from '../design/tokens';
 
@@ -47,14 +48,17 @@ export function Table() {
   const actor = actorOf(state);
   const view = viewSeat({ revealedSeat, seats });
   const observation = observe(state, view);
+  const actorObservation = observe(state, actor); // the acting human's own view
   const isBotTurn = seats[actor]?.kind === 'bot';
   const gameOver = state.phase === 'gameOver';
 
   // The human actor's legal moves (empty on a bot's turn / at game over). Turn plays feed
-  // the board's tap→stage→rail; a response (RESPOND_*) is left to the interim panel below,
-  // which stays functional until the payment-sheet and interrupt-prompt screens land.
+  // the board's tap→stage→rail; a charge-to-pay raises the payment sheet; any other
+  // response (RESPOND_*) is left to the interim panel below, which stays functional until
+  // the interrupt-prompt screen lands.
   const humanActions = !isBotTurn && !gameOver ? legalActions(state, actor) : [];
   const isResponse = humanActions.some((action) => action.type.startsWith('RESPOND_'));
+  const payAction = humanActions.find((action) => action.type === 'RESPOND_PAY');
 
   return (
     <div className="table" style={{ background: STAGE.felt, color: STAGE.textOnFelt, minHeight: '100vh', paddingBottom: 24 }}>
@@ -72,7 +76,17 @@ export function Table() {
       ) : isBotTurn ? (
         <div className="waiting">Player {actor} is thinking…</div>
       ) : (
-        <ActionPanel actions={humanActions} observation={observe(state, actor)} onAct={dispatch} />
+        <ActionPanel actions={humanActions} observation={actorObservation} onAct={dispatch} />
+      )}
+
+      {/* a standing charge raises the payment sheet over the table (INTERACTION_SPEC §6) */}
+      {payAction?.type === 'RESPOND_PAY' && (
+        <PaymentSheet
+          observation={actorObservation}
+          seats={seats}
+          suggestion={payAction.cardIds}
+          onPay={(cardIds) => dispatch({ type: 'RESPOND_PAY', cardIds })}
+        />
       )}
 
       <div className="zone">
