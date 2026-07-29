@@ -22,10 +22,10 @@ This is guaranteed by construction, not by enumeration:
    see gets one designed treatment. If a situation ever appears that has no row here,
    that is a spec bug to file — the engine will still have handled it legally.
 
-Rows marked **VERIFY** contain engine semantics I have not confirmed from source; the
-builder fills these from `legal.ts`/`reduce.ts` in a read-only pass before M4b screens,
-and corrects the row if the engine differs. Never implement a VERIFY row from this
-document alone.
+Rows once marked **VERIFY** held engine semantics not yet confirmed from source. **RESOLVED
+(§3):** a read-only engine pass has replaced all six (B14, B15, B17, B19, C4, F4) with
+engine-true wording + the proving test; three lack a dedicated test and are flagged as
+findings there. The engine remains the truth — never implement a row that conflicts with it.
 
 ---
 
@@ -97,12 +97,12 @@ rail-commit model (spec v1.2 direction).
 | B11 | AAGE BADHO played | draw-2 effect | card to centre → discard; 2 cards arc to hand | riffle |
 | B12 | SHAGUN played | all-opponents charge | card plants centre; each opponent resolves **in turn order**, one at a time (C-rows) | — |
 | B13 | VASOOLI played | one-opponent charge | after Play: **arrow targeting** to an opponent chip; then C-rows | pluck on target |
-| B14 | KIRAYA staged | kiraya play legal | rail: **Charge** + **Bank**. **VERIFY:** target scope (all players vs one) and colour-choice mechanics from engine | — |
-| B15 | DUGNA | doubles a kiraya | **VERIFY:** exact pairing (same-turn attach? separate play?) — design after engine read | — |
+| B14 | LAGAAN staged | kiraya play legal | rail: **Charge** + **Bank**. Colour picker = colours you OWN (paired: its two; wild ANY: any of the ten). **Paired LAGAAN charges ALL opponents (no target step); wild LAGAAN tap-targets ONE opponent** (like VASOOLI). [engine: reduce.ts:491–526] | — |
+| B15 | DUGNA LAGAAN | attaches to a LAGAAN charge | **Not a standalone play.** A ×2 / ×4 doubling toggle during LAGAAN staging; each DUGNA attached spends **one extra play** (max 2 → ×4). Never on the rail alone. [engine: reduce.ts:500–537] | tap |
 | B16 | KABZA played | steal complete set | arrow targeting → only opponents' **complete** sets glow; on commit the whole set flies over | stamp-slam (KABZA is a signature moment) |
-| B17 | HAATH KI SAFAI | steal one property | arrow → legal single properties glow. **VERIFY:** whether cards inside complete sets are excluded | slide |
+| B17 | HAATH KI SAFAI | steal one loose property | arrow/tap → only properties **NOT in a complete set** glow; complete-set cards are engine-excluded (that's KABZA's job). [engine: legal.ts:313–324; reduce.ts:422–424] | slide |
 | B18 | ADLA-BADLI | swap properties | two-step: pick **mine** (glow set 1) → pick **theirs** (glow set 2) → both fly, crossing | double slide |
-| B19 | MAKAAN / HAVELI | attach to own complete set | rail Play → my complete sets glow; attaches visibly atop the set. **VERIFY:** whether HAVELI requires MAKAAN first | build tap |
+| B19 | MAKAAN / HAVELI | attach to own complete set | rail Play → only your **complete** sets glow (never Junctions/Utilities). MAKAAN → a complete set with no makaan; **HAVELI → a complete set that already holds a MAKAAN**. [engine: reduce.ts:337–367; legal.ts:328–353] | build tap |
 | B20 | NAHI CHALEGA in hand, no window | not offered | card sleeps like any unplayable card; **never** on the rail as Play | — |
 
 ### C. Payments (the debt sheet)
@@ -112,7 +112,7 @@ rail-commit model (spec v1.2 direction).
 | C1 | You owe and can pay | interrupt: charge on you | bottom sheet: "Pay ₹N Cr to <name>", **suggestPayment pre-selected**, meter, gold Pay button | sheet slide |
 | C2 | Overpay | selection > debt | meter: "₹5 / 4 Cr · no change given" — surfaced only here | — |
 | C3 | Can't fully pay | table total < debt | button reads "Pay all I have"; engine takes everything payable | — |
-| C4 | Nothing on table | zero payable | **VERIFY:** engine auto-resolve path; UI shows brief ticker "Nothing to pay with" — no sheet | soft thud |
+| C4 | Nothing on table | zero payable | Engine does **not** auto-skip: the charge still opens a payment step whose only legal move is an **empty** RESPOND_PAY. UI auto-submits it → brief ticker "Nothing to pay with", no interactive sheet. [engine: reduce.ts:635–639, 737–765] | soft thud |
 | C5 | Paying breaks my FULL set | player selects set card | small warning chip on that card "breaks your set" (suggestPayment never pre-picks this when avoidable) | — |
 | C6 | Payment commits | `RESPOND_PAY` | cards fly to recipient: money→their bank, properties→their groups; my ribbons update | note count, medium haptic |
 | C7 | I receive a wildcard in payment | `RESPOND_PLACE_RECEIVED` | inline chooser: my legal groups glow, I tap where it lands | slide |
@@ -143,7 +143,7 @@ rail-commit model (spec v1.2 direction).
 | F1 | Overflow discard buried | house rule | (A9) face-down under draw pile; count up; identity never shown anywhere | tick |
 | F2 | Discard pile grows | actions resolve | top face visible, quiet/desaturated; tap = long-press zoom of top card only | — |
 | F3 | Draw pile runs low | count small | count chip simply shows the number; no alarm state | — |
-| F4 | Reshuffle moment | draw empty, discard recycles | brief centre note "Reshuffling…" + discard flips into draw pile; **VERIFY:** exact engine reshuffle trigger/order | shuffle sound |
+| F4 | Reshuffle moment | draw empty, discard recycles | Trigger: mid-draw, draw empty **and** discard non-empty → the **whole discard pile is seed-shuffled** into a new draw pile (deterministic); "Reshuffling…" note. Overflow buried under the draw pile is already in it → **never reshuffled**. [engine: reduce.ts:107–133, 165] | shuffle sound |
 
 ### G. Table states
 
@@ -175,17 +175,84 @@ rail-commit model (spec v1.2 direction).
 
 ---
 
-## 3. VERIFY ledger (builder fills before M4b screens)
+## 3. VERIFY ledger — RESOLVED (read-only engine pass)
 
-Read-only engine pass; correct the rows, never the engine:
-1. **B14** KIRAYA target scope + colour mechanics.
-2. **B15** DUGNA pairing semantics.
-3. **B17** HAATH KI SAFAI exclusions (complete-set cards?).
-4. **B19** HAVELI prerequisite (MAKAAN first?).
-5. **C4** zero-payable auto-resolve path.
-6. **F4** reshuffle trigger and ordering.
-Deliverable: this file updated with the six answers + the proving test for each,
-committed as `docs: state matrix engine-verified`.
+Answered from `legal.ts` / `reduce.ts` / `sets.ts` / `payment.ts`; the engine is the truth.
+Each answer cites file:line and the proving test — or names the missing proof as a finding.
+
+1. **B14 — LAGAAN target scope + colour.** The colour must be one the card permits AND one
+   you own: **paired LAGAAN = one of its two colours; wild (ANY) = any of the ten**
+   (`reduce.ts:491–497`; `legal.ts:263–266`). **Paired (`targeted:false`) charges ALL
+   opponents** (target must be `null` — `reduce.ts:521–525`); **wild (ANY, `targeted:true`)
+   charges ONE chosen opponent** (target required — `reduce.ts:516–520`). Proof: colour
+   ownership — `turn.test.ts:222–235` (#12, `COLOR_NOT_OWNED`, paired card). **⚠ MISSING
+   PROOF:** no test exercises the wild/targeted path or the `BAD_TARGET` guards; the
+   target-scope split rests on `reduce.ts:513–526` + the 500-game sim (`tools driver.test`,
+   invariants only). → finding.
+
+2. **B15 — DUGNA LAGAAN pairing.** A same-turn **ATTACH**, carried in
+   `PLAY_KIRAYA.dugnaCardIds` — never a standalone play (`legal.ts:248, 268–291`). **Each
+   attached DUGNA consumes one extra play** (`playsNeeded = 1 + dugnaCount` — `reduce.ts:508`).
+   **Two stack → ×4** (`2^dugnaCount` — `sets.ts:126`), capped at `maxDugnaPerCharge = 2`
+   (`rules.ts:31`; `reduce.ts:505`). Proof: `interrupts.test.ts:203–227` (doubles + one play
+   each, ₹16 = ×4) and `:229–249` (rejects when plays short). ✓ **fully proven.**
+
+3. **B17 — HAATH KI SAFAI exclusions.** Steals only a property **NOT in a complete set**:
+   enumerated by `stealableProperties` (`legal.ts:313–324`, used at `:225`) and defended in
+   reduce (`reduce.ts:422–424`, `SET_COMPLETE`). Complete sets are KABZA's domain.
+   Proof: `interrupts.test.ts:135–152` (`SET_COMPLETE`). ✓ **proven.**
+
+4. **B19 — HAVELI prerequisite.** **HAVELI requires the set to already hold a MAKAAN**
+   (`reduce.ts:356–357`; `legal.ts:346`). **Both MAKAAN and HAVELI require the set to be
+   COMPLETE** (`reduce.ts:342, 356`; `legal.ts:341`), and neither may sit on
+   Junctions/Utilities (`reduce.ts:339`; `legal.ts:336`). Proof: `turn.test.ts:237–255`
+   (#13) proves the RENT BONUS counts only on a complete set — but that is `kirayaForGroup`,
+   not placement. **⚠ MISSING PROOF:** no test places a MAKAAN/HAVELI through `reduce` to
+   exercise the prerequisites (`NO_MAKAAN_SPOT` / `NO_HAVELI_SPOT` / junction block); every
+   building test uses pre-placed buildings via `makeState`. Code + legal + sim only. → finding.
+
+5. **C4 — zero-payable path.** **No engine auto-resolve.** A standing charge always advances
+   to `awaitingPayment` regardless of the debtor's table (`reduce.ts:635–639`); the only legal
+   action is one `RESPOND_PAY` with an **empty** list (`suggestPayment` returns `[]` when
+   table ≤ debt — `payment.ts:258–259`; `legal.ts:70–80`), which `validatePayment` accepts
+   (empty ok when payable is empty — `payment.ts:86–92`) and `applyPayment` settles as a
+   `Paid` event with no cards. Proof: `payment.test.ts:55–60` (#3, `validatePayment([])` ok +
+   `totalPayableValue` 0). **⚠ PARTIAL PROOF:** the empty-selection VALIDATION is tested, but
+   no named test drives the full flow (charge on an empty table → `awaitingPayment` → empty
+   pay → `InterruptResolved`); code-proven (`reduce.ts:635–639, 737–765`) + sim only. → finding.
+   *UI note: the engine opens the step; the UI auto-resolves it — it is not an engine skip.*
+
+6. **F4 — reshuffle trigger + order.** During a draw, when `drawPile` is empty **and**
+   `discardPile` is non-empty, the whole discard pile is **seed-shuffled** (`shuffleWithState`,
+   deterministic) into a new draw pile, discard empties, `DrawPileReshuffled` fires
+   (`reduce.ts:107–133`). Both empty → the draw simply stops short (`:112–114`).
+   **House-rule interaction:** end-of-turn overflow discards are `unshift`ed to the **bottom of
+   the draw pile** (`reduce.ts:165`), not the discard pile — so they are already in the draw
+   pile and are **never** part of a reshuffle; only spent action/LAGAAN/DUGNA/NAHI cards recycle.
+   Proof: `turn.test.ts:55–66` (#16, reshuffle event) + `turn.test.ts:155–189` (#15, overflow
+   buried under the draw pile). ✓ **proven.**
+
+**UI-treatment consequences:**
+- **B15 changes the UI (the owner's flagged case):** DUGNA LAGAAN is an ATTACH — a doubling
+  toggle during LAGAAN staging that spends extra plays, **not** a standalone rail play (row B15).
+- **B14 branches the UI:** paired LAGAAN auto-hits all opponents (no target step); wild LAGAAN
+  needs a tap-target step like VASOOLI (row B14).
+- **C4 reframed:** the engine does not skip payment; the UI auto-plays the single empty
+  RESPOND_PAY to present "no sheet" (row C4).
+- B17 / B19 / F4 tightened their rows; no treatment reversal.
+
+**Findings (engine is CORRECT; the gap is test coverage):** B14 (wild-LAGAAN target scope +
+`BAD_TARGET`), B19 (building-placement prerequisites), and C4 (full empty-pay flow) have no
+dedicated named test — each is exercised by the 500-game sim without a targeted assertion.
+Recommend three small unit tests when M4b begins (not blocking).
+
+**A8 Learn cards:** none of the six existing Niyam cards state LAGAAN / DUGNA / MAKAAN-HAVELI
+mechanics, so **no card needs a wording fix from these six answers**; the engine-true details
+above are the material for the optional **Card 7 — "Lagaan aur imaarat"** noted in
+`M4B_SPEC_v1.2.md` A8 (add at M4d). *Separately flagged to the owner (outside this VERIFY
+scope): A4 + Niyam Card 6 state that wildcards are universal and bankable, which the current
+engine does not do — `placeableSets` gives dual wildcards only their two colours (`sets.ts:30`)
+and `BANK_CARD` excludes wildcards (`legal.ts:166`).*
 
 ---
 
