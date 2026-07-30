@@ -17,7 +17,7 @@ import type { Action, GameEvent, GameState, PropertyGroup, SetId } from '@sauda/
 import { actorOf, useGame, viewSeat } from '../game/store';
 import type { SeatConfig } from '../game/store';
 import { paymentDetails } from '../game/paymentModel';
-import { shouldAutoEndTurn, zeroPayableResponse } from '../game/interaction';
+import { botBeatDelayMs, shouldAutoEndTurn, zeroPayableResponse } from '../game/interaction';
 import { describeThreat } from '../game/labels';
 import { Board } from './Board';
 import { PaymentSheet } from './PaymentSheet';
@@ -46,7 +46,6 @@ function completedSets(state: GameState, player: number): { set: SetId; group: P
   return out;
 }
 
-const BOT_MOVE_DELAY_MS = 700; // §8/I1: each bot play holds ~700 ms so it is watchable
 const BEAT_MS = 500; // L1: the pause before an auto-resolve so the player reads it
 const AUTO_END_MS = 800; // F2: the beat before the turn ends itself when only END_TURN is legal
 const HUMAN_PLAY_BEAT_MS = 800; // F4: how long the human's just-played card is held on centre stage
@@ -90,7 +89,12 @@ export function Table() {
   const ackHandoff = useGame((store) => store.ackHandoff);
   const reset = useGame((store) => store.reset);
 
-  // Drive bot turns one step at a time; each step updates state and re-runs this.
+  // Drive bot turns one step at a time; each step updates state and re-runs this. H5: the delay is
+  // PACED — the first beat of a bot's turn holds longest, later beats are quicker, trimming toward a
+  // floor near the ~3s cap so a long turn never drags. `botBeat` tracks the beat index + elapsed
+  // within the current bot's turn and resets whenever control leaves this bot (a human turn, or a
+  // different bot); the count advances in the timer callback, so it ticks once per real beat.
+  const botBeat = useRef({ actor: -1, beats: 0, elapsed: 0 });
   useEffect(() => {
     if (!state || state.phase === 'gameOver' || handoffSeat !== null) {
       return;
@@ -103,9 +107,18 @@ export function Table() {
     }
     const actor = actorOf(state);
     if (seats[actor]?.kind !== 'bot') {
+      botBeat.current.actor = -1; // control is with a human / nobody — the next bot turn starts fresh
       return;
     }
-    const timer = setTimeout(() => stepBot(), BOT_MOVE_DELAY_MS);
+    if (botBeat.current.actor !== actor) {
+      botBeat.current = { actor, beats: 0, elapsed: 0 }; // a new bot turn — reset the beat run
+    }
+    const delay = botBeatDelayMs(botBeat.current.beats, botBeat.current.elapsed);
+    const timer = setTimeout(() => {
+      botBeat.current.beats += 1;
+      botBeat.current.elapsed += delay;
+      stepBot();
+    }, delay);
     return () => clearTimeout(timer);
   }, [state, handoffSeat, seats, stepBot]);
 

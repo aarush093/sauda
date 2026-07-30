@@ -284,6 +284,31 @@ export function shouldAutoEndTurn(actions: Action[]): boolean {
   return actions.length === 1 && actions[0]!.type === 'END_TURN';
 }
 
+// H5 (excellence pass): bot pacing as ONE constant table. A bot's turn plays as a run of beats
+// (draw · each play · end), each held long enough to be watchable (I1) but no longer. The FIRST beat
+// of a bot's turn holds longest ("here comes the bot"); later beats are quicker; and as a turn nears
+// its presentation cap the beats trim toward a floor so a long turn never drags into dead time —
+// but every card is still SHOWN (we slow, never skip). Flat 700ms/beat gave 6-8s waits between my
+// turns; this keeps a typical bot turn ~1.5-2.5s and caps the worst near ~3s.
+export const BOT_PACING = {
+  firstBeatMs: 700, // the opening beat of a bot's turn — longest, so the turn's start reads
+  beatMs: 450, // each subsequent beat within the same turn
+  floorMs: 350, // never faster than this — a card must still be seen
+  turnCapMs: 3000, // soft cap: once a turn has shown this much, beats trim toward the floor
+} as const;
+
+// The delay BEFORE the next beat of a bot's turn, given how many beats this turn has already shown
+// (beatIndex, 0-based) and how much presentation time they have taken (elapsedMs). Pure + unit-tested.
+export function botBeatDelayMs(beatIndex: number, elapsedMs: number, pacing = BOT_PACING): number {
+  if (beatIndex === 0) {
+    return pacing.firstBeatMs;
+  }
+  // Trim evenly toward the floor as the turn's ~3s budget is consumed, so a long turn tightens up
+  // instead of dragging — but never below the floor (a beat is always long enough to be seen).
+  const remaining = pacing.turnCapMs - elapsedMs;
+  return Math.max(pacing.floorMs, Math.min(pacing.beatMs, remaining));
+}
+
 // C4: a charge I cannot pay anything toward. The engine still opens a payment step whose
 // ONLY legal move is an empty RESPOND_PAY (suggestPayment returns [] iff the table is
 // worth nothing). Returns that move to auto-submit — no interactive sheet — or null.

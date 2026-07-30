@@ -11,6 +11,8 @@ import type { Action, CardId, SetId } from '@sauda/engine';
 import { actionCardId, cardVerbHint } from './labels';
 import {
   autoDrawAction,
+  BOT_PACING,
+  botBeatDelayMs,
   dropZonesForCard,
   kirayaPlan,
   reachableActionsForCard,
@@ -234,6 +236,53 @@ describe('shouldAutoEndTurn — auto-end only when nothing else is legal (F2)', 
   it('does not fire on an empty or non-END_TURN list', () => {
     expect(shouldAutoEndTurn([])).toBe(false);
     expect(shouldAutoEndTurn([{ type: 'DRAW' }])).toBe(false);
+  });
+});
+
+// H5 (excellence pass): bot pacing as ONE constant table — first beat longest, later beats quicker,
+// trimming toward the floor near the ~3s cap, never below the floor (a card is always seen).
+describe('botBeatDelayMs — the bot-turn pacing table (H5)', () => {
+  it('the FIRST beat of a bot turn holds longest', () => {
+    expect(botBeatDelayMs(0, 0)).toBe(BOT_PACING.firstBeatMs);
+    expect(BOT_PACING.firstBeatMs).toBe(700);
+  });
+
+  it('subsequent beats run at the quicker beat rate while there is budget', () => {
+    expect(botBeatDelayMs(1, 700)).toBe(BOT_PACING.beatMs); // 450
+    expect(botBeatDelayMs(2, 1150)).toBe(BOT_PACING.beatMs);
+    expect(botBeatDelayMs(3, 1600)).toBe(BOT_PACING.beatMs);
+  });
+
+  it('trims evenly toward the floor as the ~3s cap approaches', () => {
+    expect(botBeatDelayMs(6, 2600)).toBe(400); // min(450, 3000-2600)
+    expect(botBeatDelayMs(7, 2700)).toBe(BOT_PACING.floorMs); // max(350, 300) = 350
+  });
+
+  it('never drops below the floor once past the cap — a beat is always long enough to be seen', () => {
+    expect(botBeatDelayMs(9, 3000)).toBe(BOT_PACING.floorMs);
+    expect(botBeatDelayMs(20, 9000)).toBe(BOT_PACING.floorMs);
+    expect(BOT_PACING.floorMs).toBe(350);
+  });
+
+  it('is monotonically non-increasing after the first beat, and every beat is watchable', () => {
+    let previous = botBeatDelayMs(1, BOT_PACING.firstBeatMs);
+    let elapsed = BOT_PACING.firstBeatMs + previous;
+    for (let beat = 2; beat < 12; beat++) {
+      const delay = botBeatDelayMs(beat, elapsed);
+      expect(delay).toBeLessThanOrEqual(previous);
+      expect(delay).toBeGreaterThanOrEqual(BOT_PACING.floorMs);
+      previous = delay;
+      elapsed += delay;
+    }
+  });
+
+  it('a typical 5-beat bot turn presents in well under the 3s cap', () => {
+    let elapsed = 0;
+    for (let beat = 0; beat < 5; beat++) {
+      elapsed += botBeatDelayMs(beat, elapsed);
+    }
+    expect(elapsed).toBe(700 + 450 * 4); // 2500ms — no trim needed
+    expect(elapsed).toBeLessThan(BOT_PACING.turnCapMs);
   });
 });
 
