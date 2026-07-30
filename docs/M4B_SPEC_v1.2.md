@@ -319,3 +319,37 @@ screens. Munshi (advisor, 3/game, shared bot brain) is built and specced.
    fix.
 
 *End of amendment.*
+
+---
+
+## A12 — Owner playtest refinements (30 Jul; appended, existing sections unchanged)
+
+Four rules the owner's first playtest added. Each is implemented and captured
+(`docs/captures/playtest-fixes-1/`); the others (F4 real-cards, F5 opponent row, F7 why-lines) are
+polish within existing sections and live only in DECISIONS.md.
+
+- **F1 — hand-fan scrub + no-clip law.** The fan NEVER clips: every card's rotated box stays inside
+  the frame (≥8px side padding), tilt is capped at |5°|, and cards shrink for a dense hand rather
+  than spilling (pure `fanLayout`, unit-tested). Interaction is a SCRUB: a finger glides over the
+  fan; the card under it peeks up clear of its neighbours; sliding re-targets; lifting ~40px above
+  the band turns the peek into the A10/L3 drag; a release in the band taps (stages, A1). Discard mode
+  uses the same fan + peek. The ~90ms peek ease is M4c.
+- **F2 — auto end-of-turn (an A10/L4 refinement).** When the human seat's `legalActions` is EXACTLY
+  `[END_TURN]` — no play, no DECLARE_WIN, no free REARRANGE_WILDCARD — the UI ends the turn itself
+  after an ~800ms beat with a ticker line ("Turn over — <name> plays."), and hides the manual button.
+  When anything else is legal, End turn stays MANUAL (a declarable win or a free wildcard move is
+  never eaten). Over the hand limit, the auto END_TURN flows into the A8/A9 discard step exactly as a
+  manual one would.
+- **F3 — payment default + money-first disclosure (L6).** The pre-selected DEFAULT never overpays
+  when an exact selection exists, and prefers money (fewer properties). Disclosure: money notes are
+  always shown; the default's own property stays shown; every OTHER property set hides behind one
+  quiet "Pay with property instead" expander (collapsed), so a money-covered debt reads as money
+  only. Must-pay-all (table ≤ debt) shows everything, locked. Manual edits + the "no change given"
+  warning are unchanged.
+- **F6 — game-end overlay + the no-scroll law at end.** Any game end (human SAUDA! or a bot win)
+  presents ONE full-screen overlay: dimmed felt, a centred tokens panel (title, the winner's three
+  completed-set banners, a tokens New game control), board asleep behind. It is `position: fixed` —
+  never in flow — so it can't grow the page (the old in-flow winner strip was the end-state scroll
+  bug). The A2 no-scroll law now explicitly holds through the end state.
+
+*End of A12.*
