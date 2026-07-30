@@ -22,7 +22,6 @@ import { describeThreat } from '../game/labels';
 import { Board } from './Board';
 import { PaymentSheet } from './PaymentSheet';
 import { InterruptPrompt } from './InterruptPrompt';
-import { ReceivePrompt } from './ReceivePrompt';
 import { HandoffOverlay } from './HandoffOverlay';
 import { EndOverlay } from './EndOverlay';
 import { STAGE, INK, FONT } from '../design/tokens';
@@ -59,8 +58,9 @@ interface AutoResolve {
   note: string;
 }
 
-// The last card `player` just placed / built / banked / played, held on centre stage so a play
-// is SEEN, not just read as a ticker line (§8/I1 · F4). Newest matching card wins.
+// The last card `player` just placed / built / banked / played — OR received (G6: an auto-placed
+// card that arrived to them) — held on centre stage so it is SEEN, not just read as a ticker line
+// (§8/I1 · F4). Newest matching card wins.
 function lastPlayedCard(events: GameEvent[], player: number): string | null {
   for (let index = events.length - 1; index >= 0; index--) {
     const event = events[index]!;
@@ -68,7 +68,8 @@ function lastPlayedCard(events: GameEvent[], player: number): string | null {
       (event.type === 'ActionPlayed' ||
         event.type === 'CardBanked' ||
         event.type === 'PropertyPlaced' ||
-        event.type === 'BuildingPlaced') &&
+        event.type === 'BuildingPlaced' ||
+        event.type === 'CardReceived') &&
       event.player === player
     ) {
       return event.cardId;
@@ -244,6 +245,16 @@ export function Table() {
       action.type === 'RESPOND_PLACE_RECEIVED',
   );
   const receiveHead = receiveOptions[0];
+  // G6: a received wildcard awaiting placement (C7) lands ON THE BOARD stage — its legal sets glow,
+  // I drag it home (or tap a set). One at a time: the engine offers only the head card's options.
+  const receive =
+    handoffSeat === null && receiveHead
+      ? {
+          cardId: receiveHead.cardId,
+          bySet: new Map<SetId, Action>(receiveOptions.map((option) => [option.set, option])),
+          onPlace: dispatch,
+        }
+      : null;
   // C4 opens no sheet — the beat auto-submits it. The sheet renders only with real cards.
   const showPaymentSheet = payAction?.type === 'RESPOND_PAY' && autoResolve === null;
 
@@ -257,6 +268,7 @@ export function Table() {
         tickerLines={tickerLines}
         spotlightCardId={spotlightCardId}
         autoEnding={autoEndNote !== null}
+        receive={receive}
       />
 
       {/* F6: any game end presents the full-screen end overlay (fixed, so it never grows the page
@@ -305,10 +317,8 @@ export function Table() {
         />
       )}
 
-      {/* C7: a wildcard reached me as payment — choose which of my legal groups it joins. */}
-      {handoffSeat === null && receiveHead && (
-        <ReceivePrompt cardId={receiveHead.cardId} options={receiveOptions} onChoose={dispatch} />
-      )}
+      {/* C7 (G6): a wildcard reached me as payment — it now lands ON the board stage with its legal
+          sets glowing (see the Board `receive` prop), so there is no separate chooser overlay. */}
 
       {handoffSeat !== null && <HandoffOverlay seat={handoffSeat} onReady={ackHandoff} />}
     </div>

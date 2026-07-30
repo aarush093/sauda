@@ -71,14 +71,15 @@ function MiniGroup({
 
 // A dashed placeholder where dragging a property/wildcard would START A NEW group of a
 // colour I don't yet hold (§3). It is a drop zone in its own right.
-function GhostSlot({ set, width, hot }: { set: SetId; width: number; hot: boolean }) {
+function GhostSlot({ set, width, hot, onClick }: { set: SetId; width: number; hot: boolean; onClick?: (() => void) | undefined }) {
   const theme = SETS[set];
   const height = Math.round(width * 1.4);
   return (
     <div
       data-drop={`set:${set}`}
+      onClick={onClick}
       title={`New ${theme.label} set`}
-      style={{ width, height, flex: '0 0 auto', borderRadius: 4, border: `1px dashed ${INK.gold}`, boxShadow: hot ? GLOW.hot : 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden', opacity: hot ? 1 : 0.85 }}
+      style={{ width, height, flex: '0 0 auto', borderRadius: 4, border: `1px dashed ${INK.gold}`, boxShadow: hot ? GLOW.hot : 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden', opacity: hot ? 1 : 0.85, cursor: onClick ? 'pointer' : undefined }}
     >
       <div style={{ height: '44%', background: theme.hex, opacity: 0.55 }} />
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.mono, fontSize: Math.round(width * 0.3), color: STAGE.textOnFelt }}>+</div>
@@ -97,6 +98,7 @@ export function GroupRow({
   dropSets,
   hotZoneId,
   onExpand,
+  onSetPlace,
 }: {
   properties: Record<SetId, PropertyGroup[]>;
   kiraya?: Record<SetId, number[]> | undefined;
@@ -105,6 +107,9 @@ export function GroupRow({
   dropSets?: Set<SetId> | undefined;
   hotZoneId?: string | null | undefined;
   onExpand?: (() => void) | undefined;
+  // G6: while placing a received card, tapping a glowing set (or ghost slot) places it there
+  // instead of opening the expand view.
+  onSetPlace?: ((set: SetId) => void) | undefined;
 }) {
   const groups = nonEmptyGroups(properties);
   const existing = new Set(groups.map((entry) => entry.set));
@@ -136,12 +141,18 @@ export function GroupRow({
             dropId={droppable ? `set:${set}` : undefined}
             soft={droppable && !hot}
             hot={hot}
-            onExpand={onExpand}
+            onExpand={onSetPlace ? () => onSetPlace(set) : onExpand}
           />
         );
       })}
       {ghostSets.map((set) => (
-        <GhostSlot key={`ghost-${set}`} set={set} width={width} hot={hotZoneId === `set:${set}`} />
+        <GhostSlot
+          key={`ghost-${set}`}
+          set={set}
+          width={width}
+          hot={hotZoneId === `set:${set}`}
+          onClick={onSetPlace ? () => onSetPlace(set) : undefined}
+        />
       ))}
     </div>
   );

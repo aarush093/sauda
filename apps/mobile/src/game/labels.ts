@@ -121,6 +121,10 @@ export function describeEvent(event: GameEvent): string | null {
       return `P${event.debtor} paid P${event.creditor}: ${event.cardIds.map(describeCard).join(', ') || 'nothing'}`;
     case 'SetStolen':
       return `P${event.to} grabbed P${event.from}'s ${SETS[event.set].label}`;
+    case 'CardReceived':
+      // G6 (owner playtest 2): a card arrived to a player (paid to them, or a placed received
+      // wildcard) — narrated so the player always SEES what arrived (L1).
+      return `P${event.player} received ${describeCard(event.cardId)} → ${SETS[event.set].label}`;
     case 'WinDeclared':
       return `★ Player ${event.player} wins!`;
     default:

@@ -15,7 +15,7 @@
  */
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { Action, Observation, SetId } from '@sauda/engine';
+import type { Action, CardId, Observation, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
 import { dropZonesForCard, rearrangeDestinations } from '../game/interaction';
 import type { DropZone } from '../game/interaction';
@@ -89,6 +89,7 @@ export function Board({
   tickerLines = [],
   spotlightCardId = null,
   autoEnding = false,
+  receive = null,
 }: {
   observation: Observation;
   seats: SeatConfig[];
@@ -97,6 +98,10 @@ export function Board({
   tickerLines?: string[];
   spotlightCardId?: string | null; // a bot's held card (I1) or the human's just-played beat (F4)
   autoEnding?: boolean; // F2: the turn is auto-ending — hide the manual End turn button
+  // G6: a wildcard reached me as payment and needs a group (matrix C7). It lands on stage; its
+  // legal destination sets glow; I drag it home (or tap a glowing set). bySet maps each legal set
+  // to the exact RESPOND_PLACE_RECEIVED the engine enumerated.
+  receive?: { cardId: CardId; bySet: Map<SetId, Action>; onPlace: (action: Action) => void } | null;
 }) {
   const myTurn = observation.currentPlayer === observation.me;
   const topDiscard = observation.discardPile[observation.discardPile.length - 1];
@@ -206,7 +211,30 @@ export function Board({
   const { drag: rearrangeDrag, cardHandlers } = useHandDrag({ eligibleZones, onTap: onTapCard, onDrop: onDropCard });
   const [fanDrag, setFanDrag] = useState<DragState | null>(null);
   const [inspectDrag, setInspectDrag] = useState<DragState | null>(null); // a drag begun on the inspected card
-  const drag = fanDrag ?? rearrangeDrag ?? inspectDrag;
+
+  // G6: the received card on stage is draggable onto a glowing destination set (tap a set as the
+  // fallback). Both fire the exact RESPOND_PLACE_RECEIVED the engine enumerated for that set.
+  function placeReceivedIn(set: SetId): void {
+    if (!receive) {
+      return;
+    }
+    const action = receive.bySet.get(set);
+    if (action) {
+      receive.onPlace(action);
+    }
+  }
+  const receiveZones = (_cardId: string): Set<string> =>
+    receive ? new Set([...receive.bySet.keys()].map((set) => `set:${set}`)) : new Set();
+  const { drag: receiveDrag, cardHandlers: receiveHandlers } = useHandDrag({
+    eligibleZones: receiveZones,
+    onTap: () => {}, // a plain tap on the staged received card does nothing — placement is on the sets
+    onDrop: (_cardId, zoneId) => {
+      if (zoneId.startsWith('set:')) {
+        placeReceivedIn(zoneId.slice(4) as SetId);
+      }
+    },
+  });
+  const drag = fanDrag ?? rearrangeDrag ?? inspectDrag ?? receiveDrag;
 
   // Which zones glow while a card is in the air (soft = eligible, hot = under the pointer).
   // A placed wildcard being dragged lights only its legal destination groups (B8).
@@ -222,6 +250,13 @@ export function Board({
       if (zone.kind === 'bank') bankEligible = true;
       else if (zone.kind === 'play') playEligible = true;
       else if (zone.set) eligibleSets.add(zone.set);
+    }
+  }
+  // G6: while a received card awaits placement, its legal destination sets glow the whole time (not
+  // only mid-drag) so I can see where it may go — and each is a tap-to-place target.
+  if (receive) {
+    for (const set of receive.bySet.keys()) {
+      eligibleSets.add(set);
     }
   }
   const hotZoneId = drag?.hotZoneId ?? null;
@@ -265,7 +300,23 @@ export function Board({
       <div style={zone(28, { display: 'flex', flexDirection: 'column' })}>
         <Ticker lines={tickerLines} />
         <div data-drop="play" style={{ flex: 1, minHeight: 0, margin: '0 8px 6px', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hotZoneId === 'play' ? GLOW.hot : playEligible ? GLOW.soft : 'none' }}>
-          {spotlightCardId ? (
+          {receive ? (
+            // G6: a wildcard reached me as payment — it sits on stage; I drag it to a glowing set
+            // (or tap one). Its legal sets glow below; dragging follows the pointer like any card.
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <div
+                {...receiveHandlers(receive.cardId)}
+                {...(import.meta.env.DEV && { 'data-card-id': receive.cardId })}
+                onContextMenu={(event) => event.preventDefault()}
+                style={{ touchAction: 'none', cursor: 'grab', boxShadow: STAGE.glowGold, borderRadius: 8, opacity: drag?.cardId === receive.cardId ? 0.3 : 1 }}
+              >
+                <ScaledCard cardId={receive.cardId} width={STAGE_CARD_PX} />
+              </div>
+              <span style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 12, color: STAGE.accentGold }}>
+                Drag it to a glowing set — or tap one
+              </span>
+            </div>
+          ) : spotlightCardId ? (
             // The bot's card held on stage (I1), or the human's just-played card for a beat (F4) —
             // the real full CardFace at stage size, both sides (G4 CENTRE STAGE).
             <div style={{ boxShadow: STAGE.glowGold, borderRadius: 8 }}>
@@ -294,7 +345,16 @@ export function Board({
           </div>
         </div>
         <div style={{ minHeight: 0, overflow: 'hidden' }}>
-          <GroupRow properties={observation.myProperties} kiraya={observation.myKiraya} width={38} mine dropSets={eligibleSets} hotZoneId={hotZoneId} onExpand={() => setExpandedView({ kind: 'me' })} />
+          <GroupRow
+            properties={observation.myProperties}
+            kiraya={observation.myKiraya}
+            width={38}
+            mine
+            dropSets={eligibleSets}
+            hotZoneId={hotZoneId}
+            onExpand={() => setExpandedView({ kind: 'me' })}
+            onSetPlace={receive ? placeReceivedIn : undefined}
+          />
         </div>
         {rearrangeableIds.size > 0 && (
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
