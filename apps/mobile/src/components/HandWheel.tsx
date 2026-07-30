@@ -127,7 +127,7 @@ export function HandWheel({
                 }}
               >
                 <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', pointerEvents: 'none' }}>
-                  <CardFace cardId={id} size="full" />
+                  <CardFace cardId={id} />
                 </div>
               </div>
             </div>

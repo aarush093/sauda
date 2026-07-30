@@ -9,16 +9,19 @@
  */
 import type { CSSProperties } from 'react';
 import { SETS } from '@sauda/engine';
-import type { SetId } from '@sauda/engine';
+import type { PropertyGroup, SetId } from '@sauda/engine';
+import { SetCascade } from './SetCascade';
 import { STAGE, INK, FONT } from '../design/tokens';
+
+const WIN_CARD_PX = 62; // the winning sets as real card cascades (G4 END OVERLAY)
 
 export function EndOverlay({
   title,
-  setColors,
+  sets,
   onNewGame,
 }: {
   title: string; // "SAUDA!" on a human win, otherwise "<name> wins"
-  setColors: SetId[]; // the winner's completed set colours (the three that won it)
+  sets: { set: SetId; group: PropertyGroup }[]; // the winner's three completed sets (real cards)
   onNewGame: () => void;
 }) {
   return (
@@ -26,9 +29,9 @@ export function EndOverlay({
       <div style={panelStyle}>
         <div style={titleStyle}>{title}</div>
         <div style={bannersRowStyle}>
-          {setColors.map((set) => (
+          {sets.map(({ set, group }) => (
             <div key={set} style={bannerStyle}>
-              <div style={{ height: 22, background: SETS[set].hex, borderRadius: 3 }} />
+              <SetCascade group={group} width={WIN_CARD_PX} />
               <div style={bannerLabelStyle}>{SETS[set].label}</div>
             </div>
           ))}
@@ -72,16 +75,9 @@ const titleStyle: CSSProperties = {
   color: INK.deepInk,
   textAlign: 'center',
 };
-const bannersRowStyle: CSSProperties = { display: 'flex', gap: 8, justifyContent: 'center' };
-const bannerStyle: CSSProperties = {
-  width: 64,
-  borderRadius: 4,
-  overflow: 'hidden',
-  border: `1px solid ${INK.agedLine}`,
-  background: STAGE.cardCream,
-};
+const bannersRowStyle: CSSProperties = { display: 'flex', gap: 10, justifyContent: 'center', alignItems: 'flex-start' };
+const bannerStyle: CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 };
 const bannerLabelStyle: CSSProperties = {
-  padding: '3px 2px',
   fontFamily: FONT.serif,
   fontSize: 10,
   fontWeight: 700,

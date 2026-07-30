@@ -13,7 +13,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { SETS, isSetComplete, legalActions, observe } from '@sauda/engine';
-import type { Action, GameEvent, GameState, SetId } from '@sauda/engine';
+import type { Action, GameEvent, GameState, PropertyGroup, SetId } from '@sauda/engine';
 import { actorOf, useGame, viewSeat } from '../game/store';
 import type { SeatConfig } from '../game/store';
 import { paymentDetails } from '../game/paymentModel';
@@ -34,15 +34,17 @@ function seatLabel(seats: SeatConfig[], id: number): string {
   return seats[id]?.kind === 'bot' ? `Bot ${id}` : `Player ${id}`;
 }
 
-// The winner's completed set colours (the three that won them the game), for the end panel (F6).
-function completedSetColors(state: GameState, player: number): SetId[] {
-  const colors: SetId[] = [];
+// The winner's completed sets (the three that won them the game) as real groups, for the end
+// panel's card cascades (F6 · G4).
+function completedSets(state: GameState, player: number): { set: SetId; group: PropertyGroup }[] {
+  const out: { set: SetId; group: PropertyGroup }[] = [];
   for (const set of ALL_SETS) {
-    if (state.players[player]!.properties[set].some((group) => isSetComplete(group))) {
-      colors.push(set);
+    const group = state.players[player]!.properties[set].find((candidate) => isSetComplete(candidate));
+    if (group) {
+      out.push({ set, group });
     }
   }
-  return colors;
+  return out;
 }
 
 const BOT_MOVE_DELAY_MS = 700; // §8/I1: each bot play holds ~700 ms so it is watchable
@@ -262,7 +264,7 @@ export function Table() {
       {gameOver && state.winnerIndex !== null && (
         <EndOverlay
           title={seats[state.winnerIndex]?.kind === 'human' ? 'SAUDA!' : `${seatLabel(seats, state.winnerIndex)} wins`}
-          setColors={completedSetColors(state, state.winnerIndex).slice(0, 3)}
+          sets={completedSets(state, state.winnerIndex).slice(0, 3)}
           onNewGame={reset}
         />
       )}

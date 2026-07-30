@@ -62,23 +62,13 @@ export const FONT = {
   serif: "'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif",
 } as const;
 
-// §2.4 card sizing. Ratio is height / width = 145 / 100.
+// §2.4 card sizing. Ratio is height / width = 145 / 100. There is ONE card width now (G4 LAW):
+// every card is the full face drawn at `fullWidth`, then transform-scaled by ScaledCard where a
+// smaller size is needed — so the design is pixel-identical at every place a card appears.
 export const CARD = {
   ratio: 145 / 100,
-  // Fixed pixel widths keep the dev sheet and tests deterministic; the responsive
-  // table sizing (clamp) is applied where cards are laid out (M4b).
   fullWidth: 132,
-  midWidth: 76,
-  chipWidth: 46,
 } as const;
-
-export type CardSize = 'full' | 'mid' | 'chip';
-
-export function cardWidth(size: CardSize): number {
-  if (size === 'full') return CARD.fullWidth;
-  if (size === 'mid') return CARD.midWidth;
-  return CARD.chipWidth;
-}
 
 // §2.4 motion tokens (consumed by the fx layer in M4c).
 export const MOTION = {

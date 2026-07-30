@@ -7,7 +7,7 @@
 import type { CSSProperties } from 'react';
 import type { Action, CardId } from '@sauda/engine';
 import type { RearrangeTarget } from '../game/interaction';
-import { CardFace } from './CardFace';
+import { ScaledCard } from './CardFace';
 import { STAGE, INK, FONT } from '../design/tokens';
 
 export function RearrangeChooser({
@@ -24,7 +24,7 @@ export function RearrangeChooser({
   return (
     <div style={overlayStyle} onClick={onCancel}>
       <div style={panelStyle} onClick={(event) => event.stopPropagation()}>
-        <CardFace cardId={cardId} size="mid" />
+        <ScaledCard cardId={cardId} width={88} />
         <div style={promptStyle}>Move to which set?</div>
         <div style={chipRowStyle}>
           {destinations.map((destination) => (

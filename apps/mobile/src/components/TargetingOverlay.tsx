@@ -11,7 +11,7 @@ import type { CSSProperties } from 'react';
 import type { Action, CardId, PlayerId, SetId } from '@sauda/engine';
 import { actionTargeting, kirayaPlan } from '../game/interaction';
 import type { KirayaPlan, TargetStep } from '../game/interaction';
-import { CardFace } from './CardFace';
+import { ScaledCard } from './CardFace';
 import { STAGE, INK, FONT } from '../design/tokens';
 
 export function TargetingOverlay({
@@ -32,7 +32,7 @@ export function TargetingOverlay({
   return (
     <div style={overlayStyle} onClick={onCancel}>
       <div style={cardWrapStyle} onClick={(event) => event.stopPropagation()}>
-        <CardFace cardId={cardId} size="mid" />
+        <ScaledCard cardId={cardId} width={88} />
         {plan ? (
           <KirayaPicker plan={plan} onCommit={onCommit} onCancel={onCancel} />
         ) : step ? (

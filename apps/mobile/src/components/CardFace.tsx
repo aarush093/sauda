@@ -3,36 +3,31 @@
  *   • Plate (static art): a raster plate if one exists, else an SVG fallback.
  *     The plate carries NO text/numerals — ever.
  *   • Live layer (this code): every number, name and icon that means something,
- *     drawn from engine data in the shared vintage styles, identical at all sizes.
+ *     drawn from engine data in the shared vintage styles.
  *
- * Degrades across FULL / MID / CHIP with one zone contract — never a second layout.
- * No rules live here; values come from theme/engine data.
+ * There is ONE face, always full (G4 LAW, owner playtest 2 — no symbolic MID/CHIP minis anymore).
+ * To show a card smaller anywhere on the board, wrap it in `ScaledCard`, which transform-scales this
+ * exact face — so a table-size deed is pixel-for-pixel the same design as the hand/stage card. No
+ * rules live here; values come from theme/engine data.
  */
 import type { CSSProperties } from 'react';
 import { ACTIONS, KIRAYA_DESCRIPTOR, KIRAYA_NAME, SETS } from '@sauda/engine';
 import type { Card, SetId } from '@sauda/engine';
-import { CARD, FONT, INK, SHADOW, cardWidth } from '../design/tokens';
-import type { CardSize } from '../design/tokens';
+import { CARD, FONT, INK, SHADOW } from '../design/tokens';
 import { cardById, plateKey, propertyName, setLabels } from '../design/cardData';
 import { plateUrl, hasPlate } from '../design/plates';
 import { titleInkForPlate, inkForBanner, actionBannerHex, ACTION_BANNER_HEX } from '../design/titleInk';
 
 export interface CardFaceProps {
   cardId: string;
-  size?: CardSize;
-  heldCount?: number; // properties owned of this colour (MID pips)
 }
 
-export function CardFace({ cardId, size = 'full', heldCount }: CardFaceProps) {
+// G4 LAW (owner playtest 2): every card anywhere is this ONE real face — no symbolic minis, ever.
+// To show a card smaller, wrap it in ScaledCard; the design stays pixel-identical at any size.
+export function CardFace({ cardId }: CardFaceProps) {
   const card = cardById(cardId);
   if (!card) {
     return null;
-  }
-  if (size === 'chip') {
-    return <ChipFace card={card} heldCount={heldCount} />;
-  }
-  if (size === 'mid') {
-    return <MidFace card={card} heldCount={heldCount} />;
   }
   return <FullFace card={card} />;
 }
@@ -49,7 +44,7 @@ export function ScaledCard({ cardId, width }: { cardId: string; width: number })
   return (
     <div style={{ width, height, position: 'relative' }}>
       <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-        <CardFace cardId={cardId} size="full" />
+        <CardFace cardId={cardId} />
       </div>
     </div>
   );
@@ -63,8 +58,8 @@ function primarySet(card: Card): SetId | null {
   return null;
 }
 
-function frameStyle(size: CardSize): CSSProperties {
-  const width = cardWidth(size);
+function frameStyle(): CSSProperties {
+  const width = CARD.fullWidth;
   return {
     width,
     height: Math.round(width * CARD.ratio),
@@ -136,7 +131,7 @@ function FullFace({ card }: { card: Card }) {
     case 'money':
       return <MoneyFull card={card} />;
     default:
-      return <div style={frameStyle('full')} />;
+      return <div style={frameStyle()} />;
   }
 }
 
@@ -153,17 +148,6 @@ const FOOTER_HEIGHT_PCT = 19;
 // and the value chip (bottom-left) are both centred on this line, in the corners.
 const FOOTER_MID_PCT = FOOTER_HEIGHT_PCT / 2;
 const SEAL_SIZE = 20;
-
-// Shared gold value-chip look, used by the corner chip on all card kinds.
-const valueChipStyle: CSSProperties = {
-  padding: '1px 4px',
-  borderRadius: 3,
-  background: INK.gold,
-  color: INK.deepInk,
-  fontSize: 8,
-  whiteSpace: 'nowrap',
-  ...mono(700),
-};
 
 // Value badge: a SOLID cream seal that completely covers the plate's printed
 // top-left circle (the empty placeholder disc the art leaves for the value).
@@ -225,13 +209,6 @@ function Seal() {
       सौ
     </div>
   );
-}
-
-// Corner value chip so fanned cards always read. Defaults bottom-right; property
-// cards pass side="left" so it never collides with the seal.
-function CornerChip({ value, side = 'right' }: { value: number; side?: 'left' | 'right' }) {
-  const horizontal = side === 'left' ? { left: 4 } : { right: 4 };
-  return <div style={{ position: 'absolute', bottom: 3, ...horizontal, ...valueChipStyle }}>₹{value} Cr</div>;
 }
 
 // Vintage footer: a warm cream/gold band with dark-ink letterpress text and thin
@@ -419,7 +396,7 @@ function PropertyFull({ card }: { card: Extract<Card, { kind: 'property' }> }) {
   const titleInk = titleInkForPlate(card.id, card.set);
   const keyline = titleInk.keyline ? { textShadow: TITLE_KEYLINE } : {};
   return (
-    <div style={frameStyle('full')}>
+    <div style={frameStyle()}>
       <Plate card={card} />
       <ValueBadge value={card.value} ink={theme.hex} />
 
@@ -491,7 +468,7 @@ function ActionFull({ card }: { card: Extract<Card, { kind: 'action' }> }) {
   const bannerInk = inkForBanner(actionBannerHex(plateKey(card), hasPlate(plateKey(card))));
   const onDarkBanner = bannerInk.name === INK.cardCream;
   return (
-    <div style={frameStyle('full')}>
+    <div style={frameStyle()}>
       <Plate card={card} />
       {/* bank value in the banner circle, from engine data (ACTIONS[kind].value) */}
       <ValueBadge value={info.value} ink={ACTION_BANNER_HEX} />
@@ -609,7 +586,7 @@ function KirayaFull({ card }: { card: Extract<Card, { kind: 'kiraya' }> }) {
   const inks = card.colors === 'ANY' ? (Object.keys(SETS) as SetId[]) : card.colors;
   const badgeInk = card.colors === 'ANY' ? INK.agedLine : SETS[card.colors[0]!].hex;
   return (
-    <div style={frameStyle('full')}>
+    <div style={frameStyle()}>
       <CodeDrawnBanner inks={inks} heightPct={20} />
       <ValueBadge value={card.value} ink={badgeInk} />
       <div style={{ position: 'absolute', top: '25%', left: 0, right: 0, textAlign: 'center', ...display, fontSize: 12, color: INK.stampRed }}>
@@ -646,7 +623,7 @@ function WildcardFull({ card }: { card: Extract<Card, { kind: 'wildcard' }> }) {
   const inks = card.colors === 'ANY' ? (Object.keys(SETS) as SetId[]) : card.colors;
   const badgeInk = card.colors === 'ANY' ? INK.agedLine : SETS[card.colors[0]!].hex;
   return (
-    <div style={frameStyle('full')}>
+    <div style={frameStyle()}>
       <CodeDrawnBanner inks={inks} heightPct={22} />
       {/* a dual wildcard carries a ₹ value (usable as payment); an ANY wildcard is ₹0 and never
           payable, so it wears NO badge (A4 · Niyam 6). */}
@@ -717,7 +694,7 @@ function MoneyFull({ card }: { card: Extract<Card, { kind: 'money' }> }) {
     // not a per-note hack (measured: "₹10"@30 = 105% of the oval, @22 = 77%).
     const centreSize = String(card.value).length >= 2 ? 22 : 30;
     return (
-      <div style={frameStyle('full')}>
+      <div style={frameStyle()}>
         <Plate card={card} />
         {/* centre cartouche: big ₹N over a small Cr, centred in the painted oval */}
         <div
@@ -748,7 +725,7 @@ function MoneyFull({ card }: { card: Extract<Card, { kind: 'money' }> }) {
   // Fallback (no note art yet): the current plain gold-ruled note design.
   const big = card.value === 10;
   return (
-    <div style={{ ...frameStyle('full'), border: `2px solid ${INK.gold}` }}>
+    <div style={{ ...frameStyle(), border: `2px solid ${INK.gold}` }}>
       <div style={{ position: 'absolute', inset: 4, border: `1.5px double ${INK.gold}`, borderRadius: 4 }} />
       {big && <div style={{ position: 'absolute', top: 4, left: 4, right: 4, height: 8, background: INK.gold }} />}
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'baseline', justifyContent: 'center', ...mono(700), color: INK.deepInk }}>
@@ -759,84 +736,3 @@ function MoneyFull({ card }: { card: Extract<Card, { kind: 'money' }> }) {
   );
 }
 
-// --- MID (your own table sets) --------------------------------------------
-
-function MidFace({ card, heldCount }: { card: Card; heldCount: number | undefined }) {
-  const set = primarySet(card);
-  if (card.kind === 'property' || (card.kind === 'wildcard' && set)) {
-    const theme = SETS[set!];
-    const held = heldCount ?? (card.kind === 'property' ? 1 : 1);
-    return (
-      <div style={frameStyle('mid')}>
-        <div style={{ background: theme.hex, color: INK.cardCream, ...display, fontSize: 8, textAlign: 'center', padding: '2px 0', textTransform: 'uppercase' }}>
-          {theme.label}
-        </div>
-        <div style={{ display: 'flex', gap: 2, justifyContent: 'center', padding: '4px 0' }}>
-          {Array.from({ length: theme.size }).map((_, i) => (
-            <span
-              key={i}
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: i < held ? theme.hex : 'transparent',
-                border: `1px solid ${theme.hex}`,
-              }}
-            />
-          ))}
-        </div>
-        <div style={{ textAlign: 'center', color: INK.stampRed, ...mono(700), fontSize: 8 }}>
-          SET ₹{theme.rent[theme.rent.length - 1]} Cr
-        </div>
-        <CornerChip value={card.value} />
-      </div>
-    );
-  }
-  // Non-set cards get a compact neutral MID.
-  return (
-    <div style={{ ...frameStyle('mid'), display: 'flex', alignItems: 'center', justifyContent: 'center', ...mono(700), fontSize: 11 }}>
-      {card.kind === 'money' ? `₹${card.value} Cr` : miniLabel(card)}
-    </div>
-  );
-}
-
-// --- CHIP (rivals / log) ---------------------------------------------------
-
-function ChipFace({ card, heldCount }: { card: Card; heldCount: number | undefined }) {
-  const set = primarySet(card);
-  if (set) {
-    const theme = SETS[set];
-    const complete = (heldCount ?? 0) >= theme.size;
-    return (
-      <div
-        style={{
-          ...frameStyle('chip'),
-          background: theme.hex,
-          color: INK.cardCream,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: complete ? `2px solid ${INK.gold}` : `2px solid ${INK.agedLine}`,
-        }}
-      >
-        <span style={{ ...display, fontSize: 11 }}>{theme.label[0]}</span>
-        <span style={{ ...mono(700), fontSize: 8, color: INK.gold }}>
-          {complete ? '✓' : `${heldCount ?? 0}/${theme.size}`}
-        </span>
-      </div>
-    );
-  }
-  return (
-    <div style={{ ...frameStyle('chip'), display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', ...mono(700), fontSize: card.kind === 'money' ? 7 : 10 }}>
-      {card.kind === 'money' ? `₹${card.value} Cr` : miniLabel(card)}
-    </div>
-  );
-}
-
-function miniLabel(card: Card): string {
-  if (card.kind === 'action') return ACTIONS[card.action].name.slice(0, 3).toUpperCase();
-  if (card.kind === 'kiraya') return KIRAYA_NAME.slice(0, 3).toUpperCase(); // "LAG"
-  if (card.kind === 'wildcard') return 'WILD';
-  return '?';
-}

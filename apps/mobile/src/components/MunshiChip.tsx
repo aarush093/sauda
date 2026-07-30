@@ -19,7 +19,7 @@ import { MUNSHI_USES_PER_GAME } from '@sauda/bots';
 import type { MunshiAdvice } from '@sauda/bots';
 import { useGame } from '../game/store';
 import { actionCardId, describeCard } from '../game/labels';
-import { CardFace } from './CardFace';
+import { ScaledCard } from './CardFace';
 import { STAGE, INK, FONT } from '../design/tokens';
 
 // The recommended move as one brief label, plus the hand card it concerns (if any) so the
@@ -93,7 +93,7 @@ export function MunshiChip({ available }: { available: boolean }) {
             <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 16, color: INK.deepInk }}>Munshi ki Salah</div>
             <div style={{ fontFamily: FONT.serif, fontSize: 12, color: INK.mutedBrown }}>Advice only — you still make the move.</div>
             <div style={moveRowStyle}>
-              {move.cardId && <CardFace cardId={move.cardId} size="chip" />}
+              {move.cardId && <ScaledCard cardId={move.cardId} width={46} />}
               <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 15, color: INK.deepInk }}>{move.label}</div>
             </div>
             <div style={{ fontFamily: FONT.serif, fontSize: 14, color: INK.deepInk, lineHeight: 1.35 }}>{advice.line}</div>

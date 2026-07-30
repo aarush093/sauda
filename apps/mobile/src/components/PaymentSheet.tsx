@@ -16,8 +16,10 @@ import type { CardId, Observation } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
 import type { PayableCard } from '../game/paymentModel';
 import { paymentDetails, paymentDisclosure, selectedTotal } from '../game/paymentModel';
-import { CardFace } from './CardFace';
+import { ScaledCard } from './CardFace';
 import { STAGE, INK, FONT, SHADOW } from '../design/tokens';
+
+const PAY_CARD_PX = 76; // the payment options — REAL scaled card faces (G4 · fixes the F4 regression)
 
 function seatName(seats: SeatConfig[], id: number): string {
   return seats[id]?.kind === 'bot' ? `Bot ${id}` : `Player ${id}`;
@@ -73,7 +75,7 @@ export function PaymentSheet({
           opacity: isSelected ? 1 : 0.6,
         }}
       >
-        <CardFace cardId={card.id} size="mid" />
+        <ScaledCard cardId={card.id} width={PAY_CARD_PX} />
       </div>
     );
   };

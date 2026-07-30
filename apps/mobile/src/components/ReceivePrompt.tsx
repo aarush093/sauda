@@ -8,7 +8,7 @@
 import type { CSSProperties } from 'react';
 import { SETS } from '@sauda/engine';
 import type { Action } from '@sauda/engine';
-import { CardFace } from './CardFace';
+import { ScaledCard } from './CardFace';
 import { STAGE, INK, FONT } from '../design/tokens';
 
 type PlaceReceived = Extract<Action, { type: 'RESPOND_PLACE_RECEIVED' }>;
@@ -26,7 +26,7 @@ export function ReceivePrompt({
     <div style={overlayStyle}>
       <div style={promptStyle}>
         <div style={titleStyle}>Keep this where?</div>
-        <CardFace cardId={cardId} size="mid" />
+        <ScaledCard cardId={cardId} width={92} />
         <div style={buttonColumnStyle}>
           {options.map((option) => (
             <button key={option.set} style={optionButton} onClick={() => onChoose(option)}>

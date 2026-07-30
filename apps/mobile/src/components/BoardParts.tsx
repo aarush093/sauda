@@ -4,13 +4,14 @@
  * numbers in the vintage token styles. The property parts additionally act as DROP ZONES
  * (A10): they carry a `data-drop` id and glow when a dragged card may land on them.
  */
-import { SETS, isSetComplete } from '@sauda/engine';
+import { SETS } from '@sauda/engine';
 import type { PropertyGroup, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
 import { CardBack } from './CardBack';
-import { CardFace } from './CardFace';
+import { ScaledCard } from './CardFace';
+import { SetCascade } from './SetCascade';
 import { useMeasuredWidth } from '../game/useMeasuredWidth';
-import { STAGE, INK, SHADOW, FONT, CARD, GLOW } from '../design/tokens';
+import { STAGE, INK, FONT, CARD, GLOW } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 export const PLAYS_PER_TURN = 3; // §7 rules default; pips render 3 slots
@@ -33,9 +34,8 @@ function nonEmptyGroups(properties: Record<SetId, PropertyGroup[]>): { set: SetI
   return out;
 }
 
-// A property GROUP as a simplified mini-card: a set-colour banner strip + a count badge,
-// a gold FULL ribbon when complete, and (mine) the engine's current rent. A2: the colour
-// is the identity — no letter monogram. When droppable it carries data-drop + a glow.
+// A property GROUP as a CASCADE of real cards (G4 LAW — no banner+count chip). It carries the
+// drop-zone id + glow when a dragged card may land on it, and taps open the full table view.
 function MiniGroup({
   set,
   group,
@@ -44,6 +44,7 @@ function MiniGroup({
   dropId,
   soft,
   hot,
+  onExpand,
 }: {
   set: SetId;
   group: PropertyGroup;
@@ -52,28 +53,18 @@ function MiniGroup({
   dropId?: string | undefined;
   soft?: boolean | undefined;
   hot?: boolean | undefined;
+  onExpand?: (() => void) | undefined;
 }) {
   const theme = SETS[set];
-  const complete = isSetComplete(group);
-  const height = Math.round(width * 1.4);
-  const boxShadow = hot ? GLOW.hot : soft ? GLOW.soft : SHADOW.cardBack;
+  const boxShadow = hot ? GLOW.hot : soft ? GLOW.soft : undefined;
   return (
     <div
       data-drop={dropId}
-      style={{ width, height, flex: '0 0 auto', position: 'relative', borderRadius: 4, overflow: 'hidden', background: STAGE.cardCream, border: `1px solid ${INK.agedLine}`, boxShadow }}
-      title={`${theme.label} ${group.cards.length}/${theme.size}`}
+      onClick={onExpand}
+      style={{ flex: '0 0 auto', position: 'relative', borderRadius: 6, boxShadow, cursor: onExpand ? 'pointer' : undefined }}
+      title={`${theme.label} ${group.cards.length}/${theme.size} — tap to expand`}
     >
-      <div style={{ height: '44%', background: theme.hex }} />
-      {complete && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: STAGE.accentGold }} />}
-      <div style={{ position: 'absolute', bottom: 1, left: 0, right: 0, textAlign: 'center', fontFamily: FONT.mono, fontWeight: 700, fontSize: Math.round(width * 0.22), color: INK.deepInk }}>
-        {complete ? '✓' : `${group.cards.length}/${theme.size}`}
-        {group.buildings.length > 0 ? `+${group.buildings.length}` : ''}
-      </div>
-      {rent !== undefined && (
-        <div style={{ position: 'absolute', top: '46%', left: 0, right: 0, textAlign: 'center', fontFamily: FONT.mono, fontSize: Math.round(width * 0.19), color: INK.deepInk }}>
-          ₹{rent}
-        </div>
-      )}
+      <SetCascade group={group} width={width} rent={rent} />
     </div>
   );
 }
@@ -97,6 +88,7 @@ function GhostSlot({ set, width, hot }: { set: SetId; width: number; hot: boolea
 
 // A player's groups in a row. Mine glow as drop targets during a drag, and grow ghost
 // slots for the legal colours I don't yet hold. Empty + not dragging → the G1 invitation.
+// Tapping any of my groups opens my full table view (G4).
 export function GroupRow({
   properties,
   kiraya,
@@ -104,6 +96,7 @@ export function GroupRow({
   mine,
   dropSets,
   hotZoneId,
+  onExpand,
 }: {
   properties: Record<SetId, PropertyGroup[]>;
   kiraya?: Record<SetId, number[]> | undefined;
@@ -111,6 +104,7 @@ export function GroupRow({
   mine?: boolean | undefined;
   dropSets?: Set<SetId> | undefined;
   hotZoneId?: string | null | undefined;
+  onExpand?: (() => void) | undefined;
 }) {
   const groups = nonEmptyGroups(properties);
   const existing = new Set(groups.map((entry) => entry.set));
@@ -142,6 +136,7 @@ export function GroupRow({
             dropId={droppable ? `set:${set}` : undefined}
             soft={droppable && !hot}
             hot={hot}
+            onExpand={onExpand}
           />
         );
       })}
@@ -161,7 +156,13 @@ const OPP_MIN_CARD_PX = 14;
 const OPP_MAX_CARD_PX = 26;
 const OPP_CHIP_PX = 22;
 
-export function OpponentGroupStrip({ properties }: { properties: Record<SetId, PropertyGroup[]> }) {
+export function OpponentGroupStrip({
+  properties,
+  onExpand,
+}: {
+  properties: Record<SetId, PropertyGroup[]>;
+  onExpand?: (() => void) | undefined;
+}) {
   const [containerRef, measured] = useMeasuredWidth<HTMLDivElement>();
   const groups = nonEmptyGroups(properties);
   const available = measured || 104; // per-opponent column width before it is measured
@@ -179,10 +180,15 @@ export function OpponentGroupStrip({ properties }: { properties: Record<SetId, P
   }
   const overflow = groups.length - shownCount;
 
+  // Tiny but REAL cascades (G4); the whole row taps open to this opponent's full table view.
   return (
-    <div ref={containerRef} style={{ display: 'flex', gap: OPP_GAP_PX, alignItems: 'flex-start', overflow: 'hidden' }}>
+    <div
+      ref={containerRef}
+      onClick={onExpand}
+      style={{ display: 'flex', gap: OPP_GAP_PX, alignItems: 'flex-start', overflow: 'hidden', cursor: onExpand ? 'pointer' : undefined }}
+    >
       {groups.slice(0, shownCount).map(({ set, group, index }) => (
-        <MiniGroup key={`${set}-${index}`} set={set} group={group} width={cardWidth} />
+        <SetCascade key={`${set}-${index}`} group={group} width={cardWidth} />
       ))}
       {overflow > 0 && (
         <div
@@ -257,10 +263,8 @@ export function DiscardTop({ topId }: { topId: string | undefined }) {
     return <div style={{ width, height, border: `1px dashed ${INK.agedLine}`, borderRadius: 4, opacity: 0.5 }} />;
   }
   return (
-    <div style={{ width, height, filter: STAGE.dimSleep }}>
-      <div style={{ transform: `scale(${width / CARD.fullWidth})`, transformOrigin: 'top left' }}>
-        <CardFace cardId={topId} size="full" />
-      </div>
+    <div style={{ filter: STAGE.dimSleep }}>
+      <ScaledCard cardId={topId} width={width} />
     </div>
   );
 }

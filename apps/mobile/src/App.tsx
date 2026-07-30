@@ -44,7 +44,7 @@ export function App() {
     return (
       <div style={{ minHeight: '100vh', background: INK.tableIndigo, padding: 32 }}>
         <div style={{ transform: 'scale(3)', transformOrigin: 'top left' }}>
-          <CardFace cardId={cardId} size="full" />
+          <CardFace cardId={cardId} />
         </div>
       </div>
     );

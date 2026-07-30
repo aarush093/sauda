@@ -22,9 +22,10 @@ import type { DropZone } from '../game/interaction';
 import { useHandDrag } from '../game/useHandDrag';
 import type { DragState } from '../game/useFanGesture';
 import { describeCard } from '../game/labels';
-import { CardFace } from './CardFace';
+import { CardFace, ScaledCard } from './CardFace';
 import { InspectCard } from './InspectCard';
 import { DiscardOverlay } from './DiscardOverlay';
+import { TableView } from './TableView';
 import { TargetingOverlay } from './TargetingOverlay';
 import { RearrangeChooser } from './RearrangeChooser';
 import { Ticker } from './Ticker';
@@ -33,6 +34,8 @@ import { MunshiChip } from './MunshiChip';
 import { BankStack, DiscardTop, DrawPile, GroupRow, OpponentGroupStrip, PlayerHeader, seatName } from './BoardParts';
 import { STAGE, INK, SHADOW, FONT, GLOW } from '../design/tokens';
 
+
+const STAGE_CARD_PX = 112; // the centre-stage spotlight card — bigger than a table card, fully readable
 
 const goldFilledButton: CSSProperties = {
   padding: '12px 22px',
@@ -134,6 +137,9 @@ export function Board({
   const [inspectingCardId, setInspectingCardId] = useState<string | null>(null);
   const inspecting = inspectingCardId !== null && observation.myHand.includes(inspectingCardId) ? inspectingCardId : null;
 
+  // Tap-to-expand table view (G4): whose full board is open, if any ('me' or an opponent seat).
+  const [expandedView, setExpandedView] = useState<{ kind: 'me' } | { kind: 'opponent'; id: number } | null>(null);
+
   // A targeted action mid-play: its card is on stage and legal targets glow (A10 targeting).
   // Cleared automatically once the card leaves the hand (committed) or the turn passes.
   const [targetingCardId, setTargetingCardId] = useState<string | null>(null);
@@ -224,18 +230,19 @@ export function Board({
 
   return (
     <div style={boardStyle}>
-      {/* opponent row (22%) — pills + their mini group stacks */}
-      <div style={zone(22, { display: 'flex', gap: 8, overflow: 'hidden' })}>
+      {/* opponent row (21%, G4 zone retune) — pills + their REAL card cascades; tap a row to expand
+          to that opponent's full readable table view. */}
+      <div style={zone(21, { display: 'flex', gap: 8, overflow: 'hidden' })}>
         {observation.opponents.map((opponent) => (
           <div key={opponent.id} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, opacity: opponent.id === observation.currentPlayer ? 1 : 0.75 }}>
             <PlayerHeader name={seatName(seats, opponent.id)} bankTotal={opponent.bankTotal} handCount={opponent.handCount} active={opponent.id === observation.currentPlayer} />
-            <OpponentGroupStrip properties={opponent.properties} />
+            <OpponentGroupStrip properties={opponent.properties} onExpand={() => setExpandedView({ kind: 'opponent', id: opponent.id })} />
           </div>
         ))}
       </div>
 
-      {/* table band (10%) — draw pile · turn chip · discard */}
-      <div style={zone(10, { display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${STAGE.scrimSheet}`, borderBottom: `1px solid ${STAGE.scrimSheet}` })}>
+      {/* table band (9%) — draw pile · turn chip · discard */}
+      <div style={zone(9, { display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${STAGE.scrimSheet}`, borderBottom: `1px solid ${STAGE.scrimSheet}` })}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {/* L4: the pile is display only — the turn-start draw is automatic, never a tap. */}
           <DrawPile count={observation.drawPileCount} />
@@ -253,15 +260,16 @@ export function Board({
         </div>
       </div>
 
-      {/* centre stage (30%) — the 2-line ticker (§8), then open felt / the tapped card's
-          overlay / the centre PLAY drop zone / the Declare SAUDA! button (A11). */}
-      <div style={zone(30, { display: 'flex', flexDirection: 'column' })}>
+      {/* centre stage (28%, G4 zone retune) — the 2-line ticker (§8), then open felt / the tapped
+          card's overlay / the centre PLAY drop zone / the Declare SAUDA! button (A11). */}
+      <div style={zone(28, { display: 'flex', flexDirection: 'column' })}>
         <Ticker lines={tickerLines} />
         <div data-drop="play" style={{ flex: 1, minHeight: 0, margin: '0 8px 6px', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hotZoneId === 'play' ? GLOW.hot : playEligible ? GLOW.soft : 'none' }}>
           {spotlightCardId ? (
-            // The bot's card held on stage (I1), or the human's just-played card for a beat (F4).
+            // The bot's card held on stage (I1), or the human's just-played card for a beat (F4) —
+            // the real full CardFace at stage size, both sides (G4 CENTRE STAGE).
             <div style={{ boxShadow: STAGE.glowGold, borderRadius: 8 }}>
-              <CardFace cardId={spotlightCardId} size="mid" />
+              <ScaledCard cardId={spotlightCardId} width={STAGE_CARD_PX} />
             </div>
           ) : declareWinAction && onAct ? (
             <button onClick={() => onAct(declareWinAction)} style={goldFilledButton}>Declare SAUDA!</button>
@@ -271,8 +279,8 @@ export function Board({
         </div>
       </div>
 
-      {/* my area (38%) — the largest zone (hierarchy law A2); sleeps when it isn't my turn. */}
-      <div style={zone(38, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
+      {/* my area (42%, G4 zone retune) — still the largest zone (hierarchy law A2); sleeps off-turn. */}
+      <div style={zone(42, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <PlayerHeader name="You" bankTotal={observation.myBankTotal} handCount={observation.myHand.length} active={myTurn} showPips playsRemaining={observation.playsRemaining} />
@@ -286,7 +294,7 @@ export function Board({
           </div>
         </div>
         <div style={{ minHeight: 0, overflow: 'hidden' }}>
-          <GroupRow properties={observation.myProperties} kiraya={observation.myKiraya} width={38} mine dropSets={eligibleSets} hotZoneId={hotZoneId} />
+          <GroupRow properties={observation.myProperties} kiraya={observation.myKiraya} width={38} mine dropSets={eligibleSets} hotZoneId={hotZoneId} onExpand={() => setExpandedView({ kind: 'me' })} />
         </div>
         {rearrangeableIds.size > 0 && (
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -326,7 +334,7 @@ export function Board({
         <div style={{ position: 'fixed', left: drag.x, top: drag.y, pointerEvents: 'none', zIndex: 50 }}>
           <div style={{ transform: 'translate(-50%, -100%) translateY(-32px) scale(0.62)', transformOrigin: 'bottom center' }}>
             <div style={{ boxShadow: SHADOW.dragLift, borderRadius: 8 }}>
-              <CardFace cardId={drag.cardId} size="full" />
+              <CardFace cardId={drag.cardId} />
             </div>
           </div>
         </div>
@@ -373,6 +381,31 @@ export function Board({
           }}
         />
       )}
+
+      {/* tap-to-expand table view (G4): an opponent's row, or one of my groups, opens their full
+          board as large real cards. Read-only; tap off to close. */}
+      {expandedView !== null && (() => {
+        if (expandedView.kind === 'me') {
+          return (
+            <TableView
+              title="You"
+              properties={observation.myProperties}
+              bankTotal={observation.myBankTotal}
+              kiraya={observation.myKiraya}
+              onClose={() => setExpandedView(null)}
+            />
+          );
+        }
+        const opponent = observation.opponents.find((candidate) => candidate.id === expandedView.id);
+        return opponent ? (
+          <TableView
+            title={seatName(seats, opponent.id)}
+            properties={opponent.properties}
+            bankTotal={opponent.bankTotal}
+            onClose={() => setExpandedView(null)}
+          />
+        ) : null;
+      })()}
 
       {/* inspect overlay (G1): a tapped hand card rises here CENTRED + LARGE, read-only — no
           buttons, no engine action. Tap to dismiss, or drag it straight to a zone to commit. */}
