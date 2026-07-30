@@ -173,3 +173,54 @@ Seven findings from the owner's first real playtest, each fixed and proven with 
 - **F5 — opponent row (owner playtest 30 Jul):** in-play pills show the NAME only (difficulty is a setup concern); an opponent's sets ride ONE adaptive row that never grows the 22% zone — mini-cards shrink to fit, and below a legible minimum the overflow collapses into a gold "+n" chip (`OpponentGroupStrip`).
 - **F6 — end card + scroll bug (owner playtest 30 Jul):** the end-state page-scroll was the old in-flow `.winner` strip stacking on the full-height board (778 > 740px). Replaced with a `position: fixed` full-screen end overlay (dimmed board, tokens panel, title + the winner's three set banners + a tokens New game control) — out of flow, so it can't grow the page. Root cause + fix proven by the scroll guard (warns 778>740 before, silent after). Spec: A12.
 - **F7 — why-lines on the rail (owner playtest 30 Jul):** when a staged card's canonical verb is absent from `legalActions`, the rail shows one greyed, non-tappable reason (`labels.ts` `cardVerbHint`, UI copy only) — MAKAAN "needs a complete set", HAVELI "needs a MAKAAN first", KABZA "no full set to seize", HAATH KI SAFAI "nothing stealable", ADLA-BADLI "needs one of yours + one of theirs", LAGAAN "no matching property". Verified (tests) that money-on-property and property-on-bank fire no action.
+
+## M4b — owner playtest 2 ("real cards, real wheel"; 30 Jul)
+
+Second owner playtest. The core hand-input model changed, the fan became a wheel, the two bare card
+families were finished, and real cards were made visible everywhere. Spec: `M4B_SPEC_v1.2.md` A13.
+`packages/engine` + `packages/bots` byte-identical throughout. Captures: `docs/captures/playtest-fixes-2/`.
+
+- **G1 — the hand-card RAIL is retired (owner playtest 2, 30 Jul).** Tapping a hand card now INSPECTS
+  (read-only, no buttons, no engine action); DRAG (from the wheel or the inspected card) is the only
+  commit path from hand. The A1 tap→stage→rail survives in the spec only as history. `ActionRail.tsx`
+  + `StagedCard.tsx` (the rail UI) were deleted, but `staging.ts` (`railForCard`, the legal-verb
+  grouping) and its 7 tests were KEPT — the inspect why-line reuses it to detect a missing canonical
+  verb, so no test was deleted and no code is dead. `interaction.test.ts`'s drag/tap PARITY suite
+  became a drag-COMPLETENESS suite (every enumerated hand play is drag-reachable; illegal drops fire
+  nothing) — same `it` count.
+- **G2 — the WHEEL replaces the fan (owner playtest 2, 30 Jul).** `fanLayout` + `HandFan` retired
+  (fanLayout.test's 26 tests removed with the retired geometry); `wheelLayout` + `HandWheel` added
+  (wheelLayout.test's 30 tests). Geometry constants (SPAN_MAX 120°, COMFORT_STEP 12°, hub radius
+  0.42·cardHeight, card width clamp 58–78) are the most defensible reading of the owner's "one
+  geometry, one size, near-semicircle for many cards" — chosen so the no-clip invariant holds at both
+  test widths, unit-proven rather than eyeballed. The redistribution glide (transform-only ~175ms) is
+  the ONE motion carve-out; the peek stays instant (inner layer, no transition) so it doesn't ride
+  the ease.
+- **G3 — discard is a full-screen L2 overlay (owner playtest 2, 30 Jul).** Replaces the inline
+  discard-via-fan. Under-pile routing is the frozen engine's (turn.test #15); the overlay adds the
+  count-down + per-card DISCARD dispatch (unit-tested) + a ticker line (new `CardsDiscarded` case).
+- **G4 — real-cards LAW (owner playtest 2, 30 Jul).** Every card everywhere renders through CardFace
+  (full, scaled by the new `ScaledCard`) or CardBack. CardFace lost its MID/CHIP symbolic branches,
+  the `size` prop, and `heldCount`; tokens lost `CardSize`/`cardWidth()`/`midWidth`/`chipWidth`.
+  On-board sets are compact real-card cascades (`SetCascade`) with a SET-rent badge; the full readable
+  view is the tap-to-expand `TableView` (opponent row or my group → L2 overlay). "SET ₹N" on a
+  wildcard row is the FULL-SET RENT (the codebase's own convention, matching PropertyFull's ledger;
+  the owner's "Rs4" example was illustrative, not a spec on the number).
+- **F4 REGRESSION root cause (owner playtest 2, 30 Jul).** F4/F3 rendered payment options via
+  `<CardFace size="mid">` (`PaymentSheet.tsx:76`), and the F4 DECISIONS note "the payment sheet
+  already rendered CardFaces (F3)" treated any CardFace call as real — but `size="mid"` was `MidFace`,
+  a symbolic banner+pips / "₹N Cr" / "LAG" stand-in. F4 changed WHERE cards appear (the stage beat)
+  but never the symbolic render path, so the owner's screenshot showed cream rectangles. Fixed under
+  G4 by routing every surface through the full face.
+- **Zone retune (owner playtest 2, 30 Jul).** Within the ±6% budget: opponents 22→21, table band
+  10→9, centre stage 30→28, my area 38→42 (still the largest). The wheel spans the full my-area with
+  the hub at bottom-centre; End turn floats in the clear bottom-right corner (cards converge to the
+  hub; F2 auto-ends most turns so it is usually hidden). Nothing scrolls in any state.
+- **G6 — received cards on the stage (owner playtest 2, 30 Jul).** Evidence (`payment.ts`
+  `routeCardToCreditor`): only a WILDCARD received in payment is a placement CHOICE (`awaitingReceive`
+  → one `RESPOND_PLACE_RECEIVED` per `placeableSet`); properties auto-place (`CardReceived`);
+  money/action/kiraya go to the bank; KABZA/HAATH/ADLA-BADLI steals auto-place. So the on-stage
+  placement flow is exactly the received-wildcard case; auto-placed arrivals get a stage beat +
+  ticker line. Engine untouched — presentation over `legalActions` only.
+- **G7 — Munshi's pick marker is static (owner playtest 2, 30 Jul).** A gold ◈ seal on the suggested
+  cards + a "Munshi's pick — tap Pay" line. The bouncing arrow is guidance juice → `M4C_MOTION_BACKLOG.md`.

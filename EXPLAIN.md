@@ -59,3 +59,41 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
 ## M4b — Play screen (Phase B)
 
 - **The Munshi chip is a read-only advisor that shares the bot's brain.** A small gold token by my avatar (three pips = three consults per game, flat, no carry-over) opens a "Munshi ki Salah" card showing the move the *bot's own* `recommend()` would pick plus one templated reason line. The point is it can never out-think the bots or diverge from them — it calls the identical function. Crucially it is **read-only**: opening it dispatches no engine action (the engine state object is literally unchanged across a consult), so it advises but never plays — the player still makes the move themselves. While it's open it is the single live surface (a scrim sleeps the hand, rail and any sheet — law L2); it appears only on my own play turn with legal moves, and a spent budget renders the chip inert. The 3-use budget lives in the store so it resets each game and never carries over.
+
+## M4b — Owner playtest 2 ("real cards, real wheel")
+
+- **Tap = inspect, drag = commit (the core input change).** The owner, playing live, read the old
+  "tap a card → it stages with a Bank/Play button rail" as the game *asking permission*. So the rail
+  is gone from the hand: **tapping a hand card now just INSPECTS it** — it floats up large and
+  readable with no buttons and can never dispatch an action. The ONLY way to play a card is to **drag**
+  it (from the wheel, or from the inspected card) onto a glowing zone. If a card's canonical play is
+  currently illegal, inspect shows one greyed why-line ("needs a complete set") so the rule teaches
+  itself. On-board picks (targeting, payment, discard, expanders) stay taps — those are choices, not
+  a permission rail.
+- **The hand is a half roulette wheel, and its whole correctness lives in one pure function.**
+  `wheelLayout(n, width)` returns each card's position + spoke angle; the component just renders it.
+  The one hard invariant — the readable top strip of every card stays inside the frame while the
+  bottoms disappear off the screen edge — is *proven* by a unit test that reconstructs each rotated
+  card's corners for n = 1..12 at both real board widths, not eyeballed. When the hand size changes
+  the cards **glide** to their new even spacing via a single transform-only transition (the one bit
+  of motion allowed in M4b); the transition sits on an *outer* layer (position + angle) while the
+  scrub "peek" sits on an *inner* layer with no transition, so the peek stays instant and only the
+  redistribution eases.
+- **"Real cards everywhere" is enforced by deleting the alternatives.** Previously a card could be
+  drawn three ways: the full face, or a symbolic "MID" (colour banner + pips), or a "CHIP" (a letter).
+  The owner's non-negotiable was that his handcrafted faces show *everywhere*. So MID and CHIP were
+  **deleted outright**, along with the `size` prop — now there is exactly one face, and `ScaledCard`
+  shows it smaller by CSS-scaling the *same* full render. A table set is a cascade of overlapped real
+  cards; tapping any opponent row (or my own group) expands it to a full-screen readable table view.
+- **The F4 regression was a "looks like it's fixed" trap.** A prior pass claimed "real cards
+  everywhere" and even noted "the payment sheet already renders CardFaces". It did call `CardFace` —
+  but with `size="mid"`, the *symbolic* variant. The lesson: "calls the right component" ≠ "renders
+  the right thing"; the fix had to remove the symbolic code path entirely, not add another caller.
+- **Received cards land where you can act on them.** When a wildcard is paid to me it used to pop a
+  separate button-list dialog. Now it lands on the centre stage and my legal destination sets glow on
+  the real board — I drag it home (or tap a glowing set). This reuses the exact same drop-zone
+  machinery as a normal play, so it's the same gesture, not a special case.
+- **Nothing in the engine moved.** Every change is presentation over `legalActions`: the wheel, the
+  inspect view, the cascades, the table view, the received-on-stage flow all derive from the engine's
+  already-enumerated moves. `packages/engine` and `packages/bots` stayed byte-identical across all
+  seven fixes.

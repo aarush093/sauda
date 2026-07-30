@@ -353,3 +353,67 @@ polish within existing sections and live only in DECISIONS.md.
   bug). The A2 no-scroll law now explicitly holds through the end state.
 
 *End of A12.*
+
+---
+
+## A13 — Owner playtest 2 ("real cards, real wheel"; 30 Jul; supersedes A1/A10 rail-as-default for hand cards)
+
+The second owner playtest returned a hard verdict: the surface worked but still played like a dialog
+system showing stand-ins. A13 changes the core hand-input model, replaces the fan with a wheel,
+finishes the two bare card families, and makes the handcrafted cards visible EVERYWHERE. Implemented
+and captured (`docs/captures/playtest-fixes-2/`). Where A13 conflicts with A1/A10, A13 wins.
+
+- **G1 — TAP = INSPECT, DRAG = COMMIT (supersedes the A1 tap→stage→RAIL for HAND cards).** The owner
+  read the rail as the game asking permission. New contract: **tapping a hand card INSPECTS it** —
+  it rises centred and large (~56% frame width), fully readable, over a light stage scrim, with **no
+  buttons**; inspect never dispatches an engine action. If the card's canonical play is illegal, one
+  greyed why-line teaches the rule (F7 copy). **Drag** — from the wheel OR the inspected card, past
+  the 8px slop — is the ONLY commit path from hand. Everything already tap-driven ON THE BOARD stays
+  tap-driven (targeting, received placement, payment sheet, interrupt, discard, expanders). The tap
+  rail UI is retired; the legal-verb grouping (`staging.ts`) survives to feed the inspect why-line.
+
+- **G2 — the WHEEL (replaces the fan).** The hand is a half roulette wheel: `wheelLayout(n, width)`
+  places each card as a spoke on an arc around a hub at the bottom-centre, rotated radially, evenly
+  spaced (`SPAN = min(120°, (n-1)·12°)`), ONE card size at every count. Invariant (unit-proven, n
+  1..12 @ {346,436}): the outer readable strip (top ~28%) of EVERY card stays fully inside the frame;
+  lower portions may run beneath the bottom edge by design; left/right/top never clip. **Seamless
+  re-spacing:** on any hand-size change the remaining cards GLIDE to their new even spacing via ONE
+  transform-only ~175ms ease-out — the single M4b motion carve-out. The scrub is unchanged (peek,
+  slide re-targets, lift → drag, release in band → inspect).
+
+- **G3 — DISCARD is a full-screen L2 overlay.** Over the hand limit, the wheel vanishes and the table
+  dims + blurs (static); ALL hand cards spread as REAL full CardFaces (grid, two rows if needed)
+  under "Over the limit — tap N to discard". Each tap buries the card face-down under the draw pile
+  (house rule 813f1cd) with a ticker line; the count-down ticks; at 7 the overlay dismisses and the
+  wheel returns. Nothing else is interactive while open.
+
+- **G4 — REAL CARDS EVERYWHERE + tap-to-expand boards (LAW).** Every card representation anywhere
+  renders through **CardFace (full, scaled by `ScaledCard`) or CardBack** — no symbolic stand-ins, no
+  banner+count chips, no MID/CHIP variants, ever. My placed sets and opponent boards are cascades of
+  overlapped real cards with a small SET-rent badge; the payment sheet, centre stage (both human and
+  bot plays), discard overlay, received/targeting/rearrange/Munshi surfaces, and the end overlay all
+  show real faces. Tapping an opponent row — or one of my groups — opens a full-screen L2 **table
+  view** (blurred felt, their sets as large real cards, bank total; tap off to close).
+
+- **G5 — the two code-drawn card families are finished.** DUAL/ANY wildcard and PAIRED/WILD LAGAAN
+  faces are completed in the locked anatomy (banner, value badge where the card carries a value,
+  ledger slip, works-line footer + Devanagari seal). They remain code-drawn (no Gemini plates, by
+  locked design). Property/action/money faces are unchanged.
+
+- **G6 — received cards land on the stage, then drag home.** Where the engine offers a placement
+  choice (a wildcard received in payment — matrix C7 / `awaitingReceive`), the card sits on the
+  centre stage, its legal destination sets glow, and I drag it home (tap a glowing set as the
+  on-board fallback); multiple queue one at a time. Auto-placed arrivals flash on the stage for a
+  beat and get a ticker line, so the player always SEES what arrived.
+
+- **G7 — Munshi's pick marker (static).** The payment sheet's suggested selection carries a small
+  gold ◈ Munshi seal and a "Munshi's pick — tap Pay" line. Static; the bouncing arrow is in the M4c
+  motion backlog.
+
+- **Zone retune (A2, within the ±6% budget).** The wheel + real-card boards shift the split to
+  **opponents 21% · table band 9% · centre stage 28% · my area 42%** (my area stays the largest —
+  hierarchy law holds). The bottom-anchored wheel band replaces the fan band; End turn floats in the
+  clear bottom-right corner (the wheel's cards converge to the hub, so nothing reaches there, and F2
+  auto-ends most turns so it is usually hidden). Nothing scrolls in any state, overlays included.
+
+*End of A13.*
