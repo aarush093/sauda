@@ -289,7 +289,8 @@ export function Board({
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={{ fontFamily: FONT.serif, fontSize: 11, opacity: 0.8 }}>Move wildcard:</span>
             {[...rearrangeableIds].map((id) => (
-              <div key={id} {...cardHandlers(id)} onContextMenu={(event) => event.preventDefault()} style={{ ...rearrangeToken, opacity: drag?.cardId === id ? 0.3 : 1 }}>
+              // {...data-card-id} is a dev-only capture marker (see HandFan) — tree-shaken from prod.
+              <div key={id} {...cardHandlers(id)} {...(import.meta.env.DEV && { 'data-card-id': id })} onContextMenu={(event) => event.preventDefault()} style={{ ...rearrangeToken, opacity: drag?.cardId === id ? 0.3 : 1 }}>
                 ◈ {describeCard(id).replace('Wildcard ', '')}
               </div>
             ))}

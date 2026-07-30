@@ -64,6 +64,12 @@ export function Table() {
     if (!state || state.phase === 'gameOver' || handoffSeat !== null) {
       return;
     }
+    // Capture freeze (dev only): while the Playwright pipeline holds a recorded frame, don't
+    // step the bot. `import.meta.env.DEV` folds to false in prod, so this guard — and the two
+    // like it below — are dead-code-eliminated from the shipped bundle (bundle stays identical).
+    if (import.meta.env.DEV && (globalThis as { __saudaCapturePaused?: boolean }).__saudaCapturePaused) {
+      return;
+    }
     const actor = actorOf(state);
     if (seats[actor]?.kind !== 'bot') {
       return;
@@ -107,6 +113,9 @@ export function Table() {
   // L4: auto-draw. Keyed on `state` so it re-checks after every applied action, and reduce
   // rejects a stray second DRAW (wrong phase), so it fires exactly once per awaitingDraw.
   useEffect(() => {
+    if (import.meta.env.DEV && (globalThis as { __saudaCapturePaused?: boolean }).__saudaCapturePaused) {
+      return; // capture freeze (dev only) — see the bot-step effect above
+    }
     if (autoDrawRef.current) {
       dispatch({ type: 'DRAW' });
     }
@@ -118,6 +127,9 @@ export function Table() {
     const pending = autoResolveRef.current;
     if (!pending) {
       return;
+    }
+    if (import.meta.env.DEV && (globalThis as { __saudaCapturePaused?: boolean }).__saudaCapturePaused) {
+      return; // capture freeze (dev only) — hold the beat so it can be shot (e.g. C4 zero-pay)
     }
     const timer = setTimeout(() => dispatch(pending.action), BEAT_MS);
     return () => clearTimeout(timer);

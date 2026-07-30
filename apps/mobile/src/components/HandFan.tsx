@@ -74,6 +74,10 @@ export function HandFan({
               <div
                 key={id}
                 {...handlers}
+                // Dev-only DOM marker so the Playwright capture pipeline can grab a specific hand
+                // card for a real mid-drag gesture. `import.meta.env.DEV` is false in prod, so the
+                // spread collapses to nothing and the attribute never reaches the shipped bundle.
+                {...(import.meta.env.DEV && { 'data-card-id': id })}
                 onContextMenu={(event) => event.preventDefault()}
                 style={{
                   position: 'absolute',

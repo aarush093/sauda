@@ -204,12 +204,67 @@ export const useGame = create<GameStore>((set, get) => {
   };
 });
 
+// The 4-seat table the capture harness replays into: seat 0 the human, seats 1-3 the medium
+// bots — matching the seatCount the fixture was generated with. Used only by the dev __replay
+// hook below, so it is tree-shaken from production along with that block.
+const CAPTURE_SEATS: SeatConfig[] = [
+  { kind: 'human' },
+  { kind: 'bot', difficulty: 'medium' },
+  { kind: 'bot', difficulty: 'medium' },
+  { kind: 'bot', difficulty: 'medium' },
+];
+
+// What __replay hands back to the Playwright pipeline so it can assert the state landed.
+interface ReplaySummary {
+  ok: boolean; // every logged action was legal on replay
+  applied: number;
+  total: number;
+  phase: string | null;
+  actor: number | null;
+  handLen: number | null;
+}
+
 // Dev-only: expose the store so the Phase-B scenario capture harness (and manual debugging)
 // can drive it from the browser — replay a recorded action log to land the UI on any target
 // state. Vite replaces `import.meta.env.DEV` with `false` in a production build, so this whole
 // block is dead-code-eliminated from the shipped app bundle.
 if (import.meta.env.DEV) {
-  (globalThis as unknown as { __sauda?: typeof useGame }).__sauda = useGame;
+  const globals = globalThis as unknown as {
+    __sauda?: typeof useGame;
+    __replay?: (seed: number, actions: Action[]) => ReplaySummary;
+    __saudaCapturePaused?: boolean;
+  };
+  globals.__sauda = useGame;
+
+  // __replay(seed, actions): land the real UI deterministically on a recorded scenario state.
+  // The committed fixture log already contains EVERY seat's actions (bots included), so we just
+  // rebuild the game from the seed and dispatch the whole log in one synchronous pass — no bot
+  // stepping. It first sets `__saudaCapturePaused` so the Table's automatic beats (bot timer,
+  // auto-draw, auto-resolve) don't advance the game past the frame the harness wants to shoot;
+  // the pause holds until the next __replay resets the page. Returns a small summary the
+  // Playwright pipeline asserts on. This is the capture bridge the scenarios harness describes.
+  globals.__saudaCapturePaused = false;
+  globals.__replay = (seed, actions) => {
+    globals.__saudaCapturePaused = true;
+    useGame.getState().newGame({ seats: CAPTURE_SEATS, seed });
+    let applied = 0;
+    for (const action of actions) {
+      const before = useGame.getState().state;
+      useGame.getState().dispatch(action); // reduce rejects an illegal action silently (no set)
+      if (useGame.getState().state !== before) {
+        applied += 1;
+      }
+    }
+    const state = useGame.getState().state;
+    return {
+      ok: applied === actions.length,
+      applied,
+      total: actions.length,
+      phase: state ? state.phase : null,
+      actor: state ? actorOf(state) : null,
+      handLen: state ? state.players[0]!.hand.length : null,
+    };
+  };
 }
 
 // The seat whose perspective the board should render right now.
