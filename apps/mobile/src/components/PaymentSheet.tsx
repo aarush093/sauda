@@ -1,16 +1,21 @@
 /**
- * The payment sheet (INTERACTION_SPEC §6; STATE_MATRIX C1-C3, C6). When a charge stands
- * against me, a cream bottom sheet slides up over the dimmed table: "Pay ₹N Cr to <name>",
- * my payable cards as tappable CardFaces (gold ring when chosen), a running meter that
- * surfaces "no change given" on overpay, and one gold commit button. The engine's
- * suggestPayment is pre-selected (C1); I may edit freely — reduce validates the final
- * choice, so nothing here decides a rule.
+ * The payment sheet (INTERACTION_SPEC §6; STATE_MATRIX C1-C3, C6; F3). When a charge stands
+ * against me, a cream bottom sheet slides up over the dimmed table: "Pay ₹N Cr to <name>", my
+ * payable cards as tappable CardFaces (gold ring when chosen), a running meter that surfaces
+ * "no change given" on overpay, and one gold commit button.
+ *
+ * F3 (owner playtest 30 Jul) — trustworthy, money-first disclosure: the DEFAULT selection is the
+ * least-overpay, money-preferring pick (paymentModel.refinePaymentSelection — never overpays when
+ * an exact subset exists), so it opens honest. Money notes are always shown; when money covers the
+ * debt the property sets hide behind one quiet "Pay with property instead" expander so the sheet
+ * reads as money only. I may still edit freely — reduce re-validates the final choice.
  */
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { CardId, Observation } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
-import { paymentDetails, selectedTotal } from '../game/paymentModel';
+import type { PayableCard } from '../game/paymentModel';
+import { paymentDetails, paymentDisclosure, selectedTotal } from '../game/paymentModel';
 import { CardFace } from './CardFace';
 import { STAGE, INK, FONT, SHADOW } from '../design/tokens';
 
@@ -21,19 +26,19 @@ function seatName(seats: SeatConfig[], id: number): string {
 export function PaymentSheet({
   observation,
   seats,
-  suggestion,
   onPay,
 }: {
   observation: Observation;
   seats: SeatConfig[];
-  suggestion: CardId[];
   onPay: (cardIds: CardId[]) => void;
 }) {
   const details = paymentDetails(observation);
-  // The sheet opens with the engine's suggestion selected (C1). Hooks must run before any
-  // early return, so this is declared unconditionally.
-  const [selected, setSelected] = useState<Set<CardId>>(() => new Set(suggestion));
-  if (details === null) {
+  // Hooks before any early return. The sheet opens on the trustworthy money-first default (F3),
+  // and starts with the property expander collapsed.
+  const disclosure = details ? paymentDisclosure(details) : null;
+  const [selected, setSelected] = useState<Set<CardId>>(() => new Set(disclosure?.defaultSelection ?? []));
+  const [propertyExpanded, setPropertyExpanded] = useState(false);
+  if (details === null || disclosure === null) {
     return null;
   }
 
@@ -55,6 +60,30 @@ export function PaymentSheet({
     setSelected(next);
   }
 
+  const payableCard = (card: PayableCard) => {
+    const isSelected = selected.has(card.id);
+    return (
+      <div
+        key={card.id}
+        onClick={() => toggle(card.id)}
+        style={{
+          borderRadius: 8,
+          cursor: details.mustPayAll ? 'default' : 'pointer',
+          boxShadow: isSelected ? STAGE.glowGold : 'none',
+          opacity: isSelected ? 1 : 0.6,
+        }}
+      >
+        <CardFace cardId={card.id} size="mid" />
+      </div>
+    );
+  };
+
+  // Money first, then the default's own property cards; the rest of the property sets wait behind
+  // the expander so a money-covered debt reads as money only (F3 · L6).
+  const shownProperties = propertyExpanded
+    ? [...disclosure.shownProperties, ...disclosure.hiddenProperties]
+    : disclosure.shownProperties;
+
   return (
     <div style={overlayStyle}>
       <div style={sheetStyle}>
@@ -67,24 +96,17 @@ export function PaymentSheet({
         </div>
 
         <div style={cardRowStyle}>
-          {details.payable.map((card) => {
-            const isSelected = selected.has(card.id);
-            return (
-              <div
-                key={card.id}
-                onClick={() => toggle(card.id)}
-                style={{
-                  borderRadius: 8,
-                  cursor: details.mustPayAll ? 'default' : 'pointer',
-                  boxShadow: isSelected ? STAGE.glowGold : 'none',
-                  opacity: isSelected ? 1 : 0.6,
-                }}
-              >
-                <CardFace cardId={card.id} size="mid" />
-              </div>
-            );
-          })}
+          {disclosure.money.map(payableCard)}
+          {shownProperties.map(payableCard)}
         </div>
+
+        {/* F3: the quiet property expander — only when money already covers the debt and there
+            are property sets to reveal. Collapsed by default so money reads as the first choice. */}
+        {!details.mustPayAll && disclosure.hiddenProperties.length > 0 && (
+          <button style={expanderStyle} onClick={() => setPropertyExpanded((open) => !open)}>
+            {propertyExpanded ? 'Hide property' : 'Pay with property instead'}
+          </button>
+        )}
 
         <button disabled={!enough} onClick={() => onPay([...selected])} style={{ ...payButtonStyle, opacity: enough ? 1 : 0.5 }}>
           {details.mustPayAll ? 'Pay all I have' : `Pay ₹${details.amount} Cr`}
@@ -119,6 +141,17 @@ const sheetStyle: CSSProperties = {
 const titleStyle: CSSProperties = { fontFamily: FONT.display, fontWeight: 700, fontSize: 18, textAlign: 'center' };
 const meterStyle: CSSProperties = { fontFamily: FONT.mono, fontWeight: 700, fontSize: 15, textAlign: 'center' };
 const cardRowStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' };
+const expanderStyle: CSSProperties = {
+  alignSelf: 'center',
+  padding: '6px 14px',
+  borderRadius: 999,
+  background: 'transparent',
+  color: INK.mutedBrown,
+  border: `1px solid ${INK.agedLine}`,
+  fontFamily: FONT.serif,
+  fontSize: 13,
+  cursor: 'pointer',
+};
 const payButtonStyle: CSSProperties = {
   alignSelf: 'center',
   minWidth: 160,

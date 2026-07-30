@@ -231,7 +231,6 @@ export function Table() {
         <PaymentSheet
           observation={actorObservation}
           seats={seats}
-          suggestion={payAction.cardIds}
           onPay={(cardIds) => dispatch({ type: 'RESPOND_PAY', cardIds })}
         />
       )}

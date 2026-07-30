@@ -67,6 +67,7 @@ const FINDINGS = [
   { id: 'F1', file: 'F1_fan_11cards', base: base('S10_eleven_cards') },
   { id: 'F1', file: 'F1_discard', base: base('S5_discard_mode') },
   { id: 'F2', file: 'F2_auto_end', base: ONLY_END_TURN },
+  { id: 'F3', file: 'F3_payment', base: base('S3_pay_from_bank') },
   {
     id: 'F1', file: 'F1_peek', base: base('S9_kabza'),
     prep: async (page) => {
