@@ -158,3 +158,57 @@ Full gate (typecheck · lint · all tests incl. ip-guard) green. `packages/engin
    instructions; owner decision.
 7. **The 11-card fan is visually crowded** (all cards partly visible, no scroll — spec-compliant).
    Owner may want tighter fanning / a different layout at the 11-card extreme.
+
+---
+
+## Phase-B close-out — committed capture pack + flag rulings
+
+A follow-up pass that **closes flags 1 and 5** and **records the rulings on 2, 3, 4, 6, 7**.
+
+### Flags 1 & 5 — CLOSED by a committed, rerunnable capture pack
+`pnpm capture` (`apps/mobile/scripts/capture.mjs`, a chromium-only Playwright **devDependency**)
+starts Vite itself if none is reachable, opens the direct `#/autostart` route at an **exact
+360×740** viewport (deviceScaleFactor 2, reduced-motion), and drives the real UI onto each state
+through a new dev-only **`window.__replay(seed, actions)`** hook that replays the committed fixture
+log. It writes one PNG per state to **`docs/captures/`** — **14 fixture states + 6 composites** —
+with **`INDEX.md`** mapping each image → state → replay id → spec rows. Viewport is a script
+parameter (default 360×740) so M5 can reuse the pipeline for store screenshots.
+
+- **Flag 1 (no committed binary images) → CLOSED.** The pack is committed under `docs/captures/`.
+  The §B "Committed PNG ✗" column recorded the *prior* pass's tooling limit (the browser tool
+  couldn't persist PNGs to a repo path); this headless Playwright path resolves it — every §B state
+  now has a committed image.
+- **Flag 5 (mid-drag glow never imaged) → CLOSED.** Three mid-drag frames are captured with
+  **real pointer input** (mouse down → move past the 8 px slop → hold → shoot → release in dead
+  space, so game state is unchanged): `DRAG_money_bank_hot` (bank glows HOT), `DRAG_wild_two_groups`
+  (a mumbai|newDelhi wildcard lights **both owned groups**, the **bank stays dark** — canon), and
+  `DRAG_placed_wild_rearrange` (a placed wildcard's rearrange drag). The transient C4 "nothing to
+  pay" beat (`S4`) and the NAHI-chain resolution beat (`S2`) are held by a dev **capture-freeze**
+  that pauses the bot timer / auto-draw / auto-resolve so they can be shot without advancing.
+
+### Rulings recorded (full text in `DECISIONS.md` → "Phase B close-out")
+- **Flag 2 — Munshi tier stays `hard`** regardless of table difficulty. Advice is full-strength
+  everywhere; it never degrades to match easier bots. [RULED]
+- **Flag 3 — the compact `◈`+pips chip is FINAL for M4b.** The name lives on the advisor card and
+  the tooltip; the Learn screen (M4d) introduces it. [ACCEPTED]
+- **Flag 4 — the payment sheet's internal scroll is spec-compliant.** The no-scroll law governs the
+  **play surface**; a modal overlay may scroll **internally**. A clarifying sentence was added to
+  `M4B_SPEC_v1.2.md` A2 so this is never "fixed". [RULED]
+- **Flag 6 — drag-glow vs tap-rail targeting stays AS IS**, parity-tested; unification **PARKED** to
+  the polish pass. [PARKED]
+- **Flag 7 — the 11-card fan is left to the owner's playtest** (spec-compliant; see
+  `docs/captures/S10_eleven_cards.png`). [NO ACTION]
+
+### Proofs
+- **Production bundle byte-identical** before/after: `index-*.js` = **244,352 bytes**, sha1
+  `13d3b5433e436c49371d39d2b680286e2ff51a76` (same content hash), CSS unchanged. Playwright is a
+  devDependency that never imports from `src/`, and every dev hook (`__replay`, capture-freeze,
+  `data-card-id` marker) is `import.meta.env.DEV`-gated → tree-shaken.
+- **Test count: 206 before and after** (engine 76 incl. ip-guard · bots 14 · tools 15 · mobile
+  101). No test added, weakened, or deleted. Typecheck · lint · ip-guard all green.
+- **Task-3 fixes: none needed.** No committed frame revealed an unambiguous spec violation — no
+  play-surface overflow (the `#/autostart` scroll guard stayed silent on every state), no wrong
+  glow, no scrim leak. The only bug found & fixed was in the capture *script* (a fan card's centre
+  is covered by the next card ~60% overlap → grab the exposed left strip), not in the app.
+- **Open flags after this pass: 3** — flags 2 and 3 (design preferences the owner may still revisit)
+  and flag 7 (owner playtest). Flags 1, 4, 5 are closed; flag 6 is parked.

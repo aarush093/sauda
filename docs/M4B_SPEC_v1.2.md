@@ -59,6 +59,12 @@ Top → bottom, one portrait screen, no scrolling in play:
 Hierarchy law: **the turn player's own area is always the largest zone; opponents
 compress.** Never invert this.
 
+Scope of the no-scroll law: it governs the **play surface** — the four zones above. A
+**modal overlay** (payment sheet, interrupt prompt, Munshi advisor) MAY scroll **internally**
+when its own content overflows a small screen; the table beneath it never scrolls. An
+internally-scrolling sheet is spec-compliant — do not "fix" it (capping/paginating a modal is a
+later design choice, not a compliance bug). [Phase-B flag 4 ruling; see DECISIONS.md]
+
 ## A3 — Screens locked (mockups are the visual reference, not the code)
 
 Five approved references exist; M4b builds them in code (mockup text/art is placeholder):
