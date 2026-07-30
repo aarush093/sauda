@@ -11,6 +11,9 @@ import { cardBackUrl } from '../design/plates';
 export function CardBack({ width, seal = true }: { width: number; seal?: boolean }) {
   const url = cardBackUrl();
   const height = Math.round(width * CARD.ratio);
+  // A large raster back downscaled to a tiny hand-count pip reads jagged (F4). Below this width we
+  // skip the image and show a clean vintage-indigo tile with the gold keyline — crisp at any size.
+  const showArt = Boolean(url) && width >= 24;
   return (
     <div
       style={{
@@ -18,16 +21,16 @@ export function CardBack({ width, seal = true }: { width: number; seal?: boolean
         height,
         position: 'relative',
         flex: '0 0 auto',
-        borderRadius: Math.max(2, Math.round(width * 0.06)),
+        borderRadius: Math.max(2, Math.round(width * 0.1)),
         overflow: 'hidden',
         border: `1px solid ${INK.agedLine}`,
         background: INK.tableIndigo,
         boxShadow: SHADOW.cardBack,
       }}
     >
-      {url && (
+      {showArt && (
         <img
-          src={url}
+          src={url ?? undefined}
           alt=""
           aria-hidden
           decoding="async"

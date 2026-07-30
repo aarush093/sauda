@@ -85,7 +85,7 @@ export function Board({
   actions = [],
   onAct,
   tickerLines = [],
-  botSpotlightCardId = null,
+  spotlightCardId = null,
   autoEnding = false,
 }: {
   observation: Observation;
@@ -93,7 +93,7 @@ export function Board({
   actions?: Action[];
   onAct?: (action: Action) => void;
   tickerLines?: string[];
-  botSpotlightCardId?: string | null;
+  spotlightCardId?: string | null; // a bot's held card (I1) or the human's just-played beat (F4)
   autoEnding?: boolean; // F2: the turn is auto-ending — hide the manual End turn button
 }) {
   const myTurn = observation.currentPlayer === observation.me;
@@ -262,10 +262,10 @@ export function Board({
       <div style={zone(30, { display: 'flex', flexDirection: 'column' })}>
         <Ticker lines={tickerLines} />
         <div data-drop="play" style={{ flex: 1, minHeight: 0, margin: '0 8px 6px', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hotZoneId === 'play' ? GLOW.hot : playEligible ? GLOW.soft : 'none' }}>
-          {botSpotlightCardId ? (
-            // I1: the acting bot's card, held on stage so its turn is watchable.
+          {spotlightCardId ? (
+            // The bot's card held on stage (I1), or the human's just-played card for a beat (F4).
             <div style={{ boxShadow: STAGE.glowGold, borderRadius: 8 }}>
-              <CardFace cardId={botSpotlightCardId} size="mid" />
+              <CardFace cardId={spotlightCardId} size="mid" />
             </div>
           ) : declareWinAction && onAct ? (
             <button onClick={() => onAct(declareWinAction)} style={goldFilledButton}>Declare SAUDA!</button>

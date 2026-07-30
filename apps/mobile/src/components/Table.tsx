@@ -11,7 +11,7 @@
  * (== reduce). No rule is decided here — the screen routes the engine's offer to the
  * right surface. Turn plays live on the Board itself (drag / tap → stage → rail, A10).
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { legalActions, observe } from '@sauda/engine';
 import type { Action, GameEvent } from '@sauda/engine';
 import { actorOf, useGame, viewSeat } from '../game/store';
@@ -28,6 +28,7 @@ import { STAGE, INK, FONT } from '../design/tokens';
 const BOT_MOVE_DELAY_MS = 700; // §8/I1: each bot play holds ~700 ms so it is watchable
 const BEAT_MS = 500; // L1: the pause before an auto-resolve so the player reads it
 const AUTO_END_MS = 800; // F2: the beat before the turn ends itself when only END_TURN is legal
+const HUMAN_PLAY_BEAT_MS = 800; // F4: how long the human's just-played card is held on centre stage
 
 // A move the UI plays for the human because there is nothing to decide (|legalActions|==1):
 // D2 auto-allow (no counter in hand) or C4 (nothing to pay with). Shown as a brief beat.
@@ -36,12 +37,18 @@ interface AutoResolve {
   note: string;
 }
 
-// The card a just-moved bot played, to spotlight on centre stage so the turn is watchable
-// (§8/I1). Reads the most recent events; the last placed / banked / played card wins.
-function spotlightCard(events: GameEvent[]): string | null {
+// The last card `player` just placed / built / banked / played, held on centre stage so a play
+// is SEEN, not just read as a ticker line (§8/I1 · F4). Newest matching card wins.
+function lastPlayedCard(events: GameEvent[], player: number): string | null {
   for (let index = events.length - 1; index >= 0; index--) {
     const event = events[index]!;
-    if (event.type === 'ActionPlayed' || event.type === 'CardBanked' || event.type === 'PropertyPlaced') {
+    if (
+      (event.type === 'ActionPlayed' ||
+        event.type === 'CardBanked' ||
+        event.type === 'PropertyPlaced' ||
+        event.type === 'BuildingPlaced') &&
+      event.player === player
+    ) {
       return event.cardId;
     }
   }
@@ -164,6 +171,30 @@ export function Table() {
     return () => clearTimeout(timer);
   }, [state, dispatch]);
 
+  // F4: flash the human's just-played card on centre stage for a beat, so their play is SEEN the
+  // same way a bot's is held (I1). A bot holds its card for the whole ~700ms step; the human is
+  // still playing, so theirs clears after a short beat.
+  const [humanPlayCardId, setHumanPlayCardId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!state || handoffSeat !== null) {
+      return;
+    }
+    const turnActor = actorOf(state);
+    if (seats[turnActor]?.kind !== 'human') {
+      return;
+    }
+    const played = lastPlayedCard(lastEvents, turnActor);
+    if (played === null) {
+      return;
+    }
+    setHumanPlayCardId(played);
+    if (import.meta.env.DEV && (globalThis as { __saudaCapturePaused?: boolean }).__saudaCapturePaused) {
+      return; // capture freeze (dev only) — hold the play beat so it can be shot
+    }
+    const timer = setTimeout(() => setHumanPlayCardId(null), HUMAN_PLAY_BEAT_MS);
+    return () => clearTimeout(timer);
+  }, [lastEvents, state, seats, handoffSeat]);
+
   if (!state) {
     return null;
   }
@@ -175,8 +206,10 @@ export function Table() {
   const isBotTurn = seats[actor]?.kind === 'bot';
   const gameOver = state.phase === 'gameOver';
   const tickerLines = log.slice(-2).map((line) => line.text);
-  // Spotlight the acting bot's last card on centre stage so its turn is watchable (I1).
-  const botSpotlightCardId = isBotTurn && handoffSeat === null ? spotlightCard(lastEvents) : null;
+  // Spotlight the acting bot's last card on centre stage so its turn is watchable (I1); on my own
+  // turn, the transient human-play beat (above) fills the same slot (F4).
+  const botSpotlightCardId = isBotTurn && handoffSeat === null ? lastPlayedCard(lastEvents, actor) : null;
+  const spotlightCardId = botSpotlightCardId ?? humanPlayCardId;
 
   // The human actor's legal moves (empty on a bot's turn / at game over). Turn plays feed
   // the board's drag/tap→stage→rail; the RESPOND_* moves each raise their own surface.
@@ -200,7 +233,7 @@ export function Table() {
         actions={isResponse ? [] : humanActions}
         onAct={dispatch}
         tickerLines={tickerLines}
-        botSpotlightCardId={botSpotlightCardId}
+        spotlightCardId={spotlightCardId}
         autoEnding={autoEndNote !== null}
       />
 

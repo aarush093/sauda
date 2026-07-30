@@ -68,6 +68,7 @@ const FINDINGS = [
   { id: 'F1', file: 'F1_discard', base: base('S5_discard_mode') },
   { id: 'F2', file: 'F2_auto_end', base: ONLY_END_TURN },
   { id: 'F3', file: 'F3_payment', base: base('S3_pay_from_bank') },
+  { id: 'F4', file: 'F4_play_on_stage', base: base('S7_wild_lagaan') }, // ends on a human place → beat
   {
     id: 'F1', file: 'F1_peek', base: base('S9_kabza'),
     prep: async (page) => {
