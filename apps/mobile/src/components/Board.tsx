@@ -33,6 +33,7 @@ import { HandWheel } from './HandWheel';
 import { MunshiChip } from './MunshiChip';
 import { BankStack, DiscardTop, DrawPile, GroupRow, OpponentGroupStrip, PlayerHeader, seatName } from './BoardParts';
 import { STAGE, INK, SHADOW, FONT, GLOW } from '../design/tokens';
+import { tallyRender } from '../game/renderTally';
 
 
 const STAGE_CARD_PX = 112; // the centre-stage spotlight card — bigger than a table card, fully readable
@@ -109,6 +110,7 @@ export function Board({
   // to the exact RESPOND_PLACE_RECEIVED the engine enumerated.
   receive?: { cardId: CardId; bySet: Map<SetId, Action>; onPlace: (action: Action) => void } | null;
 }) {
+  if (import.meta.env.DEV) tallyRender('Board');
   const myTurn = observation.currentPlayer === observation.me;
   const topDiscard = observation.discardPile[observation.discardPile.length - 1];
 

@@ -84,6 +84,7 @@ async function land(page, id) {
   await page.waitForTimeout(150);
   return summary;
 }
+const frames = (page, ms) => page.waitForTimeout(ms);
 
 // ---- H3 legibility ---------------------------------------------------------
 async function legibility(browser) {
@@ -242,6 +243,97 @@ async function overlap(browser) {
   return { mode: 'overlap', replay: summary, liveButton: dom.button, liveContainer: dom.container, liveOverlapCardIds: liveHits, buttonSizePx: { w: btnW, h: btnH }, analyticOverlapNByWidth: analytic };
 }
 
+// ---- H4 performance profile (4x CPU throttle) ------------------------------
+function pct(sorted, p) { if (!sorted.length) return 0; return sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))]; }
+
+async function profile(browser) {
+  const context = await browser.newContext({ viewport: { width: 360, height: 740 }, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  const client = await context.newCDPSession(page);
+  const requestsDuringInteraction = [];
+  // Track REAL network fetches (not cache hits) of plate images during interactions, via CDP so we
+  // can tell a served-from-cache request from a network one.
+  await client.send('Network.enable');
+  let countingNet = false;
+  const netPlateFetches = [];
+  client.on('Network.responseReceived', (e) => {
+    if (countingNet && /\.(webp|png|jpg)(\?|$)/.test(e.response.url) && !e.response.fromDiskCache && e.response.fromServiceWorker !== true && (e.response.encodedDataLength ?? 0) > 0) {
+      netPlateFetches.push(e.response.url.split('/').pop());
+    }
+  });
+  page.on('request', (r) => { if (countingNet && /\.(webp|png|jpg)(\?|$)/.test(r.url())) requestsDuringInteraction.push(r.url().split('/').pop()); });
+  await page.goto(`${DEV_URL}/#/autostart`, { waitUntil: 'load' });
+  await page.waitForFunction(() => typeof window.__replay === 'function', null, { timeout: 10000 });
+  await page.evaluate((b) => window.__replay(b.seed, b.actions), base('S6_haveli')); // richest late-game board
+  await page.evaluate(() => { window.__saudaCapturePaused = false; });
+  await page.waitForTimeout(800); // let the game-start plate preload settle
+  countingNet = true; // only count plate fetches DURING interactions (per-render fetches)
+  // rAF frame recorder — inter-frame deltas under load are the frame times.
+  await page.evaluate(() => {
+    window.__frames = []; window.__rec = false;
+    const tick = (t) => { if (window.__rec) window.__frames.push(t); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+  await client.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+
+  async function measure(fn) {
+    await page.evaluate(() => { window.__frames = []; window.__rec = true; window.__renderTally = {}; });
+    await fn();
+    const data = await page.evaluate(() => { window.__rec = false; return { frames: window.__frames, tally: window.__renderTally }; });
+    const d = [];
+    for (let i = 1; i < data.frames.length; i++) d.push(data.frames[i] - data.frames[i - 1]);
+    d.sort((a, b) => a - b);
+    return { frames: d.length, p50: +pct(d, 50).toFixed(1), p95: +pct(d, 95).toFixed(1), max: +(d.length ? d[d.length - 1] : 0).toFixed(1), tally: data.tally };
+  }
+
+  const bandBox = async () => { const c = await page.locator('[data-card-id]').all(); const bs = []; for (const x of c) { const b = await x.boundingBox(); if (b) bs.push(b); } bs.sort((a, b) => a.x - b.x); return bs; };
+
+  // (a) wheel glide — commit a play so the hand shrinks and the rest glide (175ms).
+  const glide = await measure(async () => {
+    const bs = await bandBox();
+    if (bs.length) { // drag the leftmost card up into a drag, then release over the bank if lit, else dead
+      const y = bs[0].y + bs[0].height * 0.35;
+      await page.mouse.move(bs[0].x + 6, y); await page.mouse.down();
+      await page.mouse.move(bs[0].x + 6, y - 60, { steps: 4 });
+      const bank = await page.locator('[data-drop="bank"]').first().boundingBox();
+      if (bank) await page.mouse.move(bank.x + bank.width / 2, bank.y + bank.height / 2, { steps: 6 });
+      await page.mouse.up();
+    }
+    await page.waitForTimeout(500);
+  });
+
+  // (b) active drag pointermove — the re-render test. Hold a card in the air, oscillate, never release.
+  const drag = await measure(async () => {
+    const bs = await bandBox();
+    if (bs.length) {
+      const mid = bs[Math.floor(bs.length / 2)];
+      const y = mid.y + mid.height * 0.35;
+      await page.mouse.move(mid.x + mid.width / 2, y); await page.mouse.down();
+      await page.mouse.move(mid.x + mid.width / 2, y - 60, { steps: 4 }); // lift into a drag
+      for (let i = 0; i < 24; i++) { await page.mouse.move(120 + (i % 2) * 90, 300 + (i % 3) * 40, { steps: 2 }); await frames(page, 16); }
+      await page.mouse.move(5, 5); await page.mouse.up(); // release in dead space — no commit
+    }
+  });
+  const dragTally = drag.tally;
+
+  // (d) TableView open/close — tap my group open (its "tap to expand" title), then tap off to close.
+  const tableview = await measure(async () => {
+    const grp = page.locator('[title*="tap to expand"]').first();
+    if (await grp.count()) { await grp.click(); await frames(page, 350); await page.mouse.click(180, 20); await frames(page, 350); }
+  });
+
+  // (c) a bot turn's beats — end my turn, let the bots play.
+  const botTurn = await measure(async () => {
+    const end = page.locator('button', { hasText: 'End turn' }).first();
+    if (await end.count()) await end.click();
+    await page.waitForTimeout(3000);
+  });
+
+  const dom = await page.evaluate(() => ({ nodes: document.querySelectorAll('*').length, imgs: document.querySelectorAll('img').length }));
+  await context.close();
+  return { mode: 'profile', board: 'S6_haveli', throttle: '4x CPU', budget: { targetMs: 16.7, ceilingMs: 33 }, frameTimes: { wheelGlide: glide, activeDrag: { frames: drag.frames, p50: drag.p50, p95: drag.p95, max: drag.max }, tableViewOpenClose: tableview, botTurnBeats: botTurn }, renderCountsDuringDrag: dragTally, domNodeCount: dom.nodes, imgCount: dom.imgs, plateImageRequestEvents: requestsDuringInteraction, plateNetworkFetchesDuringInteractions: netPlateFetches };
+}
+
 async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
   const browser = await chromium.launch();
@@ -249,6 +341,7 @@ async function main() {
   try {
     if (MODE === 'legibility') result = await legibility(browser);
     else if (MODE === 'overlap') result = await overlap(browser);
+    else if (MODE === 'profile') result = await profile(browser);
     else throw new Error(`unknown mode ${MODE}`);
   } finally {
     await browser.close();

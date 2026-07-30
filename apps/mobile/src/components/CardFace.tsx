@@ -10,6 +10,7 @@
  * exact face — so a table-size deed is pixel-for-pixel the same design as the hand/stage card. No
  * rules live here; values come from theme/engine data.
  */
+import { memo } from 'react';
 import type { CSSProperties } from 'react';
 import { ACTIONS, KIRAYA_DESCRIPTOR, KIRAYA_NAME, SETS } from '@sauda/engine';
 import type { Card, SetId } from '@sauda/engine';
@@ -17,6 +18,7 @@ import { CARD, FONT, INK, SHADOW } from '../design/tokens';
 import { cardById, plateKey, propertyName, setLabels } from '../design/cardData';
 import { plateUrl, hasPlate } from '../design/plates';
 import { titleInkForPlate, inkForBanner, actionBannerHex, ACTION_BANNER_HEX } from '../design/titleInk';
+import { tallyRender } from '../game/renderTally';
 
 export interface CardFaceProps {
   cardId: string;
@@ -24,13 +26,17 @@ export interface CardFaceProps {
 
 // G4 LAW (owner playtest 2): every card anywhere is this ONE real face — no symbolic minis, ever.
 // To show a card smaller, wrap it in ScaledCard; the design stays pixel-identical at any size.
-export function CardFace({ cardId }: CardFaceProps) {
+// H4: memoised — a card face depends ONLY on its cardId, so a board re-render (e.g. a drag
+// pointermove updating a zone glow) never re-renders the face itself. This is the main perf lever:
+// during a drag only the dragged layer changes, not every placed/hand card's plate + SVG work.
+export const CardFace = memo(function CardFace({ cardId }: CardFaceProps) {
+  if (import.meta.env.DEV) tallyRender('CardFace');
   const card = cardById(cardId);
   if (!card) {
     return null;
   }
   return <FullFace card={card} />;
-}
+});
 
 // Render the FULL card face scaled to an exact pixel width — the ONE mechanism for showing a real
 // card at any size (G4 LAW: every card everywhere is a real CardFace, never a symbolic mini). The
@@ -38,7 +44,7 @@ export function CardFace({ cardId }: CardFaceProps) {
 // pixel-for-pixel the same design as the hand/stage card, only smaller. The wrapper reserves the
 // scaled box in flow (the inner transform doesn't affect layout), so callers lay these out like
 // any sized element.
-export function ScaledCard({ cardId, width }: { cardId: string; width: number }) {
+export const ScaledCard = memo(function ScaledCard({ cardId, width }: { cardId: string; width: number }) {
   const scale = width / CARD.fullWidth;
   const height = Math.round(width * CARD.ratio);
   return (
@@ -48,7 +54,7 @@ export function ScaledCard({ cardId, width }: { cardId: string; width: number })
       </div>
     </div>
   );
-}
+});
 
 // The dominant set ink for a card, or null for money / ANY cards.
 function primarySet(card: Card): SetId | null {

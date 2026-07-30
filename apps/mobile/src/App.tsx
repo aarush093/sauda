@@ -6,6 +6,7 @@ import { Table } from './components/Table';
 import { PlateSheet } from './components/PlateSheet';
 import { CardFace } from './components/CardFace';
 import { DevWheel } from './components/DevWheel';
+import { preloadPlates } from './design/plates';
 import { INK, SHADOW } from './design/tokens';
 
 // Dev-only: a solo game that starts itself for the 360x740 capture frame. A fixed seed
@@ -38,6 +39,12 @@ function AutoStartTable() {
 export function App() {
   const state = useGame((store) => store.state);
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
+
+  // H4: warm every plate (fetch + async-decode) once on mount, so no card's first mid-game
+  // appearance stalls on a webp decode on the target budget WebView.
+  useEffect(() => {
+    preloadPlates();
+  }, []);
 
   // Dev-only routes for M4 art / layout review.
   if (hash.startsWith('#/dev/card/')) {

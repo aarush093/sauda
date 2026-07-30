@@ -6,15 +6,20 @@
  * renders at any width — compact on the board, large in the tap-to-expand table view — because
  * ScaledCard keeps the face pixel-identical at every size. No symbolic banner-and-count chip, ever.
  */
+import { memo } from 'react';
 import type { CSSProperties } from 'react';
 import { isSetComplete } from '@sauda/engine';
 import type { PropertyGroup } from '@sauda/engine';
 import { ScaledCard } from './CardFace';
 import { CARD, STAGE, INK, FONT } from '../design/tokens';
+import { tallyRender } from '../game/renderTally';
 
 const BANNER_STRIP = 0.26; // each stacked card reveals ~the top 26% (banner + value badge) of the next
 
-export function SetCascade({
+// H4: memoised — a cascade depends only on its group + width + rent, all referentially stable across
+// a drag (the observation doesn't change mid-drag), so it skips re-render when the board re-renders to
+// move a zone glow. Its ScaledCard children are memoised too, so the real card faces never re-run.
+export const SetCascade = memo(function SetCascade({
   group,
   width,
   rent,
@@ -23,6 +28,7 @@ export function SetCascade({
   width: number;
   rent?: number | undefined; // the engine's current rent for this set (mine); omitted for opponents
 }) {
+  if (import.meta.env.DEV) tallyRender('SetCascade');
   const complete = isSetComplete(group);
   const cardHeight = Math.round(width * CARD.ratio);
   const step = Math.max(10, Math.round(cardHeight * BANNER_STRIP));
@@ -46,7 +52,7 @@ export function SetCascade({
       )}
     </div>
   );
-}
+});
 
 const ribbonStyle: CSSProperties = {
   position: 'absolute',
