@@ -69,6 +69,7 @@ const FINDINGS = [
   { id: 'F2', file: 'F2_auto_end', base: ONLY_END_TURN },
   { id: 'F3', file: 'F3_payment', base: base('S3_pay_from_bank') },
   { id: 'F4', file: 'F4_play_on_stage', base: base('S7_wild_lagaan') }, // ends on a human place → beat
+  { id: 'F5', file: 'F5_opponent_row', base: base('S6_haveli') }, // turn 29 — opponents hold many sets
   {
     id: 'F1', file: 'F1_peek', base: base('S9_kabza'),
     prep: async (page) => {

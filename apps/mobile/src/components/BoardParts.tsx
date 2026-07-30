@@ -9,14 +9,16 @@ import type { PropertyGroup, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
 import { CardBack } from './CardBack';
 import { CardFace } from './CardFace';
+import { useMeasuredWidth } from '../game/useMeasuredWidth';
 import { STAGE, INK, SHADOW, FONT, CARD, GLOW } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 export const PLAYS_PER_TURN = 3; // §7 rules default; pips render 3 slots
 
+// F5 (owner playtest 30 Jul): in-play pills show the NAME only — the difficulty word was noise
+// repeated on every bot. Difficulty stays a setup-screen concern.
 export function seatName(seats: SeatConfig[], id: number): string {
-  const seat = seats[id];
-  return seat?.kind === 'bot' ? `Bot ${id} · ${seat.difficulty}` : `Player ${id}`;
+  return seats[id]?.kind === 'bot' ? `Bot ${id}` : `Player ${id}`;
 }
 
 function nonEmptyGroups(properties: Record<SetId, PropertyGroup[]>): { set: SetId; group: PropertyGroup; index: number }[] {
@@ -146,6 +148,63 @@ export function GroupRow({
       {ghostSets.map((set) => (
         <GhostSlot key={`ghost-${set}`} set={set} width={width} hot={hotZoneId === `set:${set}`} />
       ))}
+    </div>
+  );
+}
+
+// F5 (owner playtest 30 Jul): an opponent's groups on ONE row that never grows the 22% zone. It
+// measures its column and shrinks the mini-cards so every group fits; if they would fall below a
+// legible minimum, it shows as many as fit at that minimum plus a "+n" chip for the rest. So a
+// late-game opponent with many sets never wraps into extra rows or clips — the strip adapts.
+const OPP_GAP_PX = 2;
+const OPP_MIN_CARD_PX = 14;
+const OPP_MAX_CARD_PX = 26;
+const OPP_CHIP_PX = 22;
+
+export function OpponentGroupStrip({ properties }: { properties: Record<SetId, PropertyGroup[]> }) {
+  const [containerRef, measured] = useMeasuredWidth<HTMLDivElement>();
+  const groups = nonEmptyGroups(properties);
+  const available = measured || 104; // per-opponent column width before it is measured
+
+  let cardWidth = OPP_MAX_CARD_PX;
+  let shownCount = groups.length;
+  if (groups.length > 0) {
+    const fitAll = Math.floor((available - (groups.length - 1) * OPP_GAP_PX) / groups.length);
+    if (fitAll >= OPP_MIN_CARD_PX) {
+      cardWidth = Math.min(OPP_MAX_CARD_PX, fitAll); // everything fits — just size to the column
+    } else {
+      cardWidth = OPP_MIN_CARD_PX; // too many — pack at the minimum and overflow the rest into "+n"
+      shownCount = Math.max(1, Math.min(groups.length, Math.floor((available - OPP_CHIP_PX - OPP_GAP_PX) / (OPP_MIN_CARD_PX + OPP_GAP_PX))));
+    }
+  }
+  const overflow = groups.length - shownCount;
+
+  return (
+    <div ref={containerRef} style={{ display: 'flex', gap: OPP_GAP_PX, alignItems: 'flex-start', overflow: 'hidden' }}>
+      {groups.slice(0, shownCount).map(({ set, group, index }) => (
+        <MiniGroup key={`${set}-${index}`} set={set} group={group} width={cardWidth} />
+      ))}
+      {overflow > 0 && (
+        <div
+          title={`+${overflow} more set${overflow === 1 ? '' : 's'}`}
+          style={{
+            width: OPP_CHIP_PX,
+            height: Math.round(OPP_MIN_CARD_PX * 1.4),
+            flex: '0 0 auto',
+            borderRadius: 4,
+            border: `1px solid ${INK.gold}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: FONT.mono,
+            fontWeight: 700,
+            fontSize: 9,
+            color: STAGE.accentGold,
+          }}
+        >
+          +{overflow}
+        </div>
+      )}
     </div>
   );
 }

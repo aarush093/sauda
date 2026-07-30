@@ -29,7 +29,7 @@ import { RearrangeChooser } from './RearrangeChooser';
 import { Ticker } from './Ticker';
 import { HandFan } from './HandFan';
 import { MunshiChip } from './MunshiChip';
-import { BankStack, DiscardTop, DrawPile, GroupRow, PlayerHeader, seatName } from './BoardParts';
+import { BankStack, DiscardTop, DrawPile, GroupRow, OpponentGroupStrip, PlayerHeader, seatName } from './BoardParts';
 import { STAGE, INK, SHADOW, FONT, GLOW } from '../design/tokens';
 
 const HAND_LIMIT = 7; // §4.4 / Niyam Card 3: end a turn over 7 cards and you discard down
@@ -231,9 +231,7 @@ export function Board({
         {observation.opponents.map((opponent) => (
           <div key={opponent.id} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, opacity: opponent.id === observation.currentPlayer ? 1 : 0.75 }}>
             <PlayerHeader name={seatName(seats, opponent.id)} bankTotal={opponent.bankTotal} handCount={opponent.handCount} active={opponent.id === observation.currentPlayer} />
-            <div style={{ overflow: 'hidden' }}>
-              <GroupRow properties={opponent.properties} width={30} />
-            </div>
+            <OpponentGroupStrip properties={opponent.properties} />
           </div>
         ))}
       </div>

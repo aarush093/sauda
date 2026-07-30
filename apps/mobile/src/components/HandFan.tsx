@@ -11,41 +11,17 @@
  * (pointer-events:none) and purely visual. The card being dragged fades because the floating
  * preview shows it instead.
  */
-import { useEffect, useRef, useState } from 'react';
-import type { CSSProperties, RefObject } from 'react';
+import { useEffect } from 'react';
+import type { CSSProperties } from 'react';
 import { CardFace } from './CardFace';
 import { fanLayout } from '../game/fanLayout';
 import { useFanGesture } from '../game/useFanGesture';
 import type { DragState } from '../game/useFanGesture';
+import { useMeasuredWidth } from '../game/useMeasuredWidth';
 import { CARD, STAGE } from '../design/tokens';
 
 const PEEK_LIFT_PX = 20; // the scrubbed card rises this far, clear of its neighbours
 const PEEK_SCALE = 1.06; // and grows a touch so it reads as the focused card
-
-function useMeasuredWidth<T extends HTMLElement>(): [RefObject<T>, number] {
-  const ref = useRef<T>(null);
-  const [width, setWidth] = useState(0);
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) {
-      return;
-    }
-    if (typeof ResizeObserver === 'undefined') {
-      setWidth(element.clientWidth); // jsdom: no layout engine — stays 0, fan uses the fallback
-      return;
-    }
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setWidth(entry.contentRect.width);
-      }
-    });
-    observer.observe(element);
-    setWidth(element.clientWidth);
-    return () => observer.disconnect();
-  }, []);
-  return [ref, width];
-}
-
 const FAN_FALLBACK_WIDTH = 240; // before the slot is measured (and under jsdom, no layout)
 
 export function HandFan({
