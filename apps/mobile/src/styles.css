@@ -185,13 +185,3 @@ button:disabled {
   font-weight: 600;
   padding: 12px 24px;
 }
-
-/* Winner banner */
-.winner {
-  border: 2px solid #1e7a46;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 8px 0;
-  background: #f0fbf4;
-  font-weight: 600;
-}

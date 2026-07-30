@@ -12,9 +12,10 @@
  * right surface. Turn plays live on the Board itself (drag / tap → stage → rail, A10).
  */
 import { useEffect, useRef, useState } from 'react';
-import { legalActions, observe } from '@sauda/engine';
-import type { Action, GameEvent } from '@sauda/engine';
+import { SETS, isSetComplete, legalActions, observe } from '@sauda/engine';
+import type { Action, GameEvent, GameState, SetId } from '@sauda/engine';
 import { actorOf, useGame, viewSeat } from '../game/store';
+import type { SeatConfig } from '../game/store';
 import { paymentDetails } from '../game/paymentModel';
 import { shouldAutoEndTurn, zeroPayableResponse } from '../game/interaction';
 import { describeThreat } from '../game/labels';
@@ -23,7 +24,26 @@ import { PaymentSheet } from './PaymentSheet';
 import { InterruptPrompt } from './InterruptPrompt';
 import { ReceivePrompt } from './ReceivePrompt';
 import { HandoffOverlay } from './HandoffOverlay';
+import { EndOverlay } from './EndOverlay';
 import { STAGE, INK, FONT } from '../design/tokens';
+
+const ALL_SETS = Object.keys(SETS) as SetId[];
+
+// The seat's name for the end title (name only — difficulty is a setup concern, F5).
+function seatLabel(seats: SeatConfig[], id: number): string {
+  return seats[id]?.kind === 'bot' ? `Bot ${id}` : `Player ${id}`;
+}
+
+// The winner's completed set colours (the three that won them the game), for the end panel (F6).
+function completedSetColors(state: GameState, player: number): SetId[] {
+  const colors: SetId[] = [];
+  for (const set of ALL_SETS) {
+    if (state.players[player]!.properties[set].some((group) => isSetComplete(group))) {
+      colors.push(set);
+    }
+  }
+  return colors;
+}
 
 const BOT_MOVE_DELAY_MS = 700; // §8/I1: each bot play holds ~700 ms so it is watchable
 const BEAT_MS = 500; // L1: the pause before an auto-resolve so the player reads it
@@ -237,10 +257,14 @@ export function Table() {
         autoEnding={autoEndNote !== null}
       />
 
-      {gameOver && (
-        <div className="winner">
-          Player {state.winnerIndex} wins! <button onClick={reset}>New game</button>
-        </div>
+      {/* F6: any game end presents the full-screen end overlay (fixed, so it never grows the page
+          the way the old in-flow winner strip did). Board sleeps behind the scrim. */}
+      {gameOver && state.winnerIndex !== null && (
+        <EndOverlay
+          title={seats[state.winnerIndex]?.kind === 'human' ? 'SAUDA!' : `${seatLabel(seats, state.winnerIndex)} wins`}
+          setColors={completedSetColors(state, state.winnerIndex).slice(0, 3)}
+          onNewGame={reset}
+        />
       )}
 
       {/* L1: a brief non-interactive beat while the game auto-resolves a no-choice window. */}

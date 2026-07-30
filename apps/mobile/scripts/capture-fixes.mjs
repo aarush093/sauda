@@ -71,6 +71,13 @@ const FINDINGS = [
   { id: 'F4', file: 'F4_play_on_stage', base: base('S7_wild_lagaan') }, // ends on a human place → beat
   { id: 'F5', file: 'F5_opponent_row', base: base('S6_haveli') }, // turn 29 — opponents hold many sets
   {
+    id: 'F6', file: 'F6_end_card', base: base('S11_declare_win'), // then declare → game over (human win)
+    prep: async (page) => {
+      await page.evaluate(() => window.__sauda.getState().dispatch({ type: 'DECLARE_WIN' }));
+      await page.waitForTimeout(120);
+    },
+  },
+  {
     id: 'F1', file: 'F1_peek', base: base('S9_kabza'),
     prep: async (page) => {
       // peek a middle-ish hand card so it lifts clear of its neighbours
@@ -117,6 +124,10 @@ async function main() {
     for (const item of FINDINGS) {
       if (only && !only.has(item.id)) continue;
       const page = await context.newPage();
+      const warnings = [];
+      page.on('console', (msg) => {
+        if (msg.type() === 'warning' || msg.type() === 'error') warnings.push(msg.text());
+      });
       await page.goto(AUTOSTART, { waitUntil: 'load' });
       await page.waitForFunction(() => typeof window.__replay === 'function', null, { timeout: 10_000 });
       await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
@@ -126,7 +137,9 @@ async function main() {
       await page.screenshot({ path: join(OUT_DIR, `${item.file}_${phase}.png`) });
       if (item.post) await item.post(page);
       await page.close();
-      console.log(`  ${item.file}_${phase}`);
+      // Surface the #/autostart scroll guard: it console.warns if the play screen ever scrolls.
+      const scrollWarn = warnings.find((w) => w.includes('scrolls'));
+      console.log(`  ${item.file}_${phase}${scrollWarn ? `  ⚠ ${scrollWarn}` : ''}`);
     }
   } finally {
     await browser.close();
