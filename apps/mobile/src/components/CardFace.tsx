@@ -553,58 +553,109 @@ const actionFooterStyle: CSSProperties = {
   justifyContent: 'center',
 };
 
-function KirayaFull({ card }: { card: Extract<Card, { kind: 'kiraya' }> }) {
-  const isWild = card.colors === 'ANY';
-  const inks = card.colors === 'ANY' ? (Object.keys(SETS) as SetId[]) : card.colors;
+// A single ledger row "LABEL · · · · ₹N Cr" in the vintage rent-ledger rhythm (dotted leader
+// between an uppercase serif label on the left and a mono value on the right). Shared by the
+// two code-drawn families (wildcard / LAGAAN) so their bodies match the property RentLadder
+// look without touching PropertyFull.
+function LedgerRow({ label, value, valueInk = INK.stampRed }: { label: string; value: string; valueInk?: string }) {
   return (
-    <div style={frameStyle('full')}>
-      {/* ink band(s) */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '20%', display: 'flex' }}>
-        {inks.map((set, i) => (
-          <div key={`${set}-${i}`} style={{ flex: 1, background: SETS[set].hex }} />
-        ))}
-      </div>
-      <div style={{ position: 'absolute', top: '24%', left: 0, right: 0, textAlign: 'center', ...display, fontSize: 12, color: INK.stampRed }}>
-        {KIRAYA_NAME}
-      </div>
-      <div style={{ position: 'absolute', top: '46%', left: '8%', right: '8%', textAlign: 'center', fontSize: 7 }}>
-        <div>{isWild ? 'One rival pays' : 'All rivals pay'}</div>
-        <div style={{ fontSize: 6, color: INK.mutedBrown, marginTop: 3 }}>{KIRAYA_DESCRIPTOR}</div>
-        <div style={{ fontSize: 6, color: INK.mutedBrown, marginTop: 3 }}>
-          {card.colors === 'ANY' ? 'any colour' : setLabels(card.colors)}
-        </div>
-      </div>
-      <div style={actionFooterStyle}>SAUDA RENT PRESS</div>
-      <CornerChip value={card.value} />
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, width: '100%' }}>
+      <span style={{ fontFamily: FONT.serif, fontWeight: 700, fontSize: 6, letterSpacing: '0.02em', textTransform: 'uppercase', color: INK.deepInk, whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+      <span style={{ flex: 1, borderBottom: `1px dotted ${INK.agedLine}`, margin: '0 3px', height: 1 }} />
+      <span style={{ ...mono(700), fontSize: 6, color: valueInk, whiteSpace: 'nowrap' }}>{value}</span>
     </div>
   );
 }
 
+// The colour banner every code-drawn card wears: a two-colour split for a paired card, or the
+// all-colours band for an ANY card. Height differs by family (LAGAAN 20%, wildcard 22%) so the
+// caller passes it. Reuses SETS ink only — no plate (these two families are code-drawn by design).
+function CodeDrawnBanner({ inks, heightPct }: { inks: SetId[]; heightPct: number }) {
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: `${heightPct}%`, display: 'flex' }}>
+      {inks.map((set, i) => (
+        <div key={`${set}-${i}`} style={{ flex: 1, background: SETS[set].hex }} />
+      ))}
+    </div>
+  );
+}
+
+// PAIRED / WILD LAGAAN (G5, owner playtest 2). Completed in the locked card anatomy: two-colour
+// (or all-colours) banner, a cream value badge that hides the same top-left disc property cards
+// carry, the LAGAAN name stamp, a ledger slip stating who pays + which colours, and the standard
+// works-line footer + Devanagari seal. Property/action/money faces are untouched.
+function KirayaFull({ card }: { card: Extract<Card, { kind: 'kiraya' }> }) {
+  const isWild = card.colors === 'ANY';
+  const inks = card.colors === 'ANY' ? (Object.keys(SETS) as SetId[]) : card.colors;
+  const badgeInk = card.colors === 'ANY' ? INK.agedLine : SETS[card.colors[0]!].hex;
+  return (
+    <div style={frameStyle('full')}>
+      <CodeDrawnBanner inks={inks} heightPct={20} />
+      <ValueBadge value={card.value} ink={badgeInk} />
+      <div style={{ position: 'absolute', top: '25%', left: 0, right: 0, textAlign: 'center', ...display, fontSize: 12, color: INK.stampRed }}>
+        {KIRAYA_NAME}
+      </div>
+      {/* body: the "charge rent" ledger slip — who pays, the descriptor, and the owned colours it
+          may charge (paired: its two; wild: any you own). Same slip treatment as the rent ladder. */}
+      <div style={{ position: 'absolute', top: '42%', left: '6%', right: '6%', bottom: '22%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ ...ledgerSlipStyle, textAlign: 'center' }}>
+          <div style={{ fontFamily: FONT.serif, fontWeight: 700, fontSize: 7, color: INK.deepInk }}>
+            {isWild ? 'One rival pays rent' : 'All rivals pay rent'}
+          </div>
+          <div style={{ fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 5.5, color: INK.mutedBrown, marginTop: 2 }}>
+            {KIRAYA_DESCRIPTOR}
+          </div>
+          <div style={{ fontFamily: FONT.serif, fontWeight: 700, fontSize: 6, color: INK.deepInk, marginTop: 3, letterSpacing: '0.02em' }}>
+            {card.colors === 'ANY' ? 'ANY COLOUR YOU OWN' : setLabels(card.colors).toUpperCase()}
+          </div>
+        </div>
+      </div>
+      <div style={actionFooterStyle}>SAUDA RENT PRESS</div>
+      <Seal />
+    </div>
+  );
+}
+
+// DUAL / ANY wildcard (G5, owner playtest 2). Completed in the locked anatomy: the true two-colour
+// split (dual) or all-colours band (ANY) as banner, a cream value badge for a dual (an ANY carries
+// NO value — Niyam 6), a WILDCARD stamp, a ledger slip with one row per joinable set (or the ANY
+// no-value note), and the standard footer + seal. Property/action/money faces are untouched. The
+// two-colour split is REQUIRED (A4): a wildcard must never imply a placement the engine forbids.
 function WildcardFull({ card }: { card: Extract<Card, { kind: 'wildcard' }> }) {
   const isAny = card.colors === 'ANY';
   const inks = card.colors === 'ANY' ? (Object.keys(SETS) as SetId[]) : card.colors;
+  const badgeInk = card.colors === 'ANY' ? INK.agedLine : SETS[card.colors[0]!].hex;
   return (
     <div style={frameStyle('full')}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '22%', display: 'flex' }}>
-        {inks.map((set, i) => (
-          <div key={`${set}-${i}`} style={{ flex: 1, background: SETS[set].hex }} />
-        ))}
-      </div>
-      <div style={{ position: 'absolute', top: '26%', left: 0, right: 0, textAlign: 'center', ...display, fontSize: 9 }}>
+      <CodeDrawnBanner inks={inks} heightPct={22} />
+      {/* a dual wildcard carries a ₹ value (usable as payment); an ANY wildcard is ₹0 and never
+          payable, so it wears NO badge (A4 · Niyam 6). */}
+      {!isAny && <ValueBadge value={card.value} ink={badgeInk} />}
+      <div style={{ position: 'absolute', top: '27%', left: 0, right: 0, textAlign: 'center', ...display, fontSize: 9, color: INK.deepInk }}>
         WILDCARD
       </div>
-      <div style={{ position: 'absolute', top: '44%', left: '8%', right: '8%', textAlign: 'center', fontSize: 6.5, lineHeight: 1.4 }}>
-        {card.colors === 'ANY' ? (
-          <div>Counts for any colour · ₹0 · cannot pay</div>
-        ) : (
-          card.colors.map((set) => (
-            <div key={set}>
-              {SETS[set].label} — SET ₹{SETS[set].rent[SETS[set].rent.length - 1]} Cr
+      <div style={{ position: 'absolute', top: '43%', left: '6%', right: '6%', bottom: '22%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={ledgerSlipStyle}>
+          {card.colors === 'ANY' ? (
+            <div style={{ textAlign: 'center', fontFamily: FONT.serif, color: INK.deepInk }}>
+              <div style={{ fontWeight: 700, fontSize: 6.5 }}>Joins any colour set</div>
+              <div style={{ fontStyle: 'italic', fontSize: 5.5, color: INK.mutedBrown, marginTop: 2 }}>
+                No ₹ value · cannot pay (Niyam 6)
+              </div>
             </div>
-          ))
-        )}
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
+              {card.colors.map((set) => (
+                <LedgerRow key={set} label={SETS[set].label} value={`SET ₹${SETS[set].rent[SETS[set].rent.length - 1]} Cr`} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-      {!isAny && <CornerChip value={card.value} />}
+      <div style={actionFooterStyle}>SAUDA WILDCARD PRESS</div>
+      <Seal />
     </div>
   );
 }
