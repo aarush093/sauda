@@ -204,6 +204,14 @@ export const useGame = create<GameStore>((set, get) => {
   };
 });
 
+// Dev-only: expose the store so the Phase-B scenario capture harness (and manual debugging)
+// can drive it from the browser — replay a recorded action log to land the UI on any target
+// state. Vite replaces `import.meta.env.DEV` with `false` in a production build, so this whole
+// block is dead-code-eliminated from the shipped app bundle.
+if (import.meta.env.DEV) {
+  (globalThis as unknown as { __sauda?: typeof useGame }).__sauda = useGame;
+}
+
 // The seat whose perspective the board should render right now.
 export function viewSeat(store: Pick<GameStore, 'revealedSeat' | 'seats'>): number {
   if (store.revealedSeat !== null) {
