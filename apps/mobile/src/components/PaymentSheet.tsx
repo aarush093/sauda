@@ -48,6 +48,12 @@ export function PaymentSheet({
   const enough = details.mustPayAll ? selected.size === details.payable.length : chosen >= details.amount;
   const overpaying = !details.mustPayAll && chosen > details.amount;
 
+  // G7: the trustworthy default IS Munshi's suggested pick (the money-first, least-overpay set from
+  // the shared bot brain). Cards in it wear a small gold Munshi seal, and while the selection is
+  // still that pick a one-line nudge invites the tap. Static this pass (the bouncing arrow is M4c).
+  const munshiPick = new Set<CardId>(disclosure.defaultSelection);
+  const onMunshiPick = !details.mustPayAll && selected.size === munshiPick.size && [...selected].every((id) => munshiPick.has(id));
+
   function toggle(id: CardId): void {
     // C3: when the table can't cover the debt, every card must go — selection is locked.
     if (details === null || details.mustPayAll) {
@@ -69,6 +75,7 @@ export function PaymentSheet({
         key={card.id}
         onClick={() => toggle(card.id)}
         style={{
+          position: 'relative',
           borderRadius: 8,
           cursor: details.mustPayAll ? 'default' : 'pointer',
           boxShadow: isSelected ? STAGE.glowGold : 'none',
@@ -76,6 +83,8 @@ export function PaymentSheet({
         }}
       >
         <ScaledCard cardId={card.id} width={PAY_CARD_PX} />
+        {/* G7: the gold Munshi seal marks a card in the suggested pick. */}
+        {munshiPick.has(card.id) && <div style={munshiSealStyle} title="Munshi's pick">◈</div>}
       </div>
     );
   };
@@ -109,6 +118,9 @@ export function PaymentSheet({
             {propertyExpanded ? 'Hide property' : 'Pay with property instead'}
           </button>
         )}
+
+        {/* G7: Munshi's pick nudge — shown while the selection is still the suggested one. */}
+        {onMunshiPick && <div style={munshiPickLineStyle}>◈ Munshi's pick — tap Pay</div>}
 
         <button disabled={!enough} onClick={() => onPay([...selected])} style={{ ...payButtonStyle, opacity: enough ? 1 : 0.5 }}>
           {details.mustPayAll ? 'Pay all I have' : `Pay ₹${details.amount} Cr`}
@@ -153,6 +165,31 @@ const expanderStyle: CSSProperties = {
   fontFamily: FONT.serif,
   fontSize: 13,
   cursor: 'pointer',
+};
+// G7: the small gold Munshi seal on a suggested-pick card (the ◈ glyph, matching the advisor chip).
+const munshiSealStyle: CSSProperties = {
+  position: 'absolute',
+  top: -6,
+  left: -6,
+  width: 18,
+  height: 18,
+  borderRadius: '50%',
+  background: INK.gold,
+  color: INK.deepInk,
+  border: `1px solid ${INK.deepInk}`,
+  fontSize: 11,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontFamily: FONT.display,
+  fontWeight: 700,
+};
+const munshiPickLineStyle: CSSProperties = {
+  alignSelf: 'center',
+  fontFamily: FONT.display,
+  fontWeight: 700,
+  fontSize: 13,
+  color: INK.mutedBrown,
 };
 const payButtonStyle: CSSProperties = {
   alignSelf: 'center',
