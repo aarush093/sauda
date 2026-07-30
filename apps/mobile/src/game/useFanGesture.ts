@@ -1,17 +1,17 @@
 /**
- * The hand-fan SCRUB gesture (F1, owner playtest 30 Jul). One pointer glides over the whole fan
- * instead of grabbing a single overlapped card:
+ * The hand SCRUB gesture (F1, owner playtest 30 Jul; now drives the G2 wheel — was the fan). One
+ * pointer glides over the whole hand instead of grabbing a single overlapped card:
  *
- *   - pointerdown anywhere on the fan captures the pointer on the fan container and PEEKS the
- *     card under the pointer's x (lifted above its neighbours);
+ *   - pointerdown anywhere on the band captures the pointer on the container and PEEKS the card
+ *     under the pointer's x (lifted above its neighbours);
  *   - sliding horizontally re-targets the peek card by card;
- *   - lifting the pointer ~40px above the fan band turns the peek into the existing DRAG (from
- *     there it behaves exactly like the old drag — floating preview, drop-zone hit-test, commit);
- *   - releasing while still inside the band is a TAP: it stages the peeked card onto the A1 rail.
+ *   - lifting the pointer ~40px above the band turns the peek into the existing DRAG (from there it
+ *     behaves exactly like a drag — floating preview, drop-zone hit-test, commit);
+ *   - releasing while still inside the band is a TAP → the card rises to INSPECT (G1).
  *
- * The gesture lives on the CONTAINER (not per card) because the resting fan overlaps heavily; the
- * card under the pointer is resolved from the pure `fanLayout` geometry via `cardAtX`. DOM touch
- * comes only from the shared drop hit-test and the container rect.
+ * The gesture lives on the CONTAINER (not per card) because the resting hand overlaps heavily; the
+ * card under the pointer is resolved from the pure layout geometry via the caller's `cardAtX`. DOM
+ * touch comes only from the shared drop hit-test and the container rect.
  */
 import { useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';

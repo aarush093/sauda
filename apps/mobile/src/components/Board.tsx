@@ -27,13 +27,12 @@ import { InspectCard } from './InspectCard';
 import { TargetingOverlay } from './TargetingOverlay';
 import { RearrangeChooser } from './RearrangeChooser';
 import { Ticker } from './Ticker';
-import { HandFan } from './HandFan';
+import { HandWheel } from './HandWheel';
 import { MunshiChip } from './MunshiChip';
 import { BankStack, DiscardTop, DrawPile, GroupRow, OpponentGroupStrip, PlayerHeader, seatName } from './BoardParts';
 import { STAGE, INK, SHADOW, FONT, GLOW } from '../design/tokens';
 
 const HAND_LIMIT = 7; // §4.4 / Niyam Card 3: end a turn over 7 cards and you discard down
-const END_TURN_COLUMN_PX = 88; // reserved right column so the hand fan never underlaps it
 
 const goldFilledButton: CSSProperties = {
   padding: '12px 22px',
@@ -310,25 +309,24 @@ export function Board({
             Over the limit — tap {observation.myHand.length - HAND_LIMIT} to discard
           </div>
         )}
-        {/* bottom row: the hand fan (flex) + a reserved column for End turn (right thumb, A2)
-            so the fan never underlaps the control. */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, marginTop: 'auto' }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <HandFan
-              cards={observation.myHand}
-              interactiveIds={handTappableIds}
-              drag={drag}
-              eligibleZones={eligibleZones}
-              onTap={onTapCard}
-              onDrop={onDropCard}
-              onDragChange={setFanDrag}
-            />
-          </div>
-          <div style={{ width: END_TURN_COLUMN_PX, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 8 }}>
-            {endTurnAction && onAct && !autoEnding && (
-              <button onClick={() => onAct(endTurnAction)} style={goldOutlineButton}>End turn</button>
-            )}
-          </div>
+        {/* bottom band: the hand WHEEL (G2), hub at bottom-centre, spanning the full my-area. End
+            turn floats in the clear bottom-right corner (the wheel's cards converge to the centre
+            hub, so nothing reaches there) — usually hidden anyway, since F2 auto-ends most turns. */}
+        <div style={{ position: 'relative', marginTop: 'auto' }}>
+          <HandWheel
+            cards={observation.myHand}
+            interactiveIds={handTappableIds}
+            drag={drag}
+            eligibleZones={eligibleZones}
+            onTap={onTapCard}
+            onDrop={onDropCard}
+            onDragChange={setFanDrag}
+          />
+          {endTurnAction && onAct && !autoEnding && (
+            <button onClick={() => onAct(endTurnAction)} style={{ ...goldOutlineButton, position: 'absolute', right: 4, bottom: 8, zIndex: 3 }}>
+              End turn
+            </button>
+          )}
         </div>
       </div>
 
