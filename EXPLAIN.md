@@ -97,3 +97,35 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   inspect view, the cascades, the table view, the received-on-stage flow all derive from the engine's
   already-enumerated moves. `packages/engine` and `packages/bots` stayed byte-identical across all
   seven fixes.
+
+## M4b — excellence pass (H): evidence, geometry, performance
+
+- **End turn was floating over the wheel.** The half-roulette wheel spans the full width and its
+  cards splay their readable tops across the upper band; a button pinned to the bottom-right corner
+  overlapped those tops for most hand sizes (measured n=5..12) AND blocked scrubbing them. The fix is
+  a geometric one: move the control to the my-area header, a band the wheel never reaches — proven by
+  a pure-geometry unit test (no card's rotated box enters the header slot at any n). SPAN_MAX stays
+  120 so the wheel keeps its full spread.
+- **The wheel can only get so big.** Card legibility is bounded by the my-area height: the on-board
+  set cascades take ~half of it, leaving ~142px for the wheel. So the only lever is the hub depth —
+  a shallower hub makes the band shorter for a given card, buying a slightly wider card. The banner
+  text is measured in DEVICE pixels (CSS font × the card's transform scale × devicePixelRatio); at
+  DPR2 the set-name reads at ~9.4px, but the tiny locked value badge can't reach 10px without a card
+  so large it would scroll the screen — an honest flag, not a silent miss.
+- **A drag used to re-render the whole board.** Drag state lived in the board, so every pointermove
+  re-rendered every placed card. `React.memo` on the card face (it depends only on its id) drops that
+  from ~216 renders per drag to ~2 (just the dragged preview) — the board's cascades skip entirely
+  because their props are stable mid-drag. Frame times under a 4× CPU throttle fall back inside the
+  60fps budget.
+- **A GC bug was cancelling the plate preload.** Preloading an image is `new Image(); img.src = url`,
+  but if you don't KEEP a reference the Image can be garbage-collected before the fetch finishes,
+  cancelling it — which is why some plates still fetched mid-game. Retaining the refs fixes it; all 45
+  plates load once at start, zero mid-game fetches. We fetch (cheap) but let decode stay lazy — a full
+  decode of all 45 would be ~90MB, too much for a budget device.
+- **Bot pacing is one small table, not a flat delay.** A flat 700ms/beat made the wait between my
+  turns 4-10s. The new rule — first beat 700, later beats 450, floor 350, trimming near a ~3s cap —
+  is a pure function you can read in four lines and unit-test; it cut the median wait to 3.45s and the
+  p95 to 7.55s while still showing every card.
+- **Evidence over assertion.** Anything that moves is proven by a committed `.webm` clip recorded from
+  the real UI; every number (px sizes, frame times, overlap n-values, inter-turn waits) comes from a
+  rerunnable measurement script, not a claim.
