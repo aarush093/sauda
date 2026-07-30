@@ -24,6 +24,7 @@ import type { DragState } from '../game/useFanGesture';
 import { describeCard } from '../game/labels';
 import { CardFace } from './CardFace';
 import { InspectCard } from './InspectCard';
+import { DiscardOverlay } from './DiscardOverlay';
 import { TargetingOverlay } from './TargetingOverlay';
 import { RearrangeChooser } from './RearrangeChooser';
 import { Ticker } from './Ticker';
@@ -32,7 +33,6 @@ import { MunshiChip } from './MunshiChip';
 import { BankStack, DiscardTop, DrawPile, GroupRow, OpponentGroupStrip, PlayerHeader, seatName } from './BoardParts';
 import { STAGE, INK, SHADOW, FONT, GLOW } from '../design/tokens';
 
-const HAND_LIMIT = 7; // §4.4 / Niyam Card 3: end a turn over 7 cards and you discard down
 
 const goldFilledButton: CSSProperties = {
   padding: '12px 22px',
@@ -126,7 +126,8 @@ export function Board({
       stageableIds.add(action.cardId);
     }
   }
-  const handTappableIds = inDiscardMode ? new Set(discardByCardId.keys()) : stageableIds;
+  // In the discard step the wheel goes inert — the full-screen DiscardOverlay (G3) owns discarding.
+  const handTappableIds = inDiscardMode ? new Set<string>() : stageableIds;
 
   // G1 (owner playtest 2): a tapped hand card rises to INSPECT — read-only, no buttons, no engine
   // action. Drag is the only commit path from hand. (Supersedes the A1 tap→stage→rail.)
@@ -149,18 +150,12 @@ export function Board({
   const [rearrangingCardId, setRearrangingCardId] = useState<string | null>(null);
   const rearranging = rearrangingCardId !== null && rearrangeableIds.has(rearrangingCardId) ? rearrangingCardId : null;
 
-  // A tap either buries (discard step), opens the rearrange chooser (a placed wildcard), or raises
-  // a hand card to INSPECT (G1 — read-only, never an engine action). A drop routes to the commit.
+  // A tap either opens the rearrange chooser (a placed wildcard) or raises a hand card to INSPECT
+  // (G1 — read-only, never an engine action). A drop routes to the commit. Discarding is the
+  // DiscardOverlay's job now (G3), so the wheel is inert in the discard step and never taps here.
   function onTapCard(cardId: string): void {
     if (rearrangeableIds.has(cardId)) {
       setRearrangingCardId(cardId);
-      return;
-    }
-    if (inDiscardMode) {
-      const discard = discardByCardId.get(cardId);
-      if (discard && onAct) {
-        onAct(discard); // bury it under the draw pile (A9); engine ends the turn at the limit
-      }
       return;
     }
     setInspectingCardId(cardId); // G1: tap = inspect, no action; drag is the only commit path
@@ -304,11 +299,6 @@ export function Board({
             ))}
           </div>
         )}
-        {inDiscardMode && (
-          <div style={{ textAlign: 'center', fontFamily: FONT.display, fontWeight: 700, fontSize: 13, color: STAGE.accentGold }}>
-            Over the limit — tap {observation.myHand.length - HAND_LIMIT} to discard
-          </div>
-        )}
         {/* bottom band: the hand WHEEL (G2), hub at bottom-centre, spanning the full my-area. End
             turn floats in the clear bottom-right corner (the wheel's cards converge to the centre
             hub, so nothing reaches there) — usually hidden anyway, since F2 auto-ends most turns. */}
@@ -367,6 +357,20 @@ export function Board({
             setTargetingCardId(null);
           }}
           onCancel={() => setTargetingCardId(null)}
+        />
+      )}
+
+      {/* discard step (G3 · A8/A9): over the hand limit, a full-screen L2 overlay spreads every
+          hand card as a real face; tapping one buries it under the draw pile. Nothing else is live. */}
+      {inDiscardMode && onAct && (
+        <DiscardOverlay
+          cards={observation.myHand}
+          onDiscard={(cardId) => {
+            const discard = discardByCardId.get(cardId);
+            if (discard) {
+              onAct(discard);
+            }
+          }}
         />
       )}
 

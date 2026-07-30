@@ -107,6 +107,10 @@ export function describeEvent(event: GameEvent): string | null {
       return `P${event.player} placed ${describeCard(event.cardId)}`;
     case 'BuildingPlaced':
       return `P${event.player} built ${event.building} on ${SETS[event.set].label}`;
+    case 'CardsDiscarded':
+      // G3 (owner playtest 2): the buried-under-the-draw-pile discard gets a ticker line so it is
+      // SEEN, not silent (L1). House rule 813f1cd routes it face-down under the draw pile.
+      return `P${event.player} buried ${event.cardIds.map(describeCard).join(', ')} under the draw pile`;
     case 'ActionPlayed':
       return `P${event.player} played ${describeCard(event.cardId)}`;
     case 'NahiChalegaPlayed':
