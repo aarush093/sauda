@@ -1,0 +1,59 @@
+{
+  "mode": "profile",
+  "board": "S6_haveli",
+  "throttle": "4x CPU",
+  "budget": {
+    "targetMs": 16.7,
+    "ceilingMs": 33
+  },
+  "frameTimes": {
+    "wheelGlide": {
+      "frames": 49,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 66.6,
+      "tally": {
+        "Board": 14,
+        "CardFace": 4,
+        "SetCascade": 88
+      }
+    },
+    "activeDrag": {
+      "frames": 92,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 16.8
+    },
+    "tableViewOpenClose": {
+      "frames": 49,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 83.3,
+      "tally": {
+        "Board": 6,
+        "SetCascade": 56,
+        "CardFace": 16
+      }
+    },
+    "botTurnBeats": {
+      "frames": 179,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 33.4,
+      "tally": {
+        "Board": 10,
+        "SetCascade": 220,
+        "CardFace": 12
+      }
+    }
+  },
+  "renderCountsDuringDrag": {
+    "Board": 6,
+    "SetCascade": 132,
+    "CardFace": 2
+  },
+  "domNodeCount": 1430,
+  "imgCount": 32,
+  "plateImageRequestEvents": [],
+  "plateNetworkFetchesDuringInteractions": []
+}

@@ -31,6 +31,13 @@ const base = (id) => ({ seed: fixture.states[id].seed, actions: fixture.states[i
 
 const KILL_MOTION = '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}';
 
+// H1b: a found seed (tools/src/find-receive.ts) landing SEAT 0 in awaitingReceive — a wildcard
+// (wild_newDelhi_junction_0) is theirs to place, sitting on centre stage with its two colour-sets
+// (newDelhi · junction) glowing (matrix C7 / G6). The same stage surface serves a payment-received
+// wildcard; here it arrives via a HAATH KI SAFAI steal of a wildcard, which the engine correctly
+// opens as a placement CHOICE (a stolen wildcard can join either of its colours).
+const RECEIVE = { seed: 1, actions: [{ type: 'DRAW' }, { type: 'PLACE_PROPERTY', cardId: 'prop_puraniDilli_0', set: 'puraniDilli' }, { type: 'PLACE_PROPERTY', cardId: 'prop_bangalore_2', set: 'bangalore' }, { type: 'PLACE_PROPERTY', cardId: 'prop_junction_2', set: 'junction' }, { type: 'END_TURN' }, { type: 'DRAW' }, { type: 'PLACE_PROPERTY', cardId: 'wild_jaipur_kolkata_0', set: 'jaipur' }, { type: 'PLACE_PROPERTY', cardId: 'prop_kashi_1', set: 'kashi' }, { type: 'PLACE_PROPERTY', cardId: 'wild_newDelhi_junction_0', set: 'newDelhi' }, { type: 'END_TURN' }, { type: 'DRAW' }, { type: 'PLACE_PROPERTY', cardId: 'wild_any_0', set: 'puraniDilli' }, { type: 'PLAY_ACTION', cardId: 'action_haathKiSafai_2', params: { action: 'haathKiSafai', target: 0, cardId: 'prop_puraniDilli_0' } }, { type: 'RESPOND_ALLOW' }, { type: 'PLACE_PROPERTY', cardId: 'prop_chennai_2', set: 'chennai' }, { type: 'END_TURN' }, { type: 'DRAW' }, { type: 'PLACE_PROPERTY', cardId: 'wild_mumbai_newDelhi_0', set: 'mumbai' }, { type: 'PLACE_PROPERTY', cardId: 'prop_jaipur_0', set: 'jaipur' }, { type: 'PLACE_PROPERTY', cardId: 'prop_bangalore_0', set: 'bangalore' }, { type: 'END_TURN' }, { type: 'DRAW' }, { type: 'PLAY_ACTION', cardId: 'action_haathKiSafai_1', params: { action: 'haathKiSafai', target: 1, cardId: 'wild_newDelhi_junction_0' } }, { type: 'RESPOND_ALLOW' }] };
+
 // ---- gesture helpers (real pointer input) ---------------------------------
 async function boxLeft(page, sel) { const b = await page.locator(sel).first().boundingBox(); if (!b) throw new Error(`no ${sel}`); return { x: b.x + Math.min(12, b.width / 2), y: b.y + b.height / 2 }; }
 async function boxCenter(page, sel) { const b = await page.locator(sel).first().boundingBox(); if (!b) throw new Error(`no ${sel}`); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; }
@@ -83,7 +90,108 @@ const SCENES = [
     what: 'The 11-card wheel scrubbed end to end — a finger glides across, each card peeks up under the pointer.',
     act: async (page) => { await scrubWheel(page); },
   },
+  // ---- H1c a drag-to-bank (money → bank, hot glow, commit) ----
+  {
+    file: 'H1_drag_to_bank', kind: 'clip', spec: 'A10 L3 · H1c', base: base('S9_adla_badli'),
+    what: 'A money card dragged from the wheel to the bank — the bank glows HOT, release banks it and the hand glides to re-space.',
+    act: async (page) => { await scrubDragToZone(page, 'money_3_1', '[data-drop="bank"]', true); },
+  },
+  // ---- H1c the discard overlay end to end ----
+  {
+    file: 'H1_discard_overlay', kind: 'clip', spec: 'G3 · A8/A9 · H1c', base: base('S5_discard_mode'),
+    what: 'The over-the-limit discard overlay end to end — real card faces spread; tapping buries each under the draw pile until the count hits 7 and it dismisses.',
+    act: async (page) => {
+      await frames(page, 500);
+      for (let i = 0; i < 6; i++) {
+        const cards = await page.locator('[data-card-id]').all();
+        if (cards.length <= 7) break;
+        const b = await cards[cards.length - 1].boundingBox();
+        if (b) await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+        await frames(page, 450);
+      }
+      await frames(page, 500);
+    },
+  },
+  // ---- H1c a full bot turn (paced beats) ----
+  {
+    file: 'H1_bot_turn', kind: 'clip', spec: 'I1 · H5 · H1c', base: base('S6_haveli'),
+    what: 'A full bot turn — I end mine, control passes, the bot draws and plays with paced beats (H5), each card held to be seen.',
+    act: async (page) => {
+      const end = page.locator('button', { hasText: 'End turn' }).first();
+      if (await end.count()) await end.click();
+      await frames(page, 5200);
+    },
+  },
+  // ---- H1b the received-card flow (still + clip) ----
+  {
+    file: 'H1_received_stage', kind: 'still', spec: 'H1b · G6 · C7', base: RECEIVE,
+    what: 'A received wildcard on centre stage — "Drag it to a glowing set", its two colour-sets (newDelhi · junction) glowing below.',
+  },
+  {
+    file: 'H1_received_flow', kind: 'clip', spec: 'H1b · G6 · C7', base: RECEIVE,
+    what: 'The received-card flow — the wildcard sits on centre stage, legal sets glow, I drag it home to a set (RESPOND_PLACE_RECEIVED).',
+    act: async (page) => {
+      await frames(page, 700); // hold: the card on stage + the glowing destination sets
+      const card = await page.locator('[data-card-id="wild_newDelhi_junction_0"]').first().boundingBox();
+      const target = await page.locator('[data-drop="set:newDelhi"], [data-drop="set:junction"]').first().boundingBox();
+      if (card && target) {
+        await page.mouse.move(card.x + card.width / 2, card.y + card.height / 2); await page.mouse.down();
+        await page.mouse.move(card.x + card.width / 2 + 14, card.y + card.height / 2 + 14, { steps: 4 }); // past the slop
+        await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 10 });
+        await frames(page, 300); // hold over the glowing set
+        await page.mouse.up();
+      }
+      await frames(page, 700);
+    },
+  },
+  // ---- H2 the manual EARLY end (plays remain, button reachable) ----
+  {
+    file: 'H2_endturn_early', kind: 'clip', spec: 'H2a', base: base('S6_haveli'),
+    what: 'On my own turn with plays STILL remaining, End turn is visible in the header and reachable — clicking it ends the turn early (never dead).',
+    act: async (page) => {
+      await frames(page, 1400); // hold on the board: "N plays left" + End turn both visible
+      const end = page.locator('button', { hasText: 'End turn' }).first();
+      if (await end.count()) await end.click();
+      await frames(page, 1200);
+    },
+  },
+  // ---- H3 glide vs drag interplay (commit mid-glide, drag during a glide) ----
+  {
+    file: 'H3_glide_vs_drag', kind: 'clip', spec: 'G2 · H3', url: '#/dev/wheel/8',
+    what: 'Glide/drag interplay — a card leaves mid-glide and another is grabbed while the re-spacing is still in flight; no double animation, no hit-target drift.',
+    act: async (page) => {
+      await frames(page, 300);
+      const tap = async (frac) => { const bs = (await bandBoxes(page)); const b = bs[Math.floor(bs.length * frac)]; if (b) await page.mouse.click(b.x + b.width / 2, b.y + b.height * 0.4); };
+      await tap(0.5); await frames(page, 70); // commit while the previous glide is still easing
+      await tap(0.3); await frames(page, 70);
+      // start a scrub-drag during the glide
+      const bs = await bandBoxes(page);
+      if (bs.length) { const b = bs[Math.floor(bs.length / 2)]; const y = b.y + b.height * 0.35; await page.mouse.move(b.x + b.width / 2, y); await page.mouse.down(); await page.mouse.move(b.x + b.width / 2, y - 55, { steps: 5 }); await frames(page, 250); await page.mouse.move(5, 5); await page.mouse.up(); }
+      await frames(page, 400);
+    },
+  },
 ];
+
+async function bandBoxes(page) {
+  const cards = await page.locator('[data-card-id]').all();
+  const boxes = [];
+  for (const c of cards) { const b = await c.boundingBox(); if (b) boxes.push(b); }
+  boxes.sort((a, b) => a.x - b.x);
+  return boxes;
+}
+// A scrub-drag: press at a card's exposed left strip, lift into a drag, carry to a zone, release.
+async function scrubDragToZone(page, cardId, zoneSel, hold) {
+  const card = await page.locator(`[data-card-id="${cardId}"]`).first().boundingBox();
+  if (!card) throw new Error(`no card ${cardId}`);
+  const start = { x: card.x + Math.min(12, card.width / 2), y: card.y + card.height * 0.4 };
+  await page.mouse.move(start.x, start.y); await page.mouse.down();
+  await page.mouse.move(start.x, start.y - 55, { steps: 5 }); // lift past the band into a drag
+  const zone = await page.locator(zoneSel).first().boundingBox();
+  if (zone) await page.mouse.move(zone.x + zone.width / 2, zone.y + zone.height / 2, { steps: 10 });
+  if (hold) await frames(page, 350); // hold so the hot glow paints on film
+  await page.mouse.up();
+  await frames(page, 500); // the commit + re-spacing glide settle
+}
 
 // scrub the wheel left→right→left with real pointer moves (used by two clips)
 async function scrubWheel(page) {

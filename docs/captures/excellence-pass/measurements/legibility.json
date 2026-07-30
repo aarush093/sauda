@@ -1,0 +1,155 @@
+{
+  "mode": "legibility",
+  "replay": {
+    "ok": true,
+    "applied": 112,
+    "total": 112,
+    "phase": "playing",
+    "actor": 0,
+    "handLen": 11
+  },
+  "dpr": 2,
+  "measuredContainerWidth": 329.59375,
+  "faceScale": 0.523,
+  "restCardWidthPx": 69,
+  "restCardHeightPx": 100,
+  "wheelBandHeightPx": 142,
+  "myAreaZoneHeight": 279.7,
+  "spaceAboveWheel": 129.7,
+  "maxBandBudgetPx": 142,
+  "sampleCards": [
+    {
+      "bannerText": "Jaipur",
+      "bannerUnscaled": 9,
+      "bannerDevicePx": 9.4,
+      "badgeText": "₹2Cr",
+      "badgeUnscaled": 7,
+      "badgeDevicePx": 7.3
+    },
+    {
+      "bannerText": "New Delhi",
+      "bannerUnscaled": 9,
+      "bannerDevicePx": 9.4,
+      "badgeText": "₹4Cr",
+      "badgeUnscaled": 7,
+      "badgeDevicePx": 7.3
+    },
+    {
+      "bannerText": "Dugna Lagaan",
+      "bannerUnscaled": 12,
+      "bannerDevicePx": 12.5,
+      "badgeText": "₹1Cr",
+      "badgeUnscaled": 7,
+      "badgeDevicePx": 7.3
+    },
+    {
+      "bannerText": "Vasooli",
+      "bannerUnscaled": 12,
+      "bannerDevicePx": 12.5,
+      "badgeText": "₹3Cr",
+      "badgeUnscaled": 7,
+      "badgeDevicePx": 7.3
+    },
+    {
+      "bannerText": "Bangalore",
+      "bannerUnscaled": 9,
+      "bannerDevicePx": 9.4,
+      "badgeText": "₹3Cr",
+      "badgeUnscaled": 7,
+      "badgeDevicePx": 7.3
+    },
+    {
+      "bannerText": "Vasooli",
+      "bannerUnscaled": 12,
+      "bannerDevicePx": 12.5,
+      "badgeText": "₹3Cr",
+      "badgeUnscaled": 7,
+      "badgeDevicePx": 7.3
+    },
+    {
+      "bannerText": "New Delhi",
+      "bannerUnscaled": 9,
+      "bannerDevicePx": 9.4,
+      "badgeText": "₹4Cr",
+      "badgeUnscaled": 7,
+      "badgeDevicePx": 7.3
+    },
+    {
+      "bannerText": "Adla-Badli",
+      "bannerUnscaled": 12,
+      "bannerDevicePx": 12.5,
+      "badgeText": "₹3Cr",
+      "badgeUnscaled": 7,
+      "badgeDevicePx": 7.3
+    }
+  ],
+  "visibleStripPctByN": {
+    "2": 100,
+    "5": 100,
+    "7": 100,
+    "9": 97.6,
+    "11": 88.3,
+    "12": 88.3
+  },
+  "bars": {
+    "bannerDevicePx": 9,
+    "badgeDevicePx": 10,
+    "visibleStripPct": 26
+  },
+  "tuningCandidates": [
+    {
+      "HUB_RATIO": 0.4,
+      "MAXW": 78,
+      "WIDTH_FRAC": 0.2,
+      "restCardWidth": 66,
+      "band": 142,
+      "bannerDevicePx": 9,
+      "badgeDevicePx": 7
+    },
+    {
+      "HUB_RATIO": 0.38,
+      "MAXW": 78,
+      "WIDTH_FRAC": 0.202,
+      "restCardWidth": 67,
+      "band": 142,
+      "bannerDevicePx": 9.1,
+      "badgeDevicePx": 7.1
+    },
+    {
+      "HUB_RATIO": 0.36,
+      "MAXW": 78,
+      "WIDTH_FRAC": 0.202,
+      "restCardWidth": 67,
+      "band": 140,
+      "bannerDevicePx": 9.1,
+      "badgeDevicePx": 7.1
+    },
+    {
+      "HUB_RATIO": 0.34,
+      "MAXW": 78,
+      "WIDTH_FRAC": 0.208,
+      "restCardWidth": 69,
+      "band": 142,
+      "bannerDevicePx": 9.4,
+      "badgeDevicePx": 7.3
+    },
+    {
+      "HUB_RATIO": 0.32,
+      "MAXW": 78,
+      "WIDTH_FRAC": 0.208,
+      "restCardWidth": 69,
+      "band": 140,
+      "bannerDevicePx": 9.4,
+      "badgeDevicePx": 7.3
+    },
+    {
+      "HUB_RATIO": 0.3,
+      "MAXW": 78,
+      "WIDTH_FRAC": 0.214,
+      "restCardWidth": 71,
+      "band": 142,
+      "bannerDevicePx": 9.7,
+      "badgeDevicePx": 7.5
+    }
+  ]
+}
