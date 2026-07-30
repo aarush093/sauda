@@ -1,9 +1,13 @@
 /**
- * Presentation logic for the tap -> stage -> rail interaction (v1.2 A1; STATE_MATRIX
- * rows B1-B19). Given the engine's legalActions and the hand card the player has tapped
- * (staged), it produces the "rail": the small set of legal VERBS for that card, each a
- * labelled button. It decides NOTHING about legality — it only regroups legalActions for
- * display. All rules stay in @sauda/engine.
+ * Legal-verb grouping for a hand card (v1.2 A1; STATE_MATRIX rows B1-B19). Given the engine's
+ * legalActions and a hand card, it groups that card's legal moves into the small set of VERBS it
+ * offers (Place / Build / Play / Charge / Bank). It decides NOTHING about legality — it only
+ * regroups legalActions for display. All rules stay in @sauda/engine.
+ *
+ * NOTE (G1, owner playtest 2): the tap→stage→RAIL UI these verbs once drove is RETIRED — a tapped
+ * hand card now INSPECTS (read-only), and drag is the only commit path. This grouping survives as
+ * the source of truth the inspect why-line reads to tell whether a card's canonical verb is
+ * currently offered (InspectCard) — and stays unit-tested (staging.test.ts) as pure logic.
  *
  * The tricky bit — why a verb carries a LIST of options:
  * one card can offer the same verb in several concrete forms. A wildcard "Place"s in two

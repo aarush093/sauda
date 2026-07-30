@@ -1,15 +1,14 @@
 /**
- * Unit tests for the interaction reducer (v1.2 A10). Pure logic over synthetic Action
- * lists — no DOM, no engine state. The load-bearing test is PARITY: for every card
- * category, the set of engine actions reachable by DRAG equals the set reachable by the
- * TAP rail (staging.ts) equals the card's legalActions — so the two input paths can never
- * diverge, and neither can invent an illegal move.
+ * Unit tests for the interaction reducer (v1.2 A10 · G1 owner playtest 2). Pure logic over
+ * synthetic Action lists — no DOM, no engine state. The load-bearing test is COMPLETENESS: for
+ * every card category, every engine play the card offers is reachable by SOME drag intent, and an
+ * illegal drop produces nothing. Drag is the only commit path from hand now (tap = inspect), so the
+ * guarantee that matters is "no legal play is unreachable, and no illegal one is invented" (law L5).
  */
 import { describe, it, expect } from 'vitest';
 import { SETS } from '@sauda/engine';
 import type { Action, CardId, SetId } from '@sauda/engine';
 import { actionCardId, cardVerbHint } from './labels';
-import { railForCard } from './staging';
 import {
   autoDrawAction,
   dropZonesForCard,
@@ -36,9 +35,6 @@ const handPlaysFor = (actions: Action[], cardId: CardId): Action[] =>
         action.type === 'PLAY_ACTION' ||
         action.type === 'PLAY_KIRAYA'),
   );
-
-const flattenRail = (actions: Action[], cardId: CardId): Action[] =>
-  railForCard(actions, cardId).flatMap((verb) => verb.options.map((option) => option.action));
 
 describe('interaction reducer — drop zones', () => {
   it('dual-drop: the same action card yields BANK on the bank zone and PLAY on centre', () => {
@@ -117,7 +113,7 @@ describe('interaction reducer — rearrange, auto-draw, zero-payable', () => {
   });
 });
 
-describe('interaction reducer — drag/tap/legalActions parity (every card category)', () => {
+describe('interaction reducer — drag completeness (every hand action is drag-reachable, every card category)', () => {
   const scenarios: { name: string; card: CardId; actions: Action[] }[] = [
     { name: 'money', card: 'money_1', actions: [{ type: 'BANK_CARD', cardId: 'money_1' }] },
     { name: 'property', card: 'prop_1', actions: [{ type: 'PLACE_PROPERTY', cardId: 'prop_1', set: 'mumbai' }] },
@@ -196,10 +192,12 @@ describe('interaction reducer — drag/tap/legalActions parity (every card categ
   ];
 
   for (const { name, card, actions } of scenarios) {
-    it(`${name}: drag == tap == legalActions`, () => {
+    it(`${name}: every enumerated hand play is reachable by a drag intent`, () => {
       const legal = sortedKeys(handPlaysFor(actions, card));
+      // Drag is the only commit path from hand (G1). Completeness: the set of engine actions the
+      // drag layer can reach for this card equals exactly the card's legal plays — nothing missing,
+      // nothing invented.
       expect(sortedKeys(reachableActionsForCard(actions, card, 0))).toEqual(legal);
-      expect(sortedKeys(flattenRail(actions, card))).toEqual(legal);
     });
   }
 

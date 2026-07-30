@@ -37,6 +37,24 @@ export function CardFace({ cardId, size = 'full', heldCount }: CardFaceProps) {
   return <FullFace card={card} />;
 }
 
+// Render the FULL card face scaled to an exact pixel width — the ONE mechanism for showing a real
+// card at any size (G4 LAW: every card everywhere is a real CardFace, never a symbolic mini). The
+// face is always drawn at CARD.fullWidth then transform-scaled, so a table-size card stays
+// pixel-for-pixel the same design as the hand/stage card, only smaller. The wrapper reserves the
+// scaled box in flow (the inner transform doesn't affect layout), so callers lay these out like
+// any sized element.
+export function ScaledCard({ cardId, width }: { cardId: string; width: number }) {
+  const scale = width / CARD.fullWidth;
+  const height = Math.round(width * CARD.ratio);
+  return (
+    <div style={{ width, height, position: 'relative' }}>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+        <CardFace cardId={cardId} size="full" />
+      </div>
+    </div>
+  );
+}
+
 // The dominant set ink for a card, or null for money / ANY cards.
 function primarySet(card: Card): SetId | null {
   if (card.kind === 'property') return card.set;

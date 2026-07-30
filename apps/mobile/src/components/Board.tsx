@@ -23,7 +23,7 @@ import { useHandDrag } from '../game/useHandDrag';
 import type { DragState } from '../game/useFanGesture';
 import { describeCard } from '../game/labels';
 import { CardFace } from './CardFace';
-import { StagedCard } from './StagedCard';
+import { InspectCard } from './InspectCard';
 import { TargetingOverlay } from './TargetingOverlay';
 import { RearrangeChooser } from './RearrangeChooser';
 import { Ticker } from './Ticker';
@@ -129,8 +129,10 @@ export function Board({
   }
   const handTappableIds = inDiscardMode ? new Set(discardByCardId.keys()) : stageableIds;
 
-  const [stagedCardId, setStagedCardId] = useState<string | null>(null);
-  const staged = stagedCardId !== null && observation.myHand.includes(stagedCardId) ? stagedCardId : null;
+  // G1 (owner playtest 2): a tapped hand card rises to INSPECT — read-only, no buttons, no engine
+  // action. Drag is the only commit path from hand. (Supersedes the A1 tap→stage→rail.)
+  const [inspectingCardId, setInspectingCardId] = useState<string | null>(null);
+  const inspecting = inspectingCardId !== null && observation.myHand.includes(inspectingCardId) ? inspectingCardId : null;
 
   // A targeted action mid-play: its card is on stage and legal targets glow (A10 targeting).
   // Cleared automatically once the card leaves the hand (committed) or the turn passes.
@@ -148,8 +150,8 @@ export function Board({
   const [rearrangingCardId, setRearrangingCardId] = useState<string | null>(null);
   const rearranging = rearrangingCardId !== null && rearrangeableIds.has(rearrangingCardId) ? rearrangingCardId : null;
 
-  // A tap either buries (discard step), opens the rearrange chooser (a placed wildcard), or
-  // stages a hand card (A1 fallback). A drop routes the same three kinds to their commit.
+  // A tap either buries (discard step), opens the rearrange chooser (a placed wildcard), or raises
+  // a hand card to INSPECT (G1 — read-only, never an engine action). A drop routes to the commit.
   function onTapCard(cardId: string): void {
     if (rearrangeableIds.has(cardId)) {
       setRearrangingCardId(cardId);
@@ -162,7 +164,7 @@ export function Board({
       }
       return;
     }
-    setStagedCardId(cardId);
+    setInspectingCardId(cardId); // G1: tap = inspect, no action; drag is the only commit path
   }
 
   function onDropCard(cardId: string, zoneId: string): void {
@@ -180,6 +182,7 @@ export function Board({
     if (!zone) {
       return;
     }
+    setInspectingCardId(null); // a committed drag closes any open inspect (G1)
     if (zone.action) {
       onAct(zone.action); // bank / place / build / an untargeted play — commits immediately
     } else {
@@ -202,7 +205,8 @@ export function Board({
   // — you can only carry one thing — so the board reads whichever is active.
   const { drag: rearrangeDrag, cardHandlers } = useHandDrag({ eligibleZones, onTap: onTapCard, onDrop: onDropCard });
   const [fanDrag, setFanDrag] = useState<DragState | null>(null);
-  const drag = fanDrag ?? rearrangeDrag;
+  const [inspectDrag, setInspectDrag] = useState<DragState | null>(null); // a drag begun on the inspected card
+  const drag = fanDrag ?? rearrangeDrag ?? inspectDrag;
 
   // Which zones glow while a card is in the air (soft = eligible, hot = under the pointer).
   // A placed wildcard being dragged lights only its legal destination groups (B8).
@@ -368,16 +372,16 @@ export function Board({
         />
       )}
 
-      {/* centre-stage overlay: a tapped card rises here with its action rail (A1 fallback). */}
-      {staged !== null && targeting === null && onAct && (
-        <StagedCard
-          cardId={staged}
+      {/* inspect overlay (G1): a tapped hand card rises here CENTRED + LARGE, read-only — no
+          buttons, no engine action. Tap to dismiss, or drag it straight to a zone to commit. */}
+      {inspecting !== null && targeting === null && onAct && (
+        <InspectCard
+          cardId={inspecting}
           actions={actions}
-          onAct={(action) => {
-            onAct(action);
-            setStagedCardId(null);
-          }}
-          onCancel={() => setStagedCardId(null)}
+          eligibleZones={eligibleZones}
+          onDrop={onDropCard}
+          onDismiss={() => setInspectingCardId(null)}
+          onDragChange={setInspectDrag}
         />
       )}
     </div>
