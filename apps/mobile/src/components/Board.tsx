@@ -27,6 +27,7 @@ import { TargetingOverlay } from './TargetingOverlay';
 import { RearrangeChooser } from './RearrangeChooser';
 import { Ticker } from './Ticker';
 import { HandFan } from './HandFan';
+import { MunshiChip } from './MunshiChip';
 import { BankStack, DiscardTop, DrawPile, GroupRow, PlayerHeader, seatName } from './BoardParts';
 import { STAGE, INK, SHADOW, FONT, GLOW } from '../design/tokens';
 
@@ -99,6 +100,11 @@ export function Board({
   // NOT among them: it is auto-played at turn start (L4), never a tap.
   const endTurnAction = actions.find((action) => action.type === 'END_TURN');
   const declareWinAction = actions.find((action) => action.type === 'DECLARE_WIN');
+
+  // The Munshi advisor is offered ONLY on my own play turn while I have legal moves (H-rows);
+  // its 3-use budget lives in the store. This just gates WHEN the chip may be consulted — a
+  // response window passes `actions=[]`, and the discard step isn't the 'playing' phase.
+  const munshiAvailable = myTurn && observation.phase === 'playing' && actions.length > 0;
 
   // Discard step (A8/A9): while over the hand limit the engine offers a DISCARD per hand
   // card and nothing else; a non-empty map means the hand taps to bury instead of playing.
@@ -264,10 +270,15 @@ export function Board({
 
       {/* my area (38%) — the largest zone (hierarchy law A2); sleeps when it isn't my turn. */}
       <div style={zone(38, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <PlayerHeader name="You" bankTotal={observation.myBankTotal} handCount={observation.myHand.length} active={myTurn} showPips playsRemaining={observation.playsRemaining} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <PlayerHeader name="You" bankTotal={observation.myBankTotal} handCount={observation.myHand.length} active={myTurn} showPips playsRemaining={observation.playsRemaining} />
+            {/* Munshi chip by my avatar — its own read-only decision surface (never pushes layout,
+                never collides with the End-turn column below). */}
+            <MunshiChip available={munshiAvailable} />
+          </div>
           {/* the bank is a drop zone for money / bankable actions (never a wildcard). */}
-          <div data-drop="bank" style={{ borderRadius: 8, padding: 3, boxShadow: hotZoneId === 'bank' ? GLOW.hot : bankEligible ? GLOW.soft : 'none' }}>
+          <div data-drop="bank" style={{ borderRadius: 8, padding: 3, flexShrink: 0, whiteSpace: 'nowrap', boxShadow: hotZoneId === 'bank' ? GLOW.hot : bankEligible ? GLOW.soft : 'none' }}>
             <BankStack count={observation.myBank.length} total={observation.myBankTotal} />
           </div>
         </div>

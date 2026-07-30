@@ -71,3 +71,60 @@ describe('game store — full game via engine', () => {
     expect(errorSpy).not.toHaveBeenCalled();
   });
 });
+
+describe('game store — Munshi advisor (read-only · 3 uses · no carry-over)', () => {
+  // Seat 0 (human) always opens the game (§setup currentPlayerIndex: 0); one DRAW moves it
+  // from awaitingDraw into the 'playing' phase — exactly when the chip offers advice.
+  function humanOnPlayTurn(seed: number): void {
+    useGame.getState().newGame({ seats: [{ kind: 'human' }, { kind: 'bot', difficulty: 'medium' }], seed });
+    useGame.getState().dispatch({ type: 'DRAW' });
+  }
+
+  it('spends exactly 3 consults per game, then renders spent (never negative)', () => {
+    humanOnPlayTurn(7);
+    expect(useGame.getState().state!.phase).toBe('playing');
+    expect(useGame.getState().munshiUsesRemaining).toBe(3);
+
+    expect(useGame.getState().consultMunshi()).not.toBeNull();
+    expect(useGame.getState().munshiUsesRemaining).toBe(2);
+    expect(useGame.getState().consultMunshi()).not.toBeNull();
+    expect(useGame.getState().consultMunshi()).not.toBeNull();
+    expect(useGame.getState().munshiUsesRemaining).toBe(0);
+
+    // Budget spent: no further advice, and the count never drifts below zero.
+    expect(useGame.getState().consultMunshi()).toBeNull();
+    expect(useGame.getState().munshiUsesRemaining).toBe(0);
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not carry over across games — a new game restores all 3 uses', () => {
+    humanOnPlayTurn(7);
+    useGame.getState().consultMunshi();
+    useGame.getState().consultMunshi();
+    expect(useGame.getState().munshiUsesRemaining).toBe(1);
+
+    humanOnPlayTurn(8); // a fresh game
+    expect(useGame.getState().munshiUsesRemaining).toBe(3);
+  });
+
+  it('opening the advisor dispatches NO engine action (read-only)', () => {
+    humanOnPlayTurn(7);
+    const before = useGame.getState().state!; // the exact engine state object before consulting
+    const advice = useGame.getState().consultMunshi();
+
+    expect(advice).not.toBeNull();
+    // reduce is never called, so the engine state object is untouched (same reference) —
+    // the player must still perform the move themselves.
+    expect(useGame.getState().state).toBe(before);
+    expect(useGame.getState().state!.phase).toBe('playing');
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('offers nothing (and spends no use) when it is not my play turn', () => {
+    // Fresh game sits in awaitingDraw, not the 'playing' phase — the chip is not offered.
+    useGame.getState().newGame({ seats: [{ kind: 'human' }, { kind: 'bot', difficulty: 'medium' }], seed: 7 });
+    expect(useGame.getState().state!.phase).toBe('awaitingDraw');
+    expect(useGame.getState().consultMunshi()).toBeNull();
+    expect(useGame.getState().munshiUsesRemaining).toBe(3);
+  });
+});
