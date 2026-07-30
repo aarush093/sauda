@@ -22,7 +22,13 @@ const SPAN_MAX_DEG = 120; // the widest arc — many cards approach this near-se
 const COMFORT_STEP_DEG = 12; // each extra card widens the arc by this, until SPAN_MAX
 const SIDE_PAD_PX = 8; // clear space kept at the top and side frame edges
 export const READABLE_STRIP = 0.28; // the top fraction (banner + value badge) that must stay visible
-const HUB_RADIUS_RATIO = 0.42; // hub → card-bottom distance as a fraction of card height (the overlap)
+// H3 (excellence pass): the wheel band is capped by the my-area vertical budget (~144px at 360×740,
+// the on-board group cascades taking the rest). A SHALLOWER hub makes the band shorter for a given
+// card, which buys a wider card in the same budget — lifting the rendered banner text off the 9-px
+// floor (measured 9.0→9.4 device px at DPR 2). 0.34 keeps a clear roulette convergence; the width
+// fraction 0.21 is the largest that still passes the no-clip invariant at both board widths.
+const HUB_RADIUS_RATIO = 0.34; // hub → card-bottom distance as a fraction of card height (the overlap)
+const CARD_WIDTH_FRACTION = 0.21; // one card width = this fraction of the container width (clamped)
 const MIN_CARD_WIDTH_PX = 58;
 const MAX_CARD_WIDTH_PX = 78;
 
@@ -48,7 +54,7 @@ function clamp(value: number, lo: number, hi: number): number {
 
 export function wheelLayout(count: number, containerWidth: number): WheelLayout {
   // ONE card size at every count — it depends only on the container width, never on the hand size.
-  const cardWidth = clamp(Math.round(containerWidth * 0.2), MIN_CARD_WIDTH_PX, MAX_CARD_WIDTH_PX);
+  const cardWidth = clamp(Math.round(containerWidth * CARD_WIDTH_FRACTION), MIN_CARD_WIDTH_PX, MAX_CARD_WIDTH_PX);
   const cardHeight = Math.round(cardWidth * CARD.ratio);
   const hubRadius = Math.round(cardHeight * HUB_RADIUS_RATIO); // hub → each card's bottom-centre
   const outerRadius = hubRadius + cardHeight; // hub → each card's top (the readable end)

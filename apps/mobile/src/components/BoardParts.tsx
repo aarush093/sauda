@@ -169,10 +169,8 @@ const OPP_CHIP_PX = 22;
 
 export function OpponentGroupStrip({
   properties,
-  onExpand,
 }: {
   properties: Record<SetId, PropertyGroup[]>;
-  onExpand?: (() => void) | undefined;
 }) {
   const [containerRef, measured] = useMeasuredWidth<HTMLDivElement>();
   const groups = nonEmptyGroups(properties);
@@ -191,12 +189,12 @@ export function OpponentGroupStrip({
   }
   const overflow = groups.length - shownCount;
 
-  // Tiny but REAL cascades (G4); the whole row taps open to this opponent's full table view.
+  // Tiny but REAL cascades (G4); the whole opponent COLUMN taps open to their full table view (the
+  // click + visible affordance live on the column now — H1a), so this strip is purely presentational.
   return (
     <div
       ref={containerRef}
-      onClick={onExpand}
-      style={{ display: 'flex', gap: OPP_GAP_PX, alignItems: 'flex-start', overflow: 'hidden', cursor: onExpand ? 'pointer' : undefined }}
+      style={{ display: 'flex', gap: OPP_GAP_PX, alignItems: 'flex-start', overflow: 'hidden' }}
     >
       {groups.slice(0, shownCount).map(({ set, group, index }) => (
         <SetCascade key={`${set}-${index}`} group={group} width={cardWidth} />
@@ -289,6 +287,7 @@ export function PlayerHeader({
   active,
   showPips,
   playsRemaining,
+  expandable,
 }: {
   name: string;
   bankTotal: number;
@@ -296,6 +295,7 @@ export function PlayerHeader({
   active: boolean;
   showPips?: boolean | undefined;
   playsRemaining?: number | undefined;
+  expandable?: boolean | undefined; // H1a: show a visible "tap to expand" glyph (opponent pills)
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 8px', borderRadius: 999, background: STAGE.scrimDrag, boxShadow: active ? STAGE.glowGold : 'none', opacity: active ? 1 : 0.6 }}>
@@ -308,6 +308,11 @@ export function PlayerHeader({
           </span>
         ))}
       </span>
+      {/* H1a: a small gold expand mark so an opponent pill visibly reads as "tap to open" on touch
+          (no cursor there) — the discoverability the pass-2 report admitted only my own groups had. */}
+      {expandable && (
+        <span aria-hidden style={{ marginLeft: 'auto', fontFamily: FONT.mono, fontSize: 11, color: STAGE.accentGold, opacity: 0.85 }}>⤢</span>
+      )}
       {showPips && (
         <span style={{ display: 'flex', gap: 3, marginLeft: 'auto' }}>
           {Array.from({ length: PLAYS_PER_TURN }).map((_, index) => (

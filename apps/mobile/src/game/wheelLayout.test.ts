@@ -102,6 +102,51 @@ describe('wheelLayout — the readable strip never clips, spacing stays even (G2
     expect(wheelLayout(7, 346)).toEqual(wheelLayout(7, 346));
   });
 
+  // H2b (excellence pass): the turn control (End turn / SAUDA!) must occupy ONE fixed slot that
+  // overlaps NO wheel card at any hand size. Pass 2 floated End turn in the wheel band's bottom-right
+  // corner; these prove that corner is NOT free — the splayed readable tops of the outer cards run
+  // through it for many n — so the control was relocated to the my-area header, a band the wheel
+  // never reaches (DECISIONS.md). The slot is the measured End-turn button (~84×44 floated / ~72×26
+  // compact in the header).
+  function bboxOf(corners: Array<{ x: number; y: number }>) {
+    return { x0: Math.min(...corners.map((c) => c.x)), x1: Math.max(...corners.map((c) => c.x)), y0: Math.min(...corners.map((c) => c.y)), y1: Math.max(...corners.map((c) => c.y)) };
+  }
+  function overlaps(a: { x0: number; x1: number; y0: number; y1: number }, b: { x0: number; x1: number; y0: number; y1: number }) {
+    return a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+  }
+  function anyCardInSlot(count: number, containerWidth: number, slot: { x0: number; x1: number; y0: number; y1: number }) {
+    const { cardWidth, cardHeight, slots } = wheelLayout(count, containerWidth);
+    return slots.some((slot2) => overlaps(bboxOf(rotatedCorners(slot2, cardWidth, cardHeight)), slot));
+  }
+
+  describe('H2b — the End-turn slot never overlaps a wheel card', () => {
+    it('the OLD in-band bottom-right corner slot DOES overlap a card at some n (why it moved)', () => {
+      const clashes: string[] = [];
+      for (const containerWidth of CONTAINER_WIDTHS) {
+        for (const count of HAND_SIZES) {
+          const { height } = wheelLayout(count, containerWidth);
+          // pass-2 placement: an ~84×44 button at right:4, bottom:8 of the wheel band.
+          const slot = { x0: containerWidth - 4 - 84, x1: containerWidth - 4, y0: height - 8 - 44, y1: height - 8 };
+          if (anyCardInSlot(count, containerWidth, slot)) clashes.push(`${containerWidth}px/n=${count}`);
+        }
+      }
+      // The corner is demonstrably NOT reserved — a control there sits over the cards. Documented so
+      // no future pass re-floats a turn control into the wheel band.
+      expect(clashes.length).toBeGreaterThan(0);
+    });
+
+    it('the header slot (above the band) overlaps NO wheel card at any n @ {346,436} (the fix)', () => {
+      for (const containerWidth of CONTAINER_WIDTHS) {
+        for (const count of HAND_SIZES) {
+          // the compact End-turn button lives in the my-area header, a full row ABOVE the wheel band
+          // (y < 0 in band coordinates). No card's rotated box may reach it.
+          const slot = { x0: containerWidth - 4 - 72, x1: containerWidth - 4, y0: -30, y1: -4 };
+          expect(anyCardInSlot(count, containerWidth, slot)).toBe(false);
+        }
+      }
+    });
+  });
+
   it('uses one size per container but a larger card on a wider frame', () => {
     expect(wheelLayout(5, 436).cardWidth).toBeGreaterThan(wheelLayout(5, 346).cardWidth);
   });

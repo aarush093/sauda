@@ -48,16 +48,22 @@ const goldFilledButton: CSSProperties = {
   fontSize: 16,
   cursor: 'pointer',
 };
-const goldOutlineButton: CSSProperties = {
-  padding: '9px 14px',
+// H2b (excellence pass): End turn lives in the my-area HEADER row, by the bank — compact so it never
+// grows the header (≤ the "You" pill height) and so the wheel band below keeps its full budget. It
+// is NO LONGER floated in the wheel band's corner, where it overlapped the splayed card tops at many
+// hand sizes (measured n=5..12 @346). One fixed slot, geometrically disjoint from the wheel.
+const endTurnButton: CSSProperties = {
+  padding: '5px 12px',
   borderRadius: 999,
   background: 'transparent',
   color: STAGE.accentGold,
   border: `1.5px solid ${INK.gold}`,
   fontFamily: FONT.display,
   fontWeight: 700,
-  fontSize: 14,
+  fontSize: 13,
   cursor: 'pointer',
+  whiteSpace: 'nowrap',
+  flexShrink: 0,
 };
 // A placed wildcard's rearrange handle (B8): drag it onto a group, or tap for the chooser.
 const rearrangeToken: CSSProperties = {
@@ -269,9 +275,18 @@ export function Board({
           to that opponent's full readable table view. */}
       <div style={zone(21, { display: 'flex', gap: 8, overflow: 'hidden' })}>
         {observation.opponents.map((opponent) => (
-          <div key={opponent.id} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, opacity: opponent.id === observation.currentPlayer ? 1 : 0.75 }}>
-            <PlayerHeader name={seatName(seats, opponent.id)} bankTotal={opponent.bankTotal} handCount={opponent.handCount} active={opponent.id === observation.currentPlayer} />
-            <OpponentGroupStrip properties={opponent.properties} onExpand={() => setExpandedView({ kind: 'opponent', id: opponent.id })} />
+          // H1a (excellence pass): the WHOLE opponent column is the tap target (not just the card
+          // strip), and it carries a VISIBLE expand affordance — so on a touch screen (no cursor) it
+          // reads as "tap to open", the same as my own groups. Opens their full read-only table view.
+          <div
+            key={opponent.id}
+            {...(import.meta.env.DEV && { 'data-expand': `opponent-${opponent.id}` })}
+            onClick={() => setExpandedView({ kind: 'opponent', id: opponent.id })}
+            title={`${seatName(seats, opponent.id)} — tap to see their full board`}
+            style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, opacity: opponent.id === observation.currentPlayer ? 1 : 0.75, cursor: 'pointer' }}
+          >
+            <PlayerHeader name={seatName(seats, opponent.id)} bankTotal={opponent.bankTotal} handCount={opponent.handCount} active={opponent.id === observation.currentPlayer} expandable />
+            <OpponentGroupStrip properties={opponent.properties} />
           </div>
         ))}
       </div>
@@ -339,9 +354,17 @@ export function Board({
                 never collides with the End-turn column below). */}
             <MunshiChip available={munshiAvailable} />
           </div>
-          {/* the bank is a drop zone for money / bankable actions (never a wildcard). */}
-          <div data-drop="bank" style={{ borderRadius: 8, padding: 3, flexShrink: 0, whiteSpace: 'nowrap', boxShadow: hotZoneId === 'bank' ? GLOW.hot : bankEligible ? GLOW.soft : 'none' }}>
-            <BankStack count={observation.myBank.length} total={observation.myBankTotal} />
+          {/* right cluster: End turn (H2b — its one fixed slot, by the bank) then the bank drop zone.
+              End turn shows whenever END_TURN is legal AND the turn isn't auto-ending (F2) — so a
+              deliberate EARLY end while plays remain is always reachable, never eaten. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {endTurnAction && onAct && !autoEnding && (
+              <button onClick={() => onAct(endTurnAction)} style={endTurnButton}>End turn</button>
+            )}
+            {/* the bank is a drop zone for money / bankable actions (never a wildcard). */}
+            <div data-drop="bank" style={{ borderRadius: 8, padding: 3, flexShrink: 0, whiteSpace: 'nowrap', boxShadow: hotZoneId === 'bank' ? GLOW.hot : bankEligible ? GLOW.soft : 'none' }}>
+              <BankStack count={observation.myBank.length} total={observation.myBankTotal} />
+            </div>
           </div>
         </div>
         <div style={{ minHeight: 0, overflow: 'hidden' }}>
@@ -367,10 +390,10 @@ export function Board({
             ))}
           </div>
         )}
-        {/* bottom band: the hand WHEEL (G2), hub at bottom-centre, spanning the full my-area. End
-            turn floats in the clear bottom-right corner (the wheel's cards converge to the centre
-            hub, so nothing reaches there) — usually hidden anyway, since F2 auto-ends most turns. */}
-        <div style={{ position: 'relative', marginTop: 'auto' }}>
+        {/* bottom band: the hand WHEEL (G2), hub at bottom-centre, spanning the FULL my-area width —
+            no control shares this band (End turn moved to the header, H2b), so the wheel stays widest
+            and nothing ever overlaps a card. */}
+        <div style={{ marginTop: 'auto' }}>
           <HandWheel
             cards={observation.myHand}
             interactiveIds={handTappableIds}
@@ -380,11 +403,6 @@ export function Board({
             onDrop={onDropCard}
             onDragChange={setFanDrag}
           />
-          {endTurnAction && onAct && !autoEnding && (
-            <button onClick={() => onAct(endTurnAction)} style={{ ...goldOutlineButton, position: 'absolute', right: 4, bottom: 8, zIndex: 3 }}>
-              End turn
-            </button>
-          )}
         </div>
       </div>
 
