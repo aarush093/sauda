@@ -86,6 +86,7 @@ export function Board({
   onAct,
   tickerLines = [],
   botSpotlightCardId = null,
+  autoEnding = false,
 }: {
   observation: Observation;
   seats: SeatConfig[];
@@ -93,6 +94,7 @@ export function Board({
   onAct?: (action: Action) => void;
   tickerLines?: string[];
   botSpotlightCardId?: string | null;
+  autoEnding?: boolean; // F2: the turn is auto-ending — hide the manual End turn button
 }) {
   const myTurn = observation.currentPlayer === observation.me;
   const topDiscard = observation.discardPile[observation.discardPile.length - 1];
@@ -321,7 +323,7 @@ export function Board({
             />
           </div>
           <div style={{ width: END_TURN_COLUMN_PX, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 8 }}>
-            {endTurnAction && onAct && (
+            {endTurnAction && onAct && !autoEnding && (
               <button onClick={() => onAct(endTurnAction)} style={goldOutlineButton}>End turn</button>
             )}
           </div>

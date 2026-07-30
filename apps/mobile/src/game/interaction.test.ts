@@ -16,6 +16,7 @@ import {
   kirayaPlan,
   reachableActionsForCard,
   rearrangeDestinations,
+  shouldAutoEndTurn,
   zeroPayableResponse,
 } from './interaction';
 
@@ -206,5 +207,34 @@ describe('interaction reducer — drag/tap/legalActions parity (every card categ
     const actions: Action[] = [{ type: 'PLACE_PROPERTY', cardId: 'someone_else', set: 'mumbai' }, { type: 'END_TURN' }];
     expect(dropZonesForCard(actions, 'not_playable')).toEqual([]);
     expect(reachableActionsForCard(actions, 'not_playable', 0)).toEqual([]);
+  });
+});
+
+// F2 (owner playtest 30 Jul): the turn auto-ends ONLY on the exact [END_TURN] singleton.
+describe('shouldAutoEndTurn — auto-end only when nothing else is legal (F2)', () => {
+  it('auto-fires when END_TURN is the sole legal move', () => {
+    expect(shouldAutoEndTurn([{ type: 'END_TURN' }])).toBe(true);
+  });
+
+  it('NEVER fires when a declarable win is also legal', () => {
+    expect(shouldAutoEndTurn([{ type: 'DECLARE_WIN' }, { type: 'END_TURN' }])).toBe(false);
+  });
+
+  it('NEVER fires when a free wildcard rearrange is also legal', () => {
+    const actions: Action[] = [
+      { type: 'REARRANGE_WILDCARD', cardId: 'wild_jaipur_kolkata_0', toSet: 'kolkata' },
+      { type: 'END_TURN' },
+    ];
+    expect(shouldAutoEndTurn(actions)).toBe(false);
+  });
+
+  it('NEVER fires when a play (e.g. Bank) is still legal', () => {
+    const actions: Action[] = [{ type: 'BANK_CARD', cardId: 'money_2_0' }, { type: 'END_TURN' }];
+    expect(shouldAutoEndTurn(actions)).toBe(false);
+  });
+
+  it('does not fire on an empty or non-END_TURN list', () => {
+    expect(shouldAutoEndTurn([])).toBe(false);
+    expect(shouldAutoEndTurn([{ type: 'DRAW' }])).toBe(false);
   });
 });

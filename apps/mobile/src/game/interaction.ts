@@ -275,6 +275,15 @@ export function autoDrawAction(actions: Action[]): Action | null {
   return actions.find((action) => action.type === 'DRAW') ?? null;
 }
 
+// F2 (owner playtest 30 Jul — an A10/L4 refinement): the turn auto-ends only when END_TURN is
+// the SOLE legal move. When the human has used their plays and holds no free move, the engine
+// offers exactly [END_TURN]; the UI then moves the turn on itself instead of making the player
+// tap a button that reads as "asking permission". Anything else legal — a play, a declarable
+// DECLARE_WIN, a free REARRANGE_WILDCARD — keeps End turn MANUAL so it is never eaten.
+export function shouldAutoEndTurn(actions: Action[]): boolean {
+  return actions.length === 1 && actions[0]!.type === 'END_TURN';
+}
+
 // C4: a charge I cannot pay anything toward. The engine still opens a payment step whose
 // ONLY legal move is an empty RESPOND_PAY (suggestPayment returns [] iff the table is
 // worth nothing). Returns that move to auto-submit — no interactive sheet — or null.

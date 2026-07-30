@@ -49,10 +49,24 @@ async function releaseDead(page) {
   await page.mouse.up();
 }
 
+// F2 base: seed 1, seat 0 draws then places 3 properties — plays exhausted, so the only legal
+// move is END_TURN (found by a tools seed-search). Before F2 this shows the manual button; after
+// F2 the turn ends itself with a "Turn over" beat (held by the capture-freeze).
+const ONLY_END_TURN = {
+  seed: 1,
+  actions: [
+    { type: 'DRAW' },
+    { type: 'PLACE_PROPERTY', cardId: 'prop_puraniDilli_0', set: 'puraniDilli' },
+    { type: 'PLACE_PROPERTY', cardId: 'prop_bangalore_2', set: 'bangalore' },
+    { type: 'PLACE_PROPERTY', cardId: 'prop_junction_2', set: 'junction' },
+  ],
+};
+
 // ---- the finding recipes ----
 const FINDINGS = [
   { id: 'F1', file: 'F1_fan_11cards', base: base('S10_eleven_cards') },
   { id: 'F1', file: 'F1_discard', base: base('S5_discard_mode') },
+  { id: 'F2', file: 'F2_auto_end', base: ONLY_END_TURN },
   {
     id: 'F1', file: 'F1_peek', base: base('S9_kabza'),
     prep: async (page) => {
