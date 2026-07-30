@@ -48,6 +48,15 @@ async function releaseDead(page) {
   await page.mouse.move(5, 5, { steps: 2 });
   await page.mouse.up();
 }
+// Tap a hand card: press and release in the band without lifting → stages it onto the A1 rail.
+async function tapCard(page, cardId) {
+  const b = await box(page, `[data-card-id="${cardId}"]`);
+  const x = b.x + Math.min(12, b.width / 2);
+  const y = b.y + b.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.up();
+}
 
 // F2 base: seed 1, seat 0 draws then places 3 properties — plays exhausted, so the only legal
 // move is END_TURN (found by a tools seed-search). Before F2 this shows the manual button; after
@@ -74,6 +83,13 @@ const FINDINGS = [
     id: 'F6', file: 'F6_end_card', base: base('S11_declare_win'), // then declare → game over (human win)
     prep: async (page) => {
       await page.evaluate(() => window.__sauda.getState().dispatch({ type: 'DECLARE_WIN' }));
+      await page.waitForTimeout(120);
+    },
+  },
+  {
+    id: 'F7', file: 'F7_why_line', base: { seed: 1, actions: [{ type: 'DRAW' }] }, // holds MAKAAN, no set
+    prep: async (page) => {
+      await tapCard(page, 'action_makaan_0'); // stage the MAKAAN → rail shows Bank + the why-line
       await page.waitForTimeout(120);
     },
   },

@@ -8,6 +8,7 @@ import type { Action } from '@sauda/engine';
 import { CardFace } from './CardFace';
 import { ActionRail } from './ActionRail';
 import { railForCard } from '../game/staging';
+import { cardVerbHint } from '../game/labels';
 import { STAGE } from '../design/tokens';
 
 export function StagedCard({
@@ -22,6 +23,9 @@ export function StagedCard({
   onCancel: () => void;
 }) {
   const verbs = railForCard(actions, cardId);
+  // F7: if the card's canonical verb (Build / Play / Charge) isn't offered, show why.
+  const verbHint = cardVerbHint(cardId);
+  const hint = verbHint && !verbs.some((verb) => verb.key === verbHint.verbKey) ? verbHint.reason : null;
   return (
     <div
       onClick={onCancel}
@@ -39,7 +43,7 @@ export function StagedCard({
       {/* the card + rail; a tap in here must not fall through to the scrim's cancel */}
       <div onClick={(event) => event.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
         <CardFace cardId={cardId} size="full" />
-        <ActionRail verbs={verbs} onAct={onAct} onCancel={onCancel} />
+        <ActionRail verbs={verbs} hint={hint} onAct={onAct} onCancel={onCancel} />
       </div>
     </div>
   );

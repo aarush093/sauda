@@ -23,6 +23,18 @@ const buttonBase: CSSProperties = {
 const primaryButton: CSSProperties = { ...buttonBase, background: STAGE.accentGold, color: INK.deepInk, border: 'none' };
 const outlineButton: CSSProperties = { ...buttonBase, background: 'transparent', color: STAGE.accentGold, border: `1.5px solid ${INK.gold}` };
 const quietButton: CSSProperties = { ...buttonBase, background: 'transparent', color: STAGE.textOnFelt, border: `1px solid ${INK.agedLine}` };
+// F7: a greyed, inert hint chip (no pointer) — it explains, it never acts.
+const hintChip: CSSProperties = {
+  ...buttonBase,
+  background: 'transparent',
+  color: STAGE.textOnFelt,
+  border: `1px dashed ${INK.agedLine}`,
+  opacity: 0.6,
+  cursor: 'default',
+  fontWeight: 400,
+  fontSize: 12,
+  textAlign: 'center',
+};
 
 const railColumn: CSSProperties = {
   display: 'flex',
@@ -33,10 +45,12 @@ const railColumn: CSSProperties = {
 
 export function ActionRail({
   verbs,
+  hint = null,
   onAct,
   onCancel,
 }: {
   verbs: RailVerb[];
+  hint?: string | null; // F7: a greyed reason for a canonical verb that legalActions doesn't offer
   onAct: (action: Action) => void;
   onCancel: () => void;
 }) {
@@ -74,6 +88,12 @@ export function ActionRail({
           </button>
         );
       })}
+      {/* F7: one greyed, non-tappable hint — teaches WHY the card's main verb isn't offered. */}
+      {hint !== null && (
+        <div aria-disabled style={hintChip}>
+          {hint}
+        </div>
+      )}
       <button style={quietButton} onClick={onCancel}>
         Cancel
       </button>

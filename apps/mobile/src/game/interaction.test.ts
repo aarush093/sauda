@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import { SETS } from '@sauda/engine';
 import type { Action, CardId, SetId } from '@sauda/engine';
-import { actionCardId } from './labels';
+import { actionCardId, cardVerbHint } from './labels';
 import { railForCard } from './staging';
 import {
   autoDrawAction,
@@ -236,5 +236,45 @@ describe('shouldAutoEndTurn — auto-end only when nothing else is legal (F2)', 
   it('does not fire on an empty or non-END_TURN list', () => {
     expect(shouldAutoEndTurn([])).toBe(false);
     expect(shouldAutoEndTurn([{ type: 'DRAW' }])).toBe(false);
+  });
+});
+
+// F7 (owner playtest 30 Jul): the rail teaches WHY a card's verb is absent, and the two
+// cross-kind drops the owner tried produce no engine action.
+describe('cardVerbHint — the six teachable why-lines (F7)', () => {
+  const hintFor = (id: string) => cardVerbHint(id)?.reason ?? null;
+
+  it('maps each build/play/charge card to its reason', () => {
+    expect(cardVerbHint('action_makaan_0')).toEqual({ verbKey: 'build', reason: 'needs a complete set' });
+    expect(cardVerbHint('action_haveli_0')).toEqual({ verbKey: 'build', reason: 'needs a MAKAAN first' });
+    expect(hintFor('action_kabza_0')).toBe('no full set to seize');
+    expect(hintFor('action_haathKiSafai_0')).toBe('nothing stealable');
+    expect(hintFor('action_adlaBadli_0')).toBe('needs one of yours + one of theirs');
+    expect(cardVerbHint('kiraya_jaipur_kolkata_0')).toEqual({ verbKey: 'charge', reason: 'no matching property' });
+  });
+
+  it('has no hint for always-playable actions, money, or property', () => {
+    expect(cardVerbHint('action_vasooli_0')).toBeNull();
+    expect(cardVerbHint('action_shagun_0')).toBeNull();
+    expect(cardVerbHint('action_aageBadho_0')).toBeNull();
+    expect(cardVerbHint('money_2_0')).toBeNull();
+    expect(cardVerbHint('prop_mumbai_0')).toBeNull();
+  });
+});
+
+describe('cross-kind drops produce no engine action (F7 verify)', () => {
+  it('a money card offers only the bank zone — never a property group', () => {
+    const money = 'money_2_0';
+    const actions: Action[] = [{ type: 'BANK_CARD', cardId: money }, { type: 'END_TURN' }];
+    const zones = dropZonesForCard(actions, money);
+    expect(zones.map((zone) => zone.kind)).toEqual(['bank']); // dropping it on a set group matches nothing
+  });
+
+  it('a property offers only its set zone — never the bank', () => {
+    const prop = 'prop_mumbai_0';
+    const actions: Action[] = [{ type: 'PLACE_PROPERTY', cardId: prop, set: 'mumbai' }, { type: 'END_TURN' }];
+    const zones = dropZonesForCard(actions, prop);
+    expect(zones.some((zone) => zone.kind === 'bank')).toBe(false); // dropping it on the bank matches nothing
+    expect(zones.some((zone) => zone.kind === 'set')).toBe(true);
   });
 });

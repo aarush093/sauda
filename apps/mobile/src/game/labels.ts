@@ -58,6 +58,28 @@ export function describeCard(id: string): string {
   }
 }
 
+// F7 (owner playtest 30 Jul): when a staged card's canonical verb is missing from legalActions,
+// the rail shows ONE greyed hint so its absence reads as a RULE, not an arbitrary UI. This maps a
+// card to its verb + a short reason; the caller shows the reason only when that verb isn't offered.
+// UI COPY ONLY — the engine decides legality; this never does. Just these six teachable cases.
+const VERB_HINTS: Record<string, { verbKey: string; reason: string }> = {
+  makaan: { verbKey: 'build', reason: 'needs a complete set' },
+  haveli: { verbKey: 'build', reason: 'needs a MAKAAN first' },
+  kabza: { verbKey: 'play', reason: 'no full set to seize' },
+  haathKiSafai: { verbKey: 'play', reason: 'nothing stealable' },
+  adlaBadli: { verbKey: 'play', reason: 'needs one of yours + one of theirs' },
+  kiraya: { verbKey: 'charge', reason: 'no matching property' },
+};
+
+export function cardVerbHint(cardId: string): { verbKey: string; reason: string } | null {
+  const card = CARD_BY_ID.get(cardId);
+  if (!card) {
+    return null;
+  }
+  const key = card.kind === 'kiraya' ? 'kiraya' : card.kind === 'action' ? card.action : null;
+  return key !== null ? (VERB_HINTS[key] ?? null) : null;
+}
+
 // The hand card an action operates on (for grouping in the UI), or null.
 export function actionCardId(action: Action): string | null {
   switch (action.type) {
