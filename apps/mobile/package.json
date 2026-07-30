@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "capture": "node scripts/capture.mjs",
-    "capture:fixes": "node scripts/capture-fixes.mjs"
+    "capture:fixes": "node scripts/capture-fixes.mjs",
+    "capture:fixes2": "node scripts/capture-fixes-2.mjs"
   },
   "dependencies": {
     "@sauda/bots": "workspace:*",
