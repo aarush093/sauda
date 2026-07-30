@@ -351,7 +351,7 @@ export function Board({
       <div style={zone(42, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <PlayerHeader name="You" bankTotal={observation.myBankTotal} handCount={observation.myHand.length} active={myTurn} showPips playsRemaining={observation.playsRemaining} />
+            <PlayerHeader name="You" bankTotal={observation.myBankTotal} handCount={observation.myHand.length} active={myTurn} self />
             {/* Munshi chip by my avatar — its own read-only decision surface (never pushes layout,
                 never collides with the End-turn column below). */}
             <MunshiChip available={munshiAvailable} />

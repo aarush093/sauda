@@ -285,40 +285,37 @@ export function PlayerHeader({
   bankTotal,
   handCount,
   active,
-  showPips,
-  playsRemaining,
+  self,
   expandable,
 }: {
   name: string;
   bankTotal: number;
   handCount: number;
   active: boolean;
-  showPips?: boolean | undefined;
-  playsRemaining?: number | undefined;
+  self?: boolean | undefined; // MY pill: drop the redundant hand chrome so End turn fits (H2b)
   expandable?: boolean | undefined; // H1a: show a visible "tap to expand" glyph (opponent pills)
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 8px', borderRadius: 999, background: STAGE.scrimDrag, boxShadow: active ? STAGE.glowGold : 'none', opacity: active ? 1 : 0.6 }}>
       <span style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 13, color: STAGE.cardCream }}>{name}</span>
       <span style={{ fontFamily: FONT.mono, fontWeight: 700, fontSize: 12, color: STAGE.accentGold }}>₹{bankTotal}</span>
-      <span style={{ display: 'flex', alignItems: 'center' }} title={`${handCount} cards in hand`}>
-        {Array.from({ length: Math.min(handCount, 7) }).map((_, index) => (
-          <span key={index} style={{ marginLeft: index === 0 ? 0 : -8 }}>
-            <CardBack width={14} seal={false} />
-          </span>
-        ))}
-      </span>
+      {/* Hidden-hand card-backs are meaningful only for OPPONENTS (I see my own hand in the wheel).
+          My own pill drops them, AND drops the play-pips (plays-left already reads in the table band,
+          and the pips clashed with the Munshi chip's) — so the header has clean room for End turn
+          (H2b) at any bank total. */}
+      {!self && (
+        <span style={{ display: 'flex', alignItems: 'center' }} title={`${handCount} cards in hand`}>
+          {Array.from({ length: Math.min(handCount, 7) }).map((_, index) => (
+            <span key={index} style={{ marginLeft: index === 0 ? 0 : -8 }}>
+              <CardBack width={14} seal={false} />
+            </span>
+          ))}
+        </span>
+      )}
       {/* H1a: a small gold expand mark so an opponent pill visibly reads as "tap to open" on touch
           (no cursor there) — the discoverability the pass-2 report admitted only my own groups had. */}
       {expandable && (
         <span aria-hidden style={{ marginLeft: 'auto', fontFamily: FONT.mono, fontSize: 11, color: STAGE.accentGold, opacity: 0.85 }}>⤢</span>
-      )}
-      {showPips && (
-        <span style={{ display: 'flex', gap: 3, marginLeft: 'auto' }}>
-          {Array.from({ length: PLAYS_PER_TURN }).map((_, index) => (
-            <span key={index} style={{ width: 8, height: 8, borderRadius: '50%', background: index < (playsRemaining ?? 0) ? STAGE.accentGold : 'transparent', border: `1.5px solid ${INK.gold}` }} />
-          ))}
-        </span>
       )}
     </div>
   );
