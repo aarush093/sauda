@@ -1,25 +1,22 @@
 /**
- * The hand-drag gesture (v1.2 A10 · law L3). It turns pointer events on a hand card into
- * either a TAP (released within an 8 px slop → stage the card, the A1 fallback) or a DRAG
- * (moved past the slop → the card rides the pointer; released over a legal drop zone it
- * commits, released anywhere else it springs home). Reversible until release.
+ * The per-element drag gesture (v1.2 A10 · law L3), used now for the placed-wildcard REARRANGE
+ * token (B8) — the hand fan uses the container scrub in useFanGesture. It turns pointer events on
+ * one element into either a TAP (released within an 8 px slop → stage / open the chooser) or a
+ * DRAG (moved past the slop → the token rides the pointer; released over a legal group it commits,
+ * released anywhere else it springs home). Reversible until release.
  *
- * Hit-testing is `document.elementFromPoint` against the `data-drop` attribute each zone
- * carries, so which zone a release lands on is the DOM's own answer — no hand-maintained
- * geometry table to drift out of sync. The floating drag preview must be pointer-events:
- * none so it never hides the zone beneath it from elementFromPoint.
+ * Hit-testing is the shared `hotZoneAt` (elementFromPoint against each zone's `data-drop` id), so
+ * which zone a release lands on is the DOM's own answer — no hand-maintained geometry table. The
+ * floating drag preview must be pointer-events:none so it never hides the zone from elementFromPoint.
  */
 import { useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import { hotZoneAt } from './dropHitTest';
+import type { DragState } from './useFanGesture';
+
+export type { DragState };
 
 const SLOP_PX = 8; // a release moved less than this is a tap, not a drag
-
-export interface DragState {
-  cardId: string;
-  x: number;
-  y: number;
-  hotZoneId: string | null; // the eligible drop zone currently under the pointer, if any
-}
 
 interface PressState {
   cardId: string;
@@ -36,10 +33,8 @@ export function useHandDrag(options: {
   const [drag, setDrag] = useState<DragState | null>(null);
   const press = useRef<PressState | null>(null);
 
-  function hotZoneAt(x: number, y: number, cardId: string): string | null {
-    const zone = document.elementFromPoint(x, y)?.closest('[data-drop]');
-    const id = zone?.getAttribute('data-drop') ?? null;
-    return id && options.eligibleZones(cardId).has(id) ? id : null;
+  function hotZoneFor(x: number, y: number, cardId: string): string | null {
+    return hotZoneAt(x, y, options.eligibleZones(cardId));
   }
 
   function onPointerDown(cardId: string, event: ReactPointerEvent<HTMLElement>) {
@@ -62,7 +57,7 @@ export function useHandDrag(options: {
       cardId: state.cardId,
       x: event.clientX,
       y: event.clientY,
-      hotZoneId: hotZoneAt(event.clientX, event.clientY, state.cardId),
+      hotZoneId: hotZoneFor(event.clientX, event.clientY, state.cardId),
     });
   }
 
@@ -77,7 +72,7 @@ export function useHandDrag(options: {
       options.onTap(state.cardId); // a tap → stage (A1)
       return;
     }
-    const zoneId = hotZoneAt(event.clientX, event.clientY, state.cardId);
+    const zoneId = hotZoneFor(event.clientX, event.clientY, state.cardId);
     setDrag(null);
     if (zoneId) {
       options.onDrop(state.cardId, zoneId); // dropped on a legal zone → commit

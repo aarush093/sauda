@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "capture": "node scripts/capture.mjs"
+    "capture": "node scripts/capture.mjs",
+    "capture:fixes": "node scripts/capture-fixes.mjs"
   },
   "dependencies": {
     "@sauda/bots": "workspace:*",

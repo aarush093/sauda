@@ -14,12 +14,13 @@
  * drag gesture in HandFan / useHandDrag — this file is the composer.
  */
 import { useState } from 'react';
-import type { CSSProperties, DOMAttributes } from 'react';
+import type { CSSProperties } from 'react';
 import type { Action, Observation, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
 import { dropZonesForCard, rearrangeDestinations } from '../game/interaction';
 import type { DropZone } from '../game/interaction';
 import { useHandDrag } from '../game/useHandDrag';
+import type { DragState } from '../game/useFanGesture';
 import { describeCard } from '../game/labels';
 import { CardFace } from './CardFace';
 import { StagedCard } from './StagedCard';
@@ -194,8 +195,12 @@ export function Board({
     return new Set(dropZonesForCard(actions, cardId).map(dropZoneId));
   }
 
-  const { drag, cardHandlers } = useHandDrag({ eligibleZones, onTap: onTapCard, onDrop: onDropCard });
-  const handlersFor = (cardId: string): DOMAttributes<HTMLDivElement> => cardHandlers(cardId);
+  // Two drag sources feed one board drag: the hand-fan scrub (useFanGesture, reported up from
+  // HandFan) and the placed-wildcard rearrange token (useHandDrag). They are mutually exclusive
+  // — you can only carry one thing — so the board reads whichever is active.
+  const { drag: rearrangeDrag, cardHandlers } = useHandDrag({ eligibleZones, onTap: onTapCard, onDrop: onDropCard });
+  const [fanDrag, setFanDrag] = useState<DragState | null>(null);
+  const drag = fanDrag ?? rearrangeDrag;
 
   // Which zones glow while a card is in the air (soft = eligible, hot = under the pointer).
   // A placed wildcard being dragged lights only its legal destination groups (B8).
@@ -305,7 +310,15 @@ export function Board({
             so the fan never underlaps the control. */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, marginTop: 'auto' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <HandFan cards={observation.myHand} interactiveIds={handTappableIds} draggingId={drag?.cardId ?? null} handlersFor={handlersFor} />
+            <HandFan
+              cards={observation.myHand}
+              interactiveIds={handTappableIds}
+              drag={drag}
+              eligibleZones={eligibleZones}
+              onTap={onTapCard}
+              onDrop={onDropCard}
+              onDragChange={setFanDrag}
+            />
           </div>
           <div style={{ width: END_TURN_COLUMN_PX, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 8 }}>
             {endTurnAction && onAct && (
