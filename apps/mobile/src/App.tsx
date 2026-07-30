@@ -5,6 +5,7 @@ import { Home } from './components/Home';
 import { Table } from './components/Table';
 import { PlateSheet } from './components/PlateSheet';
 import { CardFace } from './components/CardFace';
+import { DevWheel } from './components/DevWheel';
 import { INK, SHADOW } from './design/tokens';
 
 // Dev-only: a solo game that starts itself for the 360x740 capture frame. A fixed seed
@@ -51,6 +52,12 @@ export function App() {
   }
   if (hash === '#/dev/plates') {
     return <PlateSheet />;
+  }
+  // Dev-only (tree-shaken from prod): the hand WHEEL in isolation at N cards, in a my-area-sized
+  // band, for the H3 legibility n-series stills + the re-spacing glide clip. `#/dev/wheel/5` etc.
+  if (import.meta.env.DEV && hash.startsWith('#/dev/wheel/')) {
+    const n = Math.max(1, Math.min(12, Number(hash.slice('#/dev/wheel/'.length)) || 5));
+    return <DevWheel count={n} />;
   }
   if (hash === '#/autostart') {
     return <AutoStartTable />;
