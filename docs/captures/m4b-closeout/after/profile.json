@@ -10,22 +10,22 @@
     "wheelGlide": {
       "frames": 52,
       "p50": 16.7,
-      "p95": 16.8,
-      "max": 33.3,
+      "p95": 16.7,
+      "max": 16.8,
       "tally": {
         "Board": 14,
         "CardFace": 4
       }
     },
     "activeDrag": {
-      "frames": 92,
+      "frames": 90,
       "p50": 16.7,
       "p95": 16.7,
-      "max": 33.3
+      "max": 16.8
     },
     "tableViewOpenClose": {
       "open": {
-        "frames": 29,
+        "frames": 31,
         "p50": 16.7,
         "p95": 16.8,
         "max": 16.8,
@@ -37,14 +37,14 @@
       },
       "close": {
         "frames": 25,
-        "p50": 16.7,
-        "p95": 16.7,
-        "max": 16.7,
+        "p50": 16.6,
+        "p95": 16.8,
+        "max": 16.8,
         "tally": {
           "Board": 4
         }
       },
-      "frames": 54,
+      "frames": 56,
       "p50": 16.7,
       "p95": 16.8,
       "max": 16.8,
@@ -57,8 +57,8 @@
     "botTurnBeats": {
       "frames": 180,
       "p50": 16.7,
-      "p95": 16.8,
-      "max": 33.4,
+      "p95": 16.7,
+      "max": 16.8,
       "tally": {
         "Board": 10,
         "SetCascade": 4,
