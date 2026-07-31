@@ -9,9 +9,12 @@
  *                       badge numerals; per-card visible outer-strip % at n=2,5,7,9,11,12.
  *   --mode=overlap      H2b: the End-turn button rect vs every wheel card's rect at the live n
  *                       (and the analytic worst case n=11/12) — does any card intersect the slot?
- *   --mode=profile      H4: p95 frame time under 4× CPU throttle during a wheel glide, an active
- *                       drag, a bot turn, and TableView open/close; plus CardFace/Board render
- *                       counts during a drag (needs the dev render tally).
+ *   --mode=profile      H4/J1: p95 + WORST-frame time under 4× CPU throttle during a wheel glide, an
+ *                       active drag, a bot turn, and TableView open/close; plus per-interaction
+ *                       CardFace/Board render counts (needs the dev render tally) to root-cause the
+ *                       two flagged one-frame transitions.
+ *   --mode=memory       J2: decoded image memory on the late-game board (S6_haveli) — the sum of
+ *                       naturalW×naturalH×4 over distinct decoded plate bitmaps, before/after variants.
  *
  * It NEVER starts a dev server — it reuses the one already running (default port 5174), so the
  * session's live Vite is used and no extra process is spawned. Output: JSON on stdout + a written
@@ -31,7 +34,9 @@ const argv = Object.fromEntries(process.argv.slice(2).map((a) => {
 const MODE = String(argv.mode ?? 'legibility');
 const PORT = Number(argv.port ?? 5174);
 const DEV_URL = `http://localhost:${PORT}`;
-const OUT_DIR = resolve(REPO, 'docs/captures/excellence-pass/measurements');
+// Default output is the excellence-pass evidence dir; --out=<dir> (relative to repo) redirects it
+// so a later pass (e.g. the M4b close-out) can keep its own before/after copies without clobbering.
+const OUT_DIR = resolve(REPO, String(argv.out ?? 'docs/captures/excellence-pass/measurements'));
 const fixture = JSON.parse(readFileSync(resolve(REPO, 'tools/fixtures/scenarios.json'), 'utf8'));
 const base = (id) => ({ seed: fixture.states[id].seed, actions: fixture.states[id].actions });
 
@@ -317,10 +322,17 @@ async function profile(browser) {
   const dragTally = drag.tally;
 
   // (d) TableView open/close — tap my group open (its "tap to expand" title), then tap off to close.
-  const tableview = await measure(async () => {
-    const grp = page.locator('[title*="tap to expand"]').first();
-    if (await grp.count()) { await grp.click(); await frames(page, 350); await page.mouse.click(180, 20); await frames(page, 350); }
+  // Split so we can see WHICH frame is heavy: the open (mounts the cards, J1's progressive-reveal
+  // target) vs the close (unmount + drop the backdrop blur). The reported tableView is the worse.
+  const grpSel = '[title*="tap to expand"]';
+  const tableviewOpen = await measure(async () => {
+    const grp = page.locator(grpSel).first();
+    if (await grp.count()) { await grp.click(); await frames(page, 400); }
   });
+  const tableviewClose = await measure(async () => {
+    await page.mouse.click(180, 20); await frames(page, 400);
+  });
+  const tableview = { open: tableviewOpen, close: tableviewClose, frames: tableviewOpen.frames + tableviewClose.frames, p50: Math.max(tableviewOpen.p50, tableviewClose.p50), p95: Math.max(tableviewOpen.p95, tableviewClose.p95), max: Math.max(tableviewOpen.max, tableviewClose.max), tally: tableviewOpen.tally };
 
   // (c) a bot turn's beats — end my turn, let the bots play.
   const botTurn = await measure(async () => {
@@ -331,7 +343,56 @@ async function profile(browser) {
 
   const dom = await page.evaluate(() => ({ nodes: document.querySelectorAll('*').length, imgs: document.querySelectorAll('img').length }));
   await context.close();
-  return { mode: 'profile', board: 'S6_haveli', throttle: '4x CPU', budget: { targetMs: 16.7, ceilingMs: 33 }, frameTimes: { wheelGlide: glide, activeDrag: { frames: drag.frames, p50: drag.p50, p95: drag.p95, max: drag.max }, tableViewOpenClose: tableview, botTurnBeats: botTurn }, renderCountsDuringDrag: dragTally, domNodeCount: dom.nodes, imgCount: dom.imgs, plateImageRequestEvents: requestsDuringInteraction, plateNetworkFetchesDuringInteractions: netPlateFetches };
+  // J1: the two flagged transitions breach in their WORST single frame (max), not p95 — TableView
+  // open mounts ~10 large cards at once, the play-commit re-renders the board + starts the glide.
+  // Surfacing each interaction's render tally lets us root-cause which components repaint that frame.
+  return { mode: 'profile', board: 'S6_haveli', throttle: '4x CPU', budget: { targetMs: 16.7, ceilingMs: 33 }, frameTimes: { wheelGlide: glide, activeDrag: { frames: drag.frames, p50: drag.p50, p95: drag.p95, max: drag.max }, tableViewOpenClose: tableview, botTurnBeats: botTurn }, renderCountsDuringDrag: dragTally, renderCountsDuringGlideCommit: glide.tally, renderCountsDuringTableViewOpen: tableview.tally, domNodeCount: dom.nodes, imgCount: dom.imgs, plateImageRequestEvents: requestsDuringInteraction, plateNetworkFetchesDuringInteractions: netPlateFetches };
+}
+
+// ---- J2 decoded image memory (late-game board) -----------------------------
+// The variant win is a DECODE-memory win, so we measure the bytes the renderer must hold decoded.
+// Method (stated so the number is honest): every plate <img> on the board is force-decoded, then
+// grouped by its resolved src (the browser decodes each distinct bitmap once) and summed as
+// naturalWidth × naturalHeight × 4 (RGBA). With variants each small card's src is a downscaled file,
+// so its naturalWidth drops from 600 to its tier — cutting the decoded bytes it pins. Reported on
+// S6_haveli (richest late-game board) at DPR 2, the same fixture the profile uses.
+async function memory(browser) {
+  const context = await browser.newContext({ viewport: { width: 360, height: 740 }, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  await page.goto(`${DEV_URL}/#/autostart`, { waitUntil: 'load' });
+  await page.waitForFunction(() => typeof window.__replay === 'function', null, { timeout: 10000 });
+  const summary = await page.evaluate((b) => window.__replay(b.seed, b.actions), base('S6_haveli'));
+  await page.waitForTimeout(800); // let the game-start plate preload + first paints settle
+  const data = await page.evaluate(async () => {
+    const plateImgs = Array.from(document.querySelectorAll('img')).filter((im) => /\/plates\//.test(im.currentSrc || im.src) || /\.webp(\?|$)/.test(im.currentSrc || im.src));
+    // force-decode so naturalWidth/Height are populated and the bitmaps are actually resident
+    await Promise.all(plateImgs.map((im) => (im.decode ? im.decode().catch(() => {}) : Promise.resolve())));
+    const bySrc = new Map();
+    for (const im of plateImgs) {
+      // key by the full path (a variant shares its stem with the source across tier folders, so the
+      // filename alone would merge tiers) — display just the tail (…/<tier>/<file> or plates/<file>).
+      const full = (im.currentSrc || im.src).replace(location.origin, '');
+      const src = full.split('/').slice(-2).join('/');
+      const rect = im.getBoundingClientRect();
+      const entry = bySrc.get(full) || { src, naturalW: im.naturalWidth, naturalH: im.naturalHeight, instances: 0, maxRenderedW: 0 };
+      entry.instances += 1;
+      entry.maxRenderedW = Math.max(entry.maxRenderedW, Math.round(rect.width));
+      bySrc.set(full, entry);
+    }
+    let decodedBytes = 0;
+    const tierHistogram = {};
+    const images = [];
+    for (const e of bySrc.values()) {
+      const bytes = e.naturalW * e.naturalH * 4;
+      decodedBytes += bytes;
+      tierHistogram[e.naturalW] = (tierHistogram[e.naturalW] || 0) + 1;
+      images.push({ src: e.src, naturalW: e.naturalW, naturalH: e.naturalH, decodedKB: +(bytes / 1024).toFixed(0), instances: e.instances, maxRenderedW: e.maxRenderedW });
+    }
+    images.sort((a, b) => b.decodedKB - a.decodedKB);
+    return { distinctPlates: bySrc.size, totalPlateImgEls: plateImgs.length, decodedImageMemoryMB: +(decodedBytes / 1048576).toFixed(2), tierHistogram, images };
+  });
+  await context.close();
+  return { mode: 'memory', board: 'S6_haveli', dpr: 2, method: 'sum(naturalW*naturalH*4) over distinct decoded plate bitmaps', replay: summary, ...data };
 }
 
 async function main() {
@@ -342,6 +403,7 @@ async function main() {
     if (MODE === 'legibility') result = await legibility(browser);
     else if (MODE === 'overlap') result = await overlap(browser);
     else if (MODE === 'profile') result = await profile(browser);
+    else if (MODE === 'memory') result = await memory(browser);
     else throw new Error(`unknown mode ${MODE}`);
   } finally {
     await browser.close();

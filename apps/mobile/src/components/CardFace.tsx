@@ -10,18 +10,36 @@
  * exact face — so a table-size deed is pixel-for-pixel the same design as the hand/stage card. No
  * rules live here; values come from theme/engine data.
  */
-import { memo } from 'react';
+import { createContext, memo, useContext } from 'react';
 import type { CSSProperties } from 'react';
 import { ACTIONS, KIRAYA_DESCRIPTOR, KIRAYA_NAME, SETS } from '@sauda/engine';
 import type { Card, SetId } from '@sauda/engine';
 import { CARD, FONT, INK, SHADOW } from '../design/tokens';
 import { cardById, plateKey, propertyName, setLabels } from '../design/cardData';
-import { plateUrl, hasPlate } from '../design/plates';
+import { plateVariantUrl, hasPlate } from '../design/plates';
+import { badgeFloorEnabled, badgeFloorScale } from '../design/badgeFloor';
 import { titleInkForPlate, inkForBanner, actionBannerHex, ACTION_BANNER_HEX } from '../design/titleInk';
 import { tallyRender } from '../game/renderTally';
 
+// J2/J3: the ON-SCREEN width this face is being drawn at, or null for a full-size face. The face is
+// authored at CARD.fullWidth and transform-scaled by its wrapper (ScaledCard / the wheel), so nothing
+// INSIDE the face can see how small it ends up — this context carries that one fact down to the two
+// leaves that need it: the plate <img> (which tier to load, J2) and the value badge (whether the
+// legibility floor applies, J3). Null → full size → source plate + no floor (byte-identical face).
+const FaceRenderContext = createContext<number | null>(null);
+
+// The live device pixel ratio (1 under jsdom / SSR). Used to size the plate tier and the badge floor
+// in DEVICE px, which is what both the legibility bar and the decode budget are actually measured in.
+function currentDpr(): number {
+  return typeof window !== 'undefined' && window.devicePixelRatio ? window.devicePixelRatio : 1;
+}
+
 export interface CardFaceProps {
   cardId: string;
+  // J2/J3: the width this face will occupy on screen after its wrapper's transform-scale. Callers
+  // that shrink the face (ScaledCard, the hand wheel) pass it so the plate can load a smaller tier and
+  // the value badge can hold its legibility floor. Omitted = full size (source plate, no floor).
+  renderedWidth?: number;
 }
 
 // G4 LAW (owner playtest 2): every card anywhere is this ONE real face — no symbolic minis, ever.
@@ -29,13 +47,19 @@ export interface CardFaceProps {
 // H4: memoised — a card face depends ONLY on its cardId, so a board re-render (e.g. a drag
 // pointermove updating a zone glow) never re-renders the face itself. This is the main perf lever:
 // during a drag only the dragged layer changes, not every placed/hand card's plate + SVG work.
-export const CardFace = memo(function CardFace({ cardId }: CardFaceProps) {
+export const CardFace = memo(function CardFace({ cardId, renderedWidth }: CardFaceProps) {
   if (import.meta.env.DEV) tallyRender('CardFace');
   const card = cardById(cardId);
   if (!card) {
     return null;
   }
-  return <FullFace card={card} />;
+  // Publish the on-screen size to the plate + badge below. `renderedWidth ?? null` keeps a full-size
+  // face (no prop) at the context default, so it loads the source plate and never floors the badge.
+  return (
+    <FaceRenderContext.Provider value={renderedWidth ?? null}>
+      <FullFace card={card} />
+    </FaceRenderContext.Provider>
+  );
 });
 
 // Render the FULL card face scaled to an exact pixel width — the ONE mechanism for showing a real
@@ -50,7 +74,9 @@ export const ScaledCard = memo(function ScaledCard({ cardId, width }: { cardId: 
   return (
     <div style={{ width, height, position: 'relative' }}>
       <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-        <CardFace cardId={cardId} />
+        {/* tell the face its true on-screen width so it loads the right plate tier (J2) and can hold
+            the badge legibility floor (J3) — `width` here IS the rendered width after the scale. */}
+        <CardFace cardId={cardId} renderedWidth={width} />
       </div>
     </div>
   );
@@ -84,8 +110,11 @@ function frameStyle(): CSSProperties {
 // --- plate layer -----------------------------------------------------------
 
 function Plate({ card }: { card: Card }) {
-  // Action cards resolve to a single per-kind plate; others use their own id.
-  const url = plateUrl(plateKey(card));
+  // Action cards resolve to a single per-kind plate; others use their own id. J2: pick the plate tier
+  // for this face's on-screen size (from the context) so a 14–38 px board card loads a ~160 px webp,
+  // not the full 600 px one — the decode-memory win. Full-size faces (null) get the source plate.
+  const renderedWidth = useContext(FaceRenderContext);
+  const url = plateVariantUrl(plateKey(card), renderedWidth, currentDpr());
   if (url) {
     return (
       <img
@@ -162,7 +191,24 @@ const SEAL_SIZE = 20;
 // RIGHT of centre (~(20–25, 18–21) card units, up to ~28 wide; Junctions' is the
 // largest/most offset). A 36-unit disc centred ~(23,20) covers the worst case, so
 // no painted ring ever peeks around it.
+// J3: how far to grow the badge so its numerals clear the legibility floor at this face's on-screen
+// size. Returns 1 (no change) when the floor toggle is off, at full size, or when the numerals already
+// clear the bar — so the full-size face is byte-identical and only shrunk faces are ever affected.
+function badgeFloorGrow(renderedWidth: number | null): number {
+  if (renderedWidth == null || !badgeFloorEnabled()) {
+    return 1;
+  }
+  const faceScale = renderedWidth / CARD.fullWidth;
+  return badgeFloorScale(faceScale, currentDpr());
+}
+
 function ValueBadge({ value, ink }: { value: number; ink: string }) {
+  const renderedWidth = useContext(FaceRenderContext);
+  const grow = badgeFloorGrow(renderedWidth);
+  // Anchor the growth at the badge's top-left corner (top:2, left:5) so it pushes into the card, never
+  // off its edge — the map-label pattern. Only applied when grow > 1, so the untouched case renders
+  // exactly as before (no transform, no new compositing layer).
+  const floorStyle: CSSProperties = grow > 1 ? { transform: `scale(${grow})`, transformOrigin: 'top left' } : {};
   return (
     <div
       style={{
@@ -181,6 +227,7 @@ function ValueBadge({ value, ink }: { value: number; ink: string }) {
         letterSpacing: '-0.03em',
         fontSize: 7,
         ...mono(700),
+        ...floorStyle,
       }}
     >
       ₹{value} Cr

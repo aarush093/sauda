@@ -52,7 +52,33 @@ export const SetCascade = memo(function SetCascade({
       )}
     </div>
   );
-});
+}, sameCascade);
+
+// J1: the engine rebuilds its Observation — and every PropertyGroup inside it — on EVERY dispatch, so
+// the default reference memo MISSES on every commit: measured, banking a single card re-ran ~44
+// SetCascades (their faces are memoised so the plates didn't repaint, but the wrapper reconcile still
+// cost the frame, pushing the commit over the 33 ms ceiling). PropertyGroup.cards / .buildings are
+// arrays of stable string ids, so comparing CONTENT instead of identity lets an unchanged cascade skip
+// the re-render entirely — a cascade re-renders only when its cards, buildings, width or rent actually
+// change. This makes every commit that doesn't touch a given group free for that group.
+function sameCascade(prev: { group: PropertyGroup; width: number; rent?: number | undefined }, next: { group: PropertyGroup; width: number; rent?: number | undefined }): boolean {
+  return prev.width === next.width && prev.rent === next.rent && sameIds(prev.group.cards, next.group.cards) && sameIds(prev.group.buildings, next.group.buildings);
+}
+
+function sameIds(a: readonly string[], b: readonly string[]): boolean {
+  if (a === b) {
+    return true;
+  }
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let index = 0; index < a.length; index++) {
+    if (a[index] !== b[index]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 const ribbonStyle: CSSProperties = {
   position: 'absolute',

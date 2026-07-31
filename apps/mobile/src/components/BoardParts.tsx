@@ -4,6 +4,7 @@
  * numbers in the vintage token styles. The property parts additionally act as DROP ZONES
  * (A10): they carry a `data-drop` id and glow when a dragged card may land on them.
  */
+import type { CSSProperties } from 'react';
 import { SETS } from '@sauda/engine';
 import type { PropertyGroup, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
@@ -45,6 +46,7 @@ function MiniGroup({
   soft,
   hot,
   onExpand,
+  expandHint,
 }: {
   set: SetId;
   group: PropertyGroup;
@@ -54,6 +56,7 @@ function MiniGroup({
   soft?: boolean | undefined;
   hot?: boolean | undefined;
   onExpand?: (() => void) | undefined;
+  expandHint?: boolean | undefined; // J4 touch audit: show a visible "tap to enlarge" glyph (my groups)
 }) {
   const theme = SETS[set];
   const boxShadow = hot ? GLOW.hot : soft ? GLOW.soft : undefined;
@@ -65,9 +68,30 @@ function MiniGroup({
       title={`${theme.label} ${group.cards.length}/${theme.size} — tap to expand`}
     >
       <SetCascade group={group} width={width} rent={rent} />
+      {/* J4 touch audit: on a touch screen there's no cursor, so tap-to-expand needs a VISIBLE mark —
+          the same ⤢ the opponent pills got (H1a). Top-left corner (clear of the FULL / rent / building
+          badges), on a small translucent chip so it reads over any plate art at board-cascade size. */}
+      {expandHint && (
+        <span aria-hidden style={expandHintStyle}>⤢</span>
+      )}
     </div>
   );
 }
+
+const expandHintStyle: CSSProperties = {
+  position: 'absolute',
+  top: 2,
+  left: 2,
+  zIndex: 100,
+  padding: '0 2px',
+  borderRadius: 3,
+  background: STAGE.scrimSheet,
+  color: STAGE.accentGold,
+  fontFamily: FONT.mono,
+  fontSize: 10,
+  lineHeight: 1.2,
+  pointerEvents: 'none', // purely a hint; the whole cascade already taps
+};
 
 // A dashed placeholder where dragging a property/wildcard would START A NEW group of a
 // colour I don't yet hold (§3). It is a drop zone in its own right.
@@ -142,6 +166,9 @@ export function GroupRow({
             soft={droppable && !hot}
             hot={hot}
             onExpand={onSetPlace ? () => onSetPlace(set) : onExpand}
+            // show the ⤢ only when the tap actually EXPANDS (not during receive-placement, where the
+            // glowing sets are the affordance and a tap places the card instead).
+            expandHint={!onSetPlace && Boolean(onExpand)}
           />
         );
       })}

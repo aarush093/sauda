@@ -6,10 +6,11 @@
  * plate is missing.
  */
 import { CARD, INK, FONT, SHADOW } from '../design/tokens';
-import { cardBackUrl } from '../design/plates';
+import { cardBackVariantUrl } from '../design/plates';
 
 export function CardBack({ width, seal = true }: { width: number; seal?: boolean }) {
-  const url = cardBackUrl();
+  // J2: load the plate tier for this back's on-screen width, not the full 600 px source.
+  const url = cardBackVariantUrl(width);
   const height = Math.round(width * CARD.ratio);
   // A large raster back downscaled to a tiny hand-count pip reads jagged (F4). Below this width we
   // skip the image and show a clean vintage-indigo tile with the gold keyline — crisp at any size.

@@ -5,6 +5,7 @@
  * Tap anywhere off the cards to close. It reads only the Observation the board already has; it
  * decides nothing and dispatches nothing.
  */
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { SETS } from '@sauda/engine';
 import type { PropertyGroup, SetId } from '@sauda/engine';
@@ -13,6 +14,12 @@ import { STAGE, FONT } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 const EXPAND_CARD_PX = 92; // large + readable — the point of the expand
+// J1: opening this view mounts ~10 large (92 px) real cards — measured, painting all of them in the
+// single open frame cost 66 ms under 4× throttle (well over the 33 ms ceiling). So we reveal ONE group
+// per frame instead of all at once: the end state is identical (every card shown within ~8 frames,
+// ≈130 ms) but the worst frame only paints a single group's cards. This is a load-spread, not a
+// designed animation — nothing eases, cards just appear a frame or two apart.
+const REVEAL_BATCH = 1;
 
 export function TableView({
   title,
@@ -36,6 +43,19 @@ export function TableView({
     });
   }
 
+  // J1: how many groups have been mounted so far. Starts at ZERO so the FIRST frame paints only the
+  // shell (scrim + blur + header) — the frame that already carries the board re-render and the
+  // backdrop-blur setup — then grows a batch per animation frame until every group is shown. So no
+  // single frame does the shell AND the cards; the heavy card mount is spread across later frames.
+  const [revealed, setRevealed] = useState(0);
+  useEffect(() => {
+    if (revealed >= groups.length) {
+      return; // all groups mounted — stop scheduling
+    }
+    const frame = requestAnimationFrame(() => setRevealed((count) => count + REVEAL_BATCH));
+    return () => cancelAnimationFrame(frame);
+  }, [revealed, groups.length]);
+
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={headerStyle}>
@@ -47,7 +67,7 @@ export function TableView({
         {groups.length === 0 ? (
           <div style={emptyStyle}>No sets on the table yet.</div>
         ) : (
-          groups.map(({ set, group, index }) => (
+          groups.slice(0, revealed).map(({ set, group, index }) => (
             <div key={`${set}-${index}`} style={groupColumnStyle}>
               <div style={setLabelStyle}>{SETS[set].label}</div>
               <SetCascade group={group} width={EXPAND_CARD_PX} rent={kiraya?.[set]?.[index]} />

@@ -127,7 +127,9 @@ export function HandWheel({
                 }}
               >
                 <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', pointerEvents: 'none' }}>
-                  <CardFace cardId={id} />
+                  {/* the wheel scales the face inline (not via ScaledCard), so pass the rendered width
+                      explicitly — the plate loads its tier (J2) and the badge can hold its floor (J3). */}
+                  <CardFace cardId={id} renderedWidth={cardWidth} />
                 </div>
               </div>
             </div>
