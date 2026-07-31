@@ -1,0 +1,231 @@
+{
+  "mode": "memory",
+  "board": "S6_haveli",
+  "dpr": 2,
+  "method": "sum(naturalW*naturalH*4) over distinct decoded plate bitmaps",
+  "replay": {
+    "ok": true,
+    "applied": 208,
+    "total": 208,
+    "phase": "playing",
+    "actor": 0,
+    "handLen": 2
+  },
+  "distinctPlates": 26,
+  "totalPlateImgEls": 28,
+  "decodedImageMemoryMB": 4.11,
+  "tierHistogram": {
+    "160": 25,
+    "320": 1
+  },
+  "images": [
+    {
+      "src": "320/action_makaan.webp",
+      "naturalW": 320,
+      "naturalH": 464,
+      "decodedKB": 580,
+      "instances": 1,
+      "maxRenderedW": 109
+    },
+    {
+      "src": "160/prop_jaipur_2.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 14
+    },
+    {
+      "src": "160/prop_kolkata_0.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 14
+    },
+    {
+      "src": "160/prop_bangalore_2.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 14
+    },
+    {
+      "src": "160/prop_bangalore_0.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 14
+    },
+    {
+      "src": "160/prop_kashi_0.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 18
+    },
+    {
+      "src": "160/prop_jaipur_1.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 18
+    },
+    {
+      "src": "160/prop_chennai_2.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 18
+    },
+    {
+      "src": "160/prop_junction_0.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 18
+    },
+    {
+      "src": "160/prop_junction_2.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 18
+    },
+    {
+      "src": "160/prop_junction_3.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 18
+    },
+    {
+      "src": "160/prop_jaipur_0.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 15
+    },
+    {
+      "src": "160/prop_kolkata_1.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 15
+    },
+    {
+      "src": "160/prop_junction_1.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 15
+    },
+    {
+      "src": "160/prop_utility_1.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 15
+    },
+    {
+      "src": "160/card_back.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 3,
+      "maxRenderedW": 36
+    },
+    {
+      "src": "160/prop_puraniDilli_1.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 37
+    },
+    {
+      "src": "160/prop_puraniDilli_0.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 37
+    },
+    {
+      "src": "160/prop_kashi_2.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 37
+    },
+    {
+      "src": "160/prop_chennai_1.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 37
+    },
+    {
+      "src": "160/prop_chennai_0.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 37
+    },
+    {
+      "src": "160/prop_newDelhi_0.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 37
+    },
+    {
+      "src": "160/prop_mumbai_0.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 37
+    },
+    {
+      "src": "160/prop_utility_0.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 37
+    },
+    {
+      "src": "160/action_haveli.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 77
+    },
+    {
+      "src": "160/money_1.webp",
+      "naturalW": 160,
+      "naturalH": 232,
+      "decodedKB": 145,
+      "instances": 1,
+      "maxRenderedW": 77
+    }
+  ]
+}

@@ -129,3 +129,39 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
 - **Evidence over assertion.** Anything that moves is proven by a committed `.webm` clip recorded from
   the real UI; every number (px sizes, frame times, overlap n-values, inter-turn waits) comes from a
   rerunnable measurement script, not a claim.
+
+## M4b — close-out pass (J): finish the flags, ship to the phone
+
+- **A "one-frame transition" hitch is a mount/paint cost, not a design problem.** Two interactions
+  breached the 33ms ceiling in their *worst* frame (not their p95). Rather than guess, I made the
+  profiler print a per-interaction render tally. It showed the culprits exactly: opening the expand
+  view painted 16 big card faces in a single frame, and *committing any play* re-rendered ~44 set
+  cascades. Naming the cost is 90% of fixing it.
+- **Memoisation only works if the compared value is stable.** The cascades re-rendered on every commit
+  because the engine hands back a fresh `Observation` — new `PropertyGroup` objects — each dispatch, so
+  a by-reference `React.memo` always saw "different". Switching to a *content* comparator (same card
+  ids? same buildings?) means an untouched set skips the render entirely: banking a card now re-renders
+  **0** cascades instead of 88. This is the whole trick — compare what actually changed, not the wrapper.
+- **Spreading a mount across frames: the empty first frame matters.** The expand view now reveals one
+  group per animation frame. The non-obvious bit: it must start from **zero** groups, because the first
+  frame is already the expensive one (it does the board re-render + the backdrop-blur setup). Letting
+  even one card ride that frame kept it at 66ms; deferring *all* cards to frame 2+ dropped it to 17ms.
+- **`srcset` can't help when you scale with a transform.** Every card is drawn at 132px then
+  `transform: scale()`-ed down, so the browser only ever sees a 132px `<img>` box — it can't pick a
+  smaller source itself. So the component that knows the *real* on-screen width passes it down as an
+  explicit hint, and a pure function picks the smallest pre-built tier that covers width×DPR. A 14px
+  board card stops pinning a 2MB 600px bitmap; decoded board memory falls **52MB → 4MB**.
+- **The build step that never touches the source.** A tiny sharp script derives 160px + 320px webp
+  variants of all 45 plates into a `variants/` folder. The originals are the source of truth; the
+  variants are pure build outputs (regenerate any time). Vite's `import.meta.glob` picks them up with
+  zero config, and if they're missing the runtime just falls back to the full plate — nothing breaks.
+- **A legibility floor is the map-label trick.** Below the size where the value badge's numerals would
+  drop under 10 device px, the badge stops shrinking and instead *grows* relative to the card, anchored
+  at its corner — exactly how a city label on a map stays readable as you zoom out. It's a pure
+  function of (face scale, DPR), it's a no-op at full size (so the big card is byte-identical, proven by
+  a screenshot hash), and it ships behind a default-off toggle because it's the owner's aesthetic call.
+- **Fingers, not a mouse.** Every playtest was mouse + devtools, but the input model is touch. The
+  audit found the gestures were already pointer-events (so touch works), but one affordance was
+  *cursor-only* — my own sets were tap-to-expand with only a hover cursor + tooltip to say so, invisible
+  on a phone. Same fix as the opponents got: a visible ⤢ glyph. Then `vite --host` + a terminal QR puts
+  the build on the real phone (with a USB `adb reverse` fallback for wifi that isolates clients).

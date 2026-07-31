@@ -1,0 +1,86 @@
+{
+  "mode": "profile",
+  "board": "S6_haveli",
+  "throttle": "4x CPU",
+  "budget": {
+    "targetMs": 16.7,
+    "ceilingMs": 33
+  },
+  "frameTimes": {
+    "wheelGlide": {
+      "frames": 52,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 33.3,
+      "tally": {
+        "Board": 14,
+        "CardFace": 4
+      }
+    },
+    "activeDrag": {
+      "frames": 92,
+      "p50": 16.7,
+      "p95": 16.7,
+      "max": 33.3
+    },
+    "tableViewOpenClose": {
+      "open": {
+        "frames": 29,
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8,
+        "tally": {
+          "Board": 2,
+          "SetCascade": 12,
+          "CardFace": 16
+        }
+      },
+      "close": {
+        "frames": 25,
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.7,
+        "tally": {
+          "Board": 4
+        }
+      },
+      "frames": 54,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 16.8,
+      "tally": {
+        "Board": 2,
+        "SetCascade": 12,
+        "CardFace": 16
+      }
+    },
+    "botTurnBeats": {
+      "frames": 180,
+      "p50": 16.7,
+      "p95": 16.8,
+      "max": 33.4,
+      "tally": {
+        "Board": 10,
+        "SetCascade": 4,
+        "CardFace": 12
+      }
+    }
+  },
+  "renderCountsDuringDrag": {
+    "Board": 6,
+    "CardFace": 2
+  },
+  "renderCountsDuringGlideCommit": {
+    "Board": 14,
+    "CardFace": 4
+  },
+  "renderCountsDuringTableViewOpen": {
+    "Board": 2,
+    "SetCascade": 12,
+    "CardFace": 16
+  },
+  "domNodeCount": 1429,
+  "imgCount": 32,
+  "plateImageRequestEvents": [],
+  "plateNetworkFetchesDuringInteractions": []
+}
