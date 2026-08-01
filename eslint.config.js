@@ -16,8 +16,8 @@ export default tseslint.config(
     },
   },
   {
-    // Dev-only build/capture scripts run under Node; `window` appears inside the Playwright
-    // page.evaluate callbacks in capture.mjs (those run in the browser, not Node).
+    // Dev-only build/capture scripts run under Node; the browser globals below appear inside the
+    // Playwright page.evaluate callbacks (those run in the page, not Node) — document/window/rAF/etc.
     files: ['**/scripts/**', '**/*.mjs'],
     languageOptions: {
       globals: {
@@ -27,6 +27,10 @@ export default tseslint.config(
         URL: 'readonly',
         setTimeout: 'readonly',
         window: 'readonly',
+        document: 'readonly',
+        location: 'readonly',
+        getComputedStyle: 'readonly',
+        requestAnimationFrame: 'readonly',
       },
     },
   },

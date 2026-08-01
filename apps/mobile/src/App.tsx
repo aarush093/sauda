@@ -7,6 +7,7 @@ import { PlateSheet } from './components/PlateSheet';
 import { CardFace } from './components/CardFace';
 import { DevWheel } from './components/DevWheel';
 import { preloadPlates } from './design/plates';
+import { Hud, hudEnabled } from './dev/Hud';
 import { INK, SHADOW } from './design/tokens';
 
 // Dev-only: a solo game that starts itself for the 360x740 capture frame. A fixed seed
@@ -33,7 +34,12 @@ function AutoStartTable() {
       console.warn(`[frame360] play screen scrolls: ${root.scrollHeight}px > ${window.innerHeight}px viewport`);
     }
   });
-  return state ? <Table /> : null;
+  return state ? (
+    <>
+      <Table />
+      {hudEnabled() && <Hud />}
+    </>
+  ) : null;
 }
 
 export function App() {
@@ -79,5 +85,10 @@ export function App() {
     );
   }
 
-  return <div className="app">{state === null ? <Home /> : <Table />}</div>;
+  return (
+    <div className="app">
+      {state === null ? <Home /> : <Table />}
+      {hudEnabled() && <Hud />}
+    </div>
+  );
 }

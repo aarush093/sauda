@@ -17,6 +17,7 @@
     "play": "pnpm --filter @sauda/tools play",
     "simulate": "pnpm --filter @sauda/tools simulate",
     "capture": "pnpm --filter @sauda/mobile capture",
+    "capture:phone": "pnpm --filter @sauda/mobile capture:phone",
     "dev:lan": "pnpm --filter @sauda/mobile dev:lan",
     "phone": "pnpm --filter @sauda/mobile phone:connect",
     "plates:variants": "pnpm --filter @sauda/mobile plates:variants"

@@ -1,0 +1,10 @@
+{
+  "note": "Real-device testbed (PHONE-1, owner phone test 1 Aug). The canonical portrait profiles every capture/measure/profile run drives, so 'works on my desktop' can never masquerade as 'works on a phone'. Shared single source: the TS wrapper (deviceProfiles.ts) and the Node capture script (capture-phone.mjs) both read THIS file, so a profile is edited in one place. Widths/heights are CSS px (the layout viewport); dpr is the real deviceScaleFactor; reducedMotion drives Playwright's reducedMotion + the app's prefers-reduced-motion.",
+  "profiles": [
+    { "id": "legacy-360x740", "label": "Legacy small (360x740)", "width": 360, "height": 740, "dpr": 3, "reducedMotion": false },
+    { "id": "compact-360x800", "label": "Compact (360x800)", "width": 360, "height": 800, "dpr": 3, "reducedMotion": false },
+    { "id": "mid-384x832", "label": "Mid (384x832)", "width": 384, "height": 832, "dpr": 2.75, "reducedMotion": false },
+    { "id": "tall-412x915", "label": "Tall (412x915)", "width": 412, "height": 915, "dpr": 2.625, "reducedMotion": false },
+    { "id": "reduced-412x915", "label": "Tall + reduced motion (412x915)", "width": 412, "height": 915, "dpr": 2.625, "reducedMotion": true }
+  ]
+}

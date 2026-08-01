@@ -36,6 +36,14 @@ export const STAGE = {
   scrimSheet: 'rgba(20,18,31,0.35)', // ~35% behind bottom sheets / handoff (Phase 3)
 } as const;
 
+// Dev-only HUD chrome (P2 — never shipped: rendered only under `?hud=1` in a dev build). Kept in
+// tokens so the colour-constancy guard stays green; it is not part of the game's visual language.
+export const DEV_HUD = {
+  panelFill: 'rgba(20,18,31,0.82)', // dark ink scrim so the readout is legible over any zone
+  panelText: INK.creamBlue,
+  panelBorder: 'rgba(232,184,75,0.5)', // the gold accent at half strength
+} as const;
+
 // Soft elevation only (2–8 dp) — the vintage-paper world has weight, not neon.
 export const SHADOW = {
   titleKeyline: '0 0 1.5px rgba(20,18,31,0.85), 0 1px 1px rgba(20,18,31,0.55)', // cream title halo
@@ -68,6 +76,35 @@ export const FONT = {
 export const CARD = {
   ratio: 145 / 100,
   fullWidth: 132,
+} as const;
+
+// The ONE stacking scale (P2 — owner phone test 1 Aug). The owner's phone showed dark slabs and
+// ticker text drawn OVER cards — classic ad-hoc-z-index bugs (a slab at z8 above a card at z4).
+// Every zIndex in the app is now drawn from HERE, low → high, so "what draws over what" is one
+// ordered list instead of a scatter of magic numbers. A lint gate (eslint no-restricted-syntax)
+// bans raw numeric `zIndex:` literals so nothing can drift off this scale again.
+//
+// Order (bottom → top): the felt, then the board's own bands, then the drag ghost, then the modal
+// surfaces the game waits on, then transient toasts, the end panel, and the debug HUD on top.
+// INSPECT sits BELOW the drag ghost on purpose: you can drag a card straight out of the inspect
+// overlay to commit, so the floating ghost must ride above it.
+export const LAYERS = {
+  felt: 0, // the table background
+  board: 1, // the board's static content (groups, bank, pile, headers)
+  myArea: 2, // my area band (over the felt, sleeps off-turn)
+  wheel: 3, // the hand wheel — over my area so a peeked card lifts clear
+  ticker: 4, // the 2-line ticker on centre stage
+  stage: 5, // the centre-stage spotlight card — brightest thing during a play (must beat ticker)
+  inspect: 10, // the tap-to-inspect card (drag-through: the ghost rides above it)
+  dropBand: 12, // P3: the inflated thumb-sized drop band, over the board, under the ghost
+  dragGhost: 20, // the floating dragged card — above the board + inspect, below modal surfaces
+  surface: 30, // modal surfaces the game waits on: discard, targeting, rearrange, table view, beat
+  sheet: 40, // response windows: the payment sheet, the NAHI CHALEGA prompt
+  advice: 45, // the Munshi advice card — above sheets (it explains the board beneath it)
+  toast: 50, // P3: a transient one-line hint ("drop on a glowing set")
+  end: 60, // the game-over panel — above every in-play surface
+  badge: 70, // a label/badge pinned over its own card art (local, but on the shared scale)
+  hud: 90, // the dev HUD debug instrument — top of everything
 } as const;
 
 // §2.4 motion tokens (consumed by the fx layer in M4c).
