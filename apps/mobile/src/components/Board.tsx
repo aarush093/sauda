@@ -33,41 +33,14 @@ import { RearrangeChooser } from './RearrangeChooser';
 import { Ticker } from './Ticker';
 import { HandWheel } from './HandWheel';
 import { MunshiChip } from './MunshiChip';
+import { TurnToken } from './TurnToken';
 import { BankStack, DiscardTop, DrawPile, GroupRow, OpponentGroupStrip, PlayerHeader, seatName } from './BoardParts';
 import { STAGE, INK, SHADOW, FONT, GLOW } from '../design/tokens';
 import { tallyRender } from '../game/renderTally';
 
 
-const STAGE_CARD_PX = 112; // the centre-stage spotlight card — bigger than a table card, fully readable
+const STAGE_CARD_PX = 112; // the received-card stage size — bigger than a table card, fully readable
 
-const goldFilledButton: CSSProperties = {
-  padding: '12px 22px',
-  borderRadius: 999,
-  border: 'none',
-  background: STAGE.accentGold,
-  color: INK.deepInk,
-  fontFamily: FONT.display,
-  fontWeight: 700,
-  fontSize: 16,
-  cursor: 'pointer',
-};
-// H2b (excellence pass): End turn lives in the my-area HEADER row, by the bank — compact so it never
-// grows the header (≤ the "You" pill height) and so the wheel band below keeps its full budget. It
-// is NO LONGER floated in the wheel band's corner, where it overlapped the splayed card tops at many
-// hand sizes (measured n=5..12 @346). One fixed slot, geometrically disjoint from the wheel.
-const endTurnButton: CSSProperties = {
-  padding: '5px 12px',
-  borderRadius: 999,
-  background: 'transparent',
-  color: STAGE.accentGold,
-  border: `1.5px solid ${INK.gold}`,
-  fontFamily: FONT.display,
-  fontWeight: 700,
-  fontSize: 13,
-  cursor: 'pointer',
-  whiteSpace: 'nowrap',
-  flexShrink: 0,
-};
 // A placed wildcard's rearrange handle (B8): drag it onto a group, or tap for the chooser.
 const rearrangeToken: CSSProperties = {
   padding: '4px 10px',
@@ -98,7 +71,6 @@ export function Board({
   tickerLines = [],
   spotlightCardId = null,
   spotlightFromOpponent = false,
-  autoEnding = false,
   receive = null,
 }: {
   observation: Observation;
@@ -108,7 +80,6 @@ export function Board({
   tickerLines?: string[];
   spotlightCardId?: string | null; // a bot's held card (I1) or the human's just-played beat (F4)
   spotlightFromOpponent?: boolean; // K2: an opponent's card travels UP to their row, mine DOWN to my area
-  autoEnding?: boolean; // F2: the turn is auto-ending — hide the manual End turn button
   // G6: a wildcard reached me as payment and needs a group (matrix C7). It lands on stage; its
   // legal destination sets glow; I drag it home (or tap a glowing set). bySet maps each legal set
   // to the exact RESPOND_PLACE_RECEIVED the engine enumerated.
@@ -265,6 +236,9 @@ export function Board({
     onDragCancel: dragCtl.cancel,
   });
   const drag = preview;
+  // K3: a placed-wildcard rearrange being carried right now — it pauses the turn token's auto-end
+  // drain (a rearrange is free and may still be made after the plays are spent).
+  const rearrangeActive = preview !== null && rearrangeableIds.has(preview.cardId);
 
   // Which zones glow while a card is in the air (soft = eligible, hot = under the pointer).
   // A placed wildcard being dragged lights only its legal destination groups (B8).
@@ -356,8 +330,6 @@ export function Board({
                 Drag it to a glowing set — or tap one
               </span>
             </div>
-          ) : declareWinAction && onAct ? (
-            <button onClick={() => onAct(declareWinAction)} style={goldFilledButton}>Declare SAUDA!</button>
           ) : playEligible ? (
             <span style={{ fontFamily: FONT.display, fontWeight: 700, color: STAGE.accentGold }}>Play</span>
           ) : null}
@@ -372,23 +344,27 @@ export function Board({
       {/* my area (42%, G4 zone retune) — still the largest zone (hierarchy law A2); sleeps off-turn. */}
       <div style={zone(42, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          {/* left: the You identity + the Munshi advisor chip (K3 — restyled to read unmistakably as
+              an advisor, never confusable with the turn token). */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <PlayerHeader name="You" bankTotal={observation.myBankTotal} handCount={observation.myHand.length} active={myTurn} self />
-            {/* Munshi chip by my avatar — its own read-only decision surface (never pushes layout,
-                never collides with the End-turn column below). */}
             <MunshiChip available={munshiAvailable} />
           </div>
-          {/* right cluster: End turn (H2b — its one fixed slot, by the bank) then the bank drop zone.
-              End turn shows whenever END_TURN is legal AND the turn isn't auto-ending (F2) — so a
-              deliberate EARLY end while plays remain is always reachable, never eaten. */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            {endTurnAction && onAct && !autoEnding && (
-              <button onClick={() => onAct(endTurnAction)} style={endTurnButton}>End turn</button>
-            )}
-            {/* the bank is a drop zone for money / bankable actions (never a wildcard). */}
-            <div data-drop="bank" style={{ borderRadius: 8, padding: 3, flexShrink: 0, whiteSpace: 'nowrap', boxShadow: hotZoneId === 'bank' ? GLOW.hot : bankEligible ? GLOW.soft : 'none' }}>
-              <BankStack count={observation.myBank.length} total={observation.myBankTotal} />
-            </div>
+          {/* centre: the TURN TOKEN (K3) — the plays display + end / auto-end / SAUDA! declare, all in
+              one gold control. It replaces the End turn button, the F2 "turn over" beat and the
+              centre-stage Declare button. */}
+          <TurnToken
+            active={myTurn && !inDiscardMode}
+            playsRemaining={observation.playsRemaining}
+            winLegal={!!declareWinAction}
+            endTurnLegal={!!endTurnAction}
+            rearrangeActive={rearrangeActive}
+            onEndTurn={() => { if (endTurnAction && onAct) onAct(endTurnAction); }}
+            onDeclareWin={() => { if (declareWinAction && onAct) onAct(declareWinAction); }}
+          />
+          {/* right: the bank drop zone (money / bankable actions only; never a wildcard). */}
+          <div data-drop="bank" style={{ borderRadius: 8, padding: 3, flexShrink: 0, whiteSpace: 'nowrap', boxShadow: hotZoneId === 'bank' ? GLOW.hot : bankEligible ? GLOW.soft : 'none' }}>
+            <BankStack count={observation.myBank.length} total={observation.myBankTotal} />
           </div>
         </div>
         <div style={{ minHeight: 0, overflow: 'hidden' }}>

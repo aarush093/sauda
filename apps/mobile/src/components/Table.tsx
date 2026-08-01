@@ -17,7 +17,7 @@ import type { Action, GameEvent, GameState, PropertyGroup, SetId } from '@sauda/
 import { actorOf, useGame, viewSeat } from '../game/store';
 import type { SeatConfig } from '../game/store';
 import { paymentDetails } from '../game/paymentModel';
-import { botBeatDelayMs, shouldAutoEndTurn, zeroPayableResponse } from '../game/interaction';
+import { botBeatDelayMs, zeroPayableResponse } from '../game/interaction';
 import { describeThreat } from '../game/labels';
 import { Board } from './Board';
 import { Surface } from './Surface';
@@ -48,7 +48,6 @@ function completedSets(state: GameState, player: number): { set: SetId; group: P
 }
 
 const BEAT_MS = 500; // L1: the pause before an auto-resolve so the player reads it
-const AUTO_END_MS = 800; // F2: the beat before the turn ends itself when only END_TURN is legal
 const HUMAN_PLAY_BEAT_MS = 800; // F4: how long the human's just-played card is held on centre stage
 
 // A move the UI plays for the human because there is nothing to decide (|legalActions|==1):
@@ -150,25 +149,15 @@ export function Table() {
       }
     }
   }
-  // F2: the turn ends itself when END_TURN is the only legal move (no play / DECLARE_WIN / free
-  // REARRANGE_WILDCARD). A brief beat announces the hand-over, then END_TURN dispatches; if the
-  // hand is over the limit this flows into the discard step exactly as a manual End turn would.
-  let autoEndNote: string | null = null;
-  if (state && state.phase === 'playing' && handoffSeat === null) {
-    const turnActor = actorOf(state);
-    if (seats[turnActor]?.kind === 'human' && turnActor === state.currentPlayerIndex && shouldAutoEndTurn(legalActions(state, turnActor))) {
-      const next = (state.currentPlayerIndex + 1) % state.players.length;
-      const nextName = seats[next]?.kind === 'bot' ? `Bot ${next}` : `Player ${next}`;
-      autoEndNote = `Turn over — ${nextName} plays.`;
-    }
-  }
+  // K3 (supersedes F2): the turn no longer auto-ends from HERE. The TURN TOKEN in my row owns the
+  // end of turn — its ~2.5s draining ring dispatches END_TURN once every play is spent (pausable by a
+  // rearrange, tappable to end now), and it also carries the early end and the SAUDA! declare. So
+  // there is no "turn over" beat here any more; ending still flows into the discard step (hand > 7).
 
   const autoDrawRef = useRef(false);
   autoDrawRef.current = autoDraw;
   const autoResolveRef = useRef<AutoResolve | null>(null);
   autoResolveRef.current = autoResolve;
-  const autoEndRef = useRef<string | null>(null);
-  autoEndRef.current = autoEndNote;
 
   // L4: auto-draw. Keyed on `state` so it re-checks after every applied action, and reduce
   // rejects a stray second DRAW (wrong phase), so it fires exactly once per awaitingDraw.
@@ -192,19 +181,6 @@ export function Table() {
       return; // capture freeze (dev only) — hold the beat so it can be shot (e.g. C4 zero-pay)
     }
     const timer = setTimeout(() => dispatch(pending.action), BEAT_MS);
-    return () => clearTimeout(timer);
-  }, [state, dispatch]);
-
-  // F2: auto-end after an 800 ms beat. Keyed on `state`, and reduce rejects a stray END_TURN, so
-  // it fires exactly once. Same dev capture-freeze guard so the beat can be shot.
-  useEffect(() => {
-    if (!autoEndRef.current) {
-      return;
-    }
-    if (import.meta.env.DEV && (globalThis as { __saudaCapturePaused?: boolean }).__saudaCapturePaused) {
-      return; // capture freeze (dev only) — hold the "Turn over" beat so it can be shot
-    }
-    const timer = setTimeout(() => dispatch({ type: 'END_TURN' }), AUTO_END_MS);
     return () => clearTimeout(timer);
   }, [state, dispatch]);
 
@@ -282,7 +258,6 @@ export function Table() {
         tickerLines={tickerLines}
         spotlightCardId={spotlightCardId}
         spotlightFromOpponent={botSpotlightCardId !== null}
-        autoEnding={autoEndNote !== null}
         receive={receive}
       />
 
@@ -303,13 +278,6 @@ export function Table() {
         </div>
       )}
 
-      {/* F2: the "turn over" beat — the turn is ending itself; the manual End turn button is
-          hidden (Board `autoEnding`) so it never reads as the game asking permission. */}
-      {autoEndNote && (
-        <div style={beatOverlayStyle}>
-          <Surface style={beatNoteStyle}>{autoEndNote}</Surface>
-        </div>
-      )}
 
       {/* a standing charge raises the payment sheet over the table (INTERACTION_SPEC §6).
           Private response UI waits until any pass-and-play hand-off is acked (E2). */}

@@ -75,9 +75,10 @@ export function MunshiChip({ available }: { available: boolean }) {
         style={chipStyle(enabled)}
         aria-label={spent ? 'Munshi advisor — no advice left' : `Munshi advisor — ${usesRemaining} of ${MUNSHI_USES_PER_GAME} advice left`}
       >
-        {/* the munshi's seal (◈) + one pip per unused consult. Compact by design so it never
-            crowds the avatar row; the advice card names it "Munshi ki Salah" on open. */}
+        {/* K3: the munshi's seal (◈) + a "Munshi" microlabel + one pip per unused consult — so the
+            advisor reads unmistakably as an advisor and is never confused with the turn token. */}
         <span aria-hidden style={{ fontSize: 13 }}>◈</span>
+        <span style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 10, letterSpacing: 0.2 }}>Munshi</span>
         <span style={{ display: 'flex', gap: 2 }}>
           {Array.from({ length: MUNSHI_USES_PER_GAME }).map((_, index) => (
             <span key={index} style={pipStyle(index < usesRemaining)} />
