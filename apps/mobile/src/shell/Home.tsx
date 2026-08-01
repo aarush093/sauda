@@ -1,0 +1,292 @@
+/**
+ * HOME — the game's front door (P8 shell, owner phone test 1 Aug; the K6 screen that was never
+ * built). Deep-indigo felt, the SAUDA wordmark code-drawn in a rubber-stamp ring, the theme tagline,
+ * and three doors:
+ *   • KHELO   → an inline vintage setup card (1–3 bots · difficulty) that deals straight into #/play.
+ *   • VS FRIENDS → present but stamped COMING SOON (MP1 wires it; pass-and-play is removed from the UI).
+ *   • NIYAM   → the Book (#/niyam).
+ * A first-run ribbon invites a newcomer into the Book; it never shows again after a completed game.
+ *
+ * All theme text comes from the engine theme (GAME) — no game strings live here (spec §2).
+ */
+import { useState } from 'react';
+import { GAME } from '@sauda/engine';
+import type { Difficulty } from '@sauda/bots';
+import { useGame } from '../game/store';
+import type { SeatConfig } from '../game/store';
+import { hasCompletedGame } from './firstRun';
+import { STAGE, INK, FONT, SHADOW } from '../design/tokens';
+
+function go(hash: string): void {
+  if (typeof window !== 'undefined') {
+    window.location.hash = hash;
+  }
+}
+
+export function Home() {
+  const newGame = useGame((store) => store.newGame);
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [bots, setBots] = useState(3); // solo: number of bot opponents (1–3)
+  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
+  const showRibbon = !hasCompletedGame();
+
+  function deal() {
+    const seats: SeatConfig[] = [{ kind: 'human' }];
+    for (let i = 0; i < bots; i++) {
+      seats.push({ kind: 'bot', difficulty });
+    }
+    // Any seed plays; the engine is deterministic given it (the app may use Math.random — the
+    // NO-Math.random law is the engine's, not the shell's).
+    newGame({ seats, seed: Math.floor(Math.random() * 1_000_000_000) });
+    go('#/play');
+  }
+
+  return (
+    <div style={screenStyle}>
+      <div style={{ flex: 1 }} />
+
+      {/* the rubber-stamp wordmark — code-drawn ring, no asset */}
+      <StampWordmark />
+      <div style={taglineStyle}>{GAME.tagline}</div>
+
+      <div style={{ flex: 1 }} />
+
+      {!setupOpen ? (
+        <div style={buttonsColumn}>
+          <button style={primaryButton} onClick={() => setSetupOpen(true)}>
+            KHELO
+          </button>
+          <button style={comingSoonButton} disabled title="Online multiplayer is coming soon">
+            VS FRIENDS
+            <span style={comingSoonStamp}>COMING SOON</span>
+          </button>
+          <button style={secondaryButton} onClick={() => go('#/niyam')}>
+            NIYAM
+          </button>
+        </div>
+      ) : (
+        <SetupCard
+          bots={bots}
+          difficulty={difficulty}
+          onBots={setBots}
+          onDifficulty={setDifficulty}
+          onDeal={deal}
+          onBack={() => setSetupOpen(false)}
+        />
+      )}
+
+      <div style={{ flex: 1 }} />
+
+      {showRibbon && !setupOpen && (
+        <button style={ribbonStyle} onClick={() => go('#/niyam?chapter=1')}>
+          Naye ho? Niyam se shuru karo →
+        </button>
+      )}
+    </div>
+  );
+}
+
+// The inline setup card (KHELO) — a vintage ledger slip: opponents 1–3, difficulty, then DEAL.
+function SetupCard({
+  bots,
+  difficulty,
+  onBots,
+  onDifficulty,
+  onDeal,
+  onBack,
+}: {
+  bots: number;
+  difficulty: Difficulty;
+  onBots: (n: number) => void;
+  onDifficulty: (d: Difficulty) => void;
+  onDeal: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div style={setupCardStyle}>
+      <div style={setupHeading}>New game</div>
+
+      <div style={setupRowLabel}>Opponents (bots)</div>
+      <div style={segmentRow}>
+        {[1, 2, 3].map((n) => (
+          <button key={n} style={segmentButton(bots === n)} onClick={() => onBots(n)}>
+            {n}
+          </button>
+        ))}
+      </div>
+
+      <div style={setupRowLabel}>Difficulty</div>
+      <div style={segmentRow}>
+        {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
+          <button key={d} style={segmentButton(difficulty === d)} onClick={() => onDifficulty(d)}>
+            {d[0]!.toUpperCase() + d.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      <button style={primaryButton} onClick={onDeal}>
+        DEAL
+      </button>
+      <button style={linkButton} onClick={onBack}>
+        ← Back
+      </button>
+    </div>
+  );
+}
+
+// The code-drawn rubber-stamp wordmark: two ink rings, the SAUDA name in the centre, small stars —
+// the "approved matchbox" mood. Pure SVG/CSS, no asset (the locked plate art is untouched).
+function StampWordmark() {
+  return (
+    <div style={{ position: 'relative', width: 200, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <svg viewBox="0 0 200 200" width={200} height={200} aria-hidden style={{ position: 'absolute', inset: 0 }}>
+        <circle cx={100} cy={100} r={94} fill="none" stroke={INK.gold} strokeWidth={2} opacity={0.85} />
+        <circle cx={100} cy={100} r={82} fill="none" stroke={INK.gold} strokeWidth={1} opacity={0.55} />
+      </svg>
+      <div style={{ textAlign: 'center' }}>
+        <div style={wordmarkText}>{GAME.name}</div>
+        <div style={{ color: STAGE.accentGold, fontSize: 12, letterSpacing: '0.3em', opacity: 0.8 }}>★ ★ ★</div>
+      </div>
+    </div>
+  );
+}
+
+const screenStyle = {
+  position: 'fixed',
+  inset: 0,
+  height: '100dvh',
+  width: '100vw',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  padding: 'calc(env(safe-area-inset-top, 0px) + 24px) 24px calc(env(safe-area-inset-bottom, 0px) + 24px)',
+  background: `radial-gradient(120% 80% at 50% 30%, ${INK.tableIndigo}, ${INK.deepInk})`,
+  color: STAGE.textOnFelt,
+  overflow: 'hidden',
+  overscrollBehavior: 'none',
+  touchAction: 'manipulation',
+} as const;
+
+const wordmarkText = {
+  fontFamily: FONT.display,
+  fontWeight: 700,
+  fontSize: 40,
+  letterSpacing: '0.12em',
+  color: STAGE.cardCream,
+  textShadow: SHADOW.titleKeyline,
+} as const;
+
+const taglineStyle = {
+  marginTop: 12,
+  fontFamily: FONT.serif,
+  fontStyle: 'italic',
+  fontSize: 15,
+  color: STAGE.accentGold,
+} as const;
+
+const buttonsColumn = { width: '100%', maxWidth: 320, display: 'flex', flexDirection: 'column', gap: 12 } as const;
+
+const baseButton = {
+  width: '100%',
+  minHeight: 56,
+  borderRadius: 12,
+  fontFamily: FONT.display,
+  fontWeight: 700,
+  fontSize: 18,
+  letterSpacing: '0.08em',
+  cursor: 'pointer',
+} as const;
+
+const primaryButton = {
+  ...baseButton,
+  border: `2px solid ${INK.gold}`,
+  background: STAGE.accentGold,
+  color: INK.deepInk,
+  boxShadow: STAGE.glowGold,
+} as const;
+
+const secondaryButton = {
+  ...baseButton,
+  border: `1.5px solid ${INK.gold}`,
+  background: 'transparent',
+  color: STAGE.accentGold,
+} as const;
+
+const comingSoonButton = {
+  ...baseButton,
+  position: 'relative',
+  border: `1.5px dashed ${INK.agedLine}`,
+  background: 'transparent',
+  color: STAGE.textOnFelt,
+  opacity: 0.7,
+  cursor: 'default',
+} as const;
+
+const comingSoonStamp = {
+  position: 'absolute',
+  top: 6,
+  right: 8,
+  transform: 'rotate(-8deg)',
+  border: `1px solid ${INK.stampRed}`,
+  color: INK.stampRed,
+  fontFamily: FONT.mono,
+  fontSize: 8,
+  fontWeight: 700,
+  padding: '1px 4px',
+  borderRadius: 3,
+  letterSpacing: '0.1em',
+} as const;
+
+const setupCardStyle = {
+  width: '100%',
+  maxWidth: 320,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+  padding: 18,
+  borderRadius: 14,
+  border: `1.5px solid ${INK.agedLine}`,
+  background: INK.ledgerSlip,
+  color: INK.deepInk,
+  boxShadow: SHADOW.ledgerSlip,
+} as const;
+
+const setupHeading = { fontFamily: FONT.display, fontWeight: 700, fontSize: 18, color: INK.deepInk } as const;
+const setupRowLabel = { fontFamily: FONT.serif, fontSize: 13, color: INK.mutedBrown, marginTop: 4 } as const;
+const segmentRow = { display: 'flex', gap: 8 } as const;
+
+function segmentButton(active: boolean) {
+  return {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 8,
+    fontFamily: FONT.display,
+    fontWeight: 700,
+    fontSize: 14,
+    cursor: 'pointer',
+    border: `1.5px solid ${active ? INK.gold : INK.agedLine}`,
+    background: active ? STAGE.accentGold : 'transparent',
+    color: INK.deepInk,
+  } as const;
+}
+
+const linkButton = {
+  border: 'none',
+  background: 'transparent',
+  color: INK.mutedBrown,
+  fontFamily: FONT.serif,
+  fontSize: 13,
+  cursor: 'pointer',
+  minHeight: 36,
+} as const;
+
+const ribbonStyle = {
+  border: `1px solid ${INK.gold}`,
+  borderRadius: 999,
+  background: STAGE.scrimSheet,
+  color: STAGE.accentGold,
+  fontFamily: FONT.serif,
+  fontSize: 13,
+  padding: '8px 16px',
+  cursor: 'pointer',
+} as const;

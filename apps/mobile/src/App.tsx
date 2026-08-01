@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGame } from './game/store';
 import type { SeatConfig } from './game/store';
-import { Home } from './components/Home';
+import { Home } from './shell/Home';
+import { Book } from './shell/Book';
+import { markGameCompleted } from './shell/firstRun';
 import { Table } from './components/Table';
 import { PlateSheet } from './components/PlateSheet';
 import { CardFace } from './components/CardFace';
@@ -9,6 +11,23 @@ import { DevWheel } from './components/DevWheel';
 import { preloadPlates } from './design/plates';
 import { Hud, hudEnabled } from './dev/Hud';
 import { INK, SHADOW } from './design/tokens';
+
+// Reactive hash — re-renders on hashchange, so NIYAM navigation and the back button drive the route
+// (P8 shell). It reads the LIVE window.location.hash on every render (using the event only to force a
+// re-render), so a route change that rides along with a store update — KHELO does newGame() then sets
+// the hash — is picked up on the very next render, with no dependence on hashchange event timing.
+function useHash(): string {
+  const [, forceRerender] = useState(0);
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const onChange = () => forceRerender((tick) => tick + 1);
+    window.addEventListener('hashchange', onChange);
+    return () => window.removeEventListener('hashchange', onChange);
+  }, []);
+  return typeof window !== 'undefined' ? window.location.hash : '';
+}
 
 // Dev-only: a solo game that starts itself for the 360x740 capture frame. A fixed seed
 // keeps the deal reproducible across captures, and a scroll guard warns if the play screen
@@ -46,13 +65,21 @@ function AutoStartTable() {
 
 export function App() {
   const state = useGame((store) => store.state);
-  const hash = typeof window !== 'undefined' ? window.location.hash : '';
+  const hash = useHash();
 
   // H4: warm every plate (fetch + async-decode) once on mount, so no card's first mid-game
   // appearance stalls on a webp decode on the target budget WebView.
   useEffect(() => {
     preloadPlates();
   }, []);
+
+  // P8 first-run: once a game ends, the newcomer ribbon on Home never shows again.
+  const phase = state?.phase;
+  useEffect(() => {
+    if (phase === 'gameOver') {
+      markGameCompleted();
+    }
+  }, [phase]);
 
   // Dev-only routes for M4 art / layout review.
   if (hash.startsWith('#/dev/card/')) {
@@ -87,12 +114,31 @@ export function App() {
     );
   }
 
-  // Home keeps the plain centered .app menu; the Table provides its own fixed 100dvh shell (P1),
-  // so it must NOT be wrapped in .app's max-width/padding box. The HUD floats above either.
+  // P8 shell routing. HOME is the default door; the game lives at #/play; the Book at #/niyam.
+  // Home and Book each own their own fixed felt shell, so neither is wrapped in .app.
+  const route = hash.split('?')[0];
+  const hud = hudEnabled() ? <Hud /> : null;
+  if (route === '#/niyam') {
+    return (
+      <>
+        <Book onClose={() => { window.location.hash = '#/'; }} />
+        {hud}
+      </>
+    );
+  }
+  if (route === '#/play') {
+    // A reload straight to #/play with no game in the store falls back to Home.
+    return (
+      <>
+        {state ? <Table /> : <Home />}
+        {hud}
+      </>
+    );
+  }
   return (
     <>
-      {state === null ? <div className="app"><Home /></div> : <Table />}
-      {hudEnabled() && <Hud />}
+      <Home />
+      {hud}
     </>
   );
 }

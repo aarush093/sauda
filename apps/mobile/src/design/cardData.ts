@@ -4,7 +4,7 @@
  * rules here.
  */
 import { ACTIONS, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
-import type { Card, SetId } from '@sauda/engine';
+import type { ActionKind, Card, SetId } from '@sauda/engine';
 
 const DECK = buildDeck();
 const BY_ID = new Map(DECK.map((card) => [card.id, card]));
@@ -67,4 +67,14 @@ function faceKey(card: Card): string {
 // The action descriptor / other short English tag shown under a card name.
 export function actionInfo(action: keyof typeof ACTIONS): { name: string; descriptor: string } {
   return { name: ACTIONS[action].name, descriptor: ACTIONS[action].descriptor };
+}
+
+// P8 Book: a real card id to RENDER for a set / an action, so the rules book shows the actual
+// CardFace (never a redrawn stand-in). Reads the deck, so it can never drift from the real cards.
+export function representativePropertyId(set: SetId): string | undefined {
+  return DECK.find((card) => card.kind === 'property' && card.set === set)?.id;
+}
+
+export function actionCardId(action: ActionKind): string | undefined {
+  return DECK.find((card) => card.kind === 'action' && card.action === action)?.id;
 }
