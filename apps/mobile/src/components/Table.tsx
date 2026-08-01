@@ -25,6 +25,8 @@ import { PaymentSheet } from './PaymentSheet';
 import { InterruptPrompt } from './InterruptPrompt';
 import { HandoffOverlay } from './HandoffOverlay';
 import { EndOverlay } from './EndOverlay';
+import { PauseSheet } from './PauseSheet';
+import { Book } from '../shell/Book';
 import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
@@ -89,6 +91,12 @@ export function Table() {
   const ackHandoff = useGame((store) => store.ackHandoff);
   const reset = useGame((store) => store.reset);
 
+  // P8 in-game nav (K8): the pause sheet. While `paused`, every automatic beat below is frozen (bot
+  // timer, auto-draw, auto-resolve) and the turn token's auto-end drain is held (paused prop → Board),
+  // so nothing advances behind the sheet. `showBook` opens Niyam OVER the paused game.
+  const [paused, setPaused] = useState(false);
+  const [showBook, setShowBook] = useState(false);
+
   // Drive bot turns one step at a time; each step updates state and re-runs this. H5: the delay is
   // PACED — the first beat of a bot's turn holds longest, later beats are quicker, trimming toward a
   // floor near the ~3s cap so a long turn never drags. `botBeat` tracks the beat index + elapsed
@@ -96,8 +104,8 @@ export function Table() {
   // different bot); the count advances in the timer callback, so it ticks once per real beat.
   const botBeat = useRef({ actor: -1, beats: 0, elapsed: 0 });
   useEffect(() => {
-    if (!state || state.phase === 'gameOver' || handoffSeat !== null) {
-      return;
+    if (!state || state.phase === 'gameOver' || handoffSeat !== null || paused) {
+      return; // P8: a paused game steps no bot
     }
     // Capture freeze (dev only): while the Playwright pipeline holds a recorded frame, don't
     // step the bot. `import.meta.env.DEV` folds to false in prod, so this guard — and the two
@@ -120,7 +128,7 @@ export function Table() {
       stepBot();
     }, delay);
     return () => clearTimeout(timer);
-  }, [state, handoffSeat, seats, stepBot]);
+  }, [state, handoffSeat, seats, stepBot, paused]);
 
   // Compute the automatic beats for the human holding the device. Done before the early
   // return so hook order is stable; stashed in refs so the effects (keyed on `state`) read
@@ -162,13 +170,16 @@ export function Table() {
   // L4: auto-draw. Keyed on `state` so it re-checks after every applied action, and reduce
   // rejects a stray second DRAW (wrong phase), so it fires exactly once per awaitingDraw.
   useEffect(() => {
+    if (paused) {
+      return; // P8: hold auto-draw while the pause sheet is open
+    }
     if (import.meta.env.DEV && (globalThis as { __saudaCapturePaused?: boolean }).__saudaCapturePaused) {
       return; // capture freeze (dev only) — see the bot-step effect above
     }
     if (autoDrawRef.current) {
       dispatch({ type: 'DRAW' });
     }
-  }, [state, dispatch]);
+  }, [state, dispatch, paused]);
 
   // L1: auto-resolve after a beat. Keyed on `state` so a NAHI chain (allow → allow → …)
   // schedules the next beat once the previous one applied.
@@ -177,12 +188,15 @@ export function Table() {
     if (!pending) {
       return;
     }
+    if (paused) {
+      return; // P8: hold the auto-resolve beat while the pause sheet is open
+    }
     if (import.meta.env.DEV && (globalThis as { __saudaCapturePaused?: boolean }).__saudaCapturePaused) {
       return; // capture freeze (dev only) — hold the beat so it can be shot (e.g. C4 zero-pay)
     }
     const timer = setTimeout(() => dispatch(pending.action), BEAT_MS);
     return () => clearTimeout(timer);
-  }, [state, dispatch]);
+  }, [state, dispatch, paused]);
 
   // F4: flash the human's just-played card on centre stage for a beat, so their play is SEEN the
   // same way a bot's is held (I1). A bot holds its card for the whole ~700ms step; the human is
@@ -259,7 +273,31 @@ export function Table() {
         spotlightCardId={spotlightCardId}
         spotlightFromOpponent={botSpotlightCardId !== null}
         receive={receive}
+        paused={paused}
       />
+
+      {/* P8 in-game nav: the top-left home glyph → the pause sheet. Hidden during a hand-off (the
+          device is being passed) and at game over (the end panel owns the screen). */}
+      {handoffSeat === null && !gameOver && (
+        <button aria-label="Pause — game menu" style={homeGlyphStyle} onClick={() => setPaused(true)}>
+          ⌂
+        </button>
+      )}
+
+      {/* the pause sheet + Niyam-over-paused. The Book sits above the sheet (rendered after it). */}
+      {paused && !showBook && (
+        <PauseSheet
+          onResume={() => setPaused(false)}
+          onNiyam={() => setShowBook(true)}
+          onHome={() => {
+            reset();
+            if (typeof window !== 'undefined') {
+              window.location.hash = '#/';
+            }
+          }}
+        />
+      )}
+      {paused && showBook && <Book onClose={() => setShowBook(false)} />}
 
       {/* F6: any game end presents the full-screen end overlay (fixed, so it never grows the page
           the way the old in-flow winner strip did). Board sleeps behind the scrim. */}
@@ -327,6 +365,24 @@ const shellStyle = {
   overflow: 'hidden',
   overscrollBehavior: 'none',
   touchAction: 'manipulation',
+} as const;
+
+// P8: the in-game home glyph — top-left, over the board (LAYERS.nav), clear of the safe-area inset.
+const homeGlyphStyle = {
+  position: 'fixed',
+  top: 'calc(env(safe-area-inset-top, 0px) + 6px)',
+  left: 'calc(env(safe-area-inset-left, 0px) + 6px)',
+  zIndex: LAYERS.nav,
+  width: 34,
+  height: 34,
+  borderRadius: '50%',
+  border: `1.5px solid ${INK.gold}`,
+  background: STAGE.scrimSheet,
+  color: STAGE.accentGold,
+  fontSize: 17,
+  lineHeight: '30px',
+  textAlign: 'center',
+  cursor: 'pointer',
 } as const;
 
 const beatOverlayStyle = {

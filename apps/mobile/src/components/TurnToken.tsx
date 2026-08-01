@@ -64,6 +64,7 @@ export function TurnToken({
   winLegal,
   endTurnLegal,
   rearrangeActive,
+  paused = false,
   onEndTurn,
   onDeclareWin,
 }: {
@@ -72,6 +73,7 @@ export function TurnToken({
   winLegal: boolean;
   endTurnLegal: boolean;
   rearrangeActive: boolean; // a placed-wildcard rearrange is being dragged → pause the drain
+  paused?: boolean | undefined; // P8: the game is paused (pause sheet open) → freeze the auto-end drain
   onEndTurn: () => void;
   onDeclareWin: () => void;
 }) {
@@ -84,6 +86,8 @@ export function TurnToken({
   const lastFrame = useRef<number>(0);
   const rearrangeRef = useRef(rearrangeActive);
   rearrangeRef.current = rearrangeActive;
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
 
   const mode = turnTokenMode({ active, playsRemaining, winLegal, endTurnLegal, armed });
 
@@ -116,8 +120,8 @@ export function TurnToken({
       const time = now();
       const dt = Math.min(48, time - lastFrame.current);
       lastFrame.current = time;
-      if (!rearrangeRef.current) {
-        drainElapsed.current += dt; // paused while a rearrange drag is in flight
+      if (!rearrangeRef.current && !pausedRef.current) {
+        drainElapsed.current += dt; // paused while a rearrange drag is in flight, or the game is paused (P8)
       }
       const progress = Math.min(1, drainElapsed.current / DRAIN_MS);
       if (!reduced) {

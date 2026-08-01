@@ -62,6 +62,7 @@ export function Board({
   spotlightCardId = null,
   spotlightFromOpponent = false,
   receive = null,
+  paused = false,
 }: {
   observation: Observation;
   seats: SeatConfig[];
@@ -70,6 +71,7 @@ export function Board({
   tickerLines?: string[];
   spotlightCardId?: string | null; // a bot's held card (I1) or the human's just-played beat (F4)
   spotlightFromOpponent?: boolean; // K2: an opponent's card travels UP to their row, mine DOWN to my area
+  paused?: boolean | undefined; // P8: the pause sheet is open → freeze the turn token's auto-end drain
   // G6: a wildcard reached me as payment and needs a group (matrix C7). It lands on stage; its
   // legal destination sets glow; I drag it home (or tap a glowing set). bySet maps each legal set
   // to the exact RESPOND_PLACE_RECEIVED the engine enumerated.
@@ -396,6 +398,7 @@ export function Board({
             winLegal={!!declareWinAction}
             endTurnLegal={!!endTurnAction}
             rearrangeActive={rearrangeActive}
+            paused={paused}
             onEndTurn={() => { if (endTurnAction && onAct) onAct(endTurnAction); }}
             onDeclareWin={() => { if (declareWinAction && onAct) onAct(declareWinAction); }}
           />

@@ -77,6 +77,7 @@ describe('LAYERS: the one stacking scale, low → high', () => {
       LAYERS.wheel,
       LAYERS.ticker,
       LAYERS.stage,
+      LAYERS.nav,
       LAYERS.inspect,
       LAYERS.dropBand,
       LAYERS.dragGhost,
