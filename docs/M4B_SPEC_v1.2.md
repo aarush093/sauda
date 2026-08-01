@@ -478,3 +478,65 @@ SUPERSEDES the earlier rule it names.
   off a card closes it (the full-screen backdrop owns the tap; only the cards swallow it) plus an
   explicit ✕ top-right; cards render at ≥ 96px and a rich board scrolls INTERNALLY at that floor
   rather than clipping.
+
+## PHONE-1 — real-device recovery + shell (owner phone test 1 Aug)
+
+The owner's first real-Android game broke the lab-frame assumptions. These laws make the game correct
+on real phones, generous under thumbs, and give it its front door. Every proof in this pass is from
+the device testbed (Playwright profiles 360x740 / 360x800 / 384x832 / 412x915 at real DPRs + a
+reduced-motion variant), not a single desktop frame.
+
+- **P0 — DEVICE TESTBED + HUD (LAW).** All captures/measures/profiles drive the fixed portrait
+  profile set in `deviceProfiles.json` (one shared source; unit-tested). A dev-only HUD (`?hud=1`)
+  reads the LIVE viewport WxH, DPR, prefers-reduced-motion, visual-viewport height and measured
+  `[data-zone]` heights — the on-device debug surface future sessions use instead of guessing.
+- **P1 — REAL-VIEWPORT LAYOUT (LAW): the void + the scroll are gone.** The play screen is a fixed
+  shell at **100dvh** (dynamic viewport units — the URL-bar problem), `viewport-fit=cover` +
+  safe-area-inset padding on all four sides, `overscroll-behavior: none` (no pull-to-refresh),
+  `touch-action: manipulation` (no double-tap zoom), `overflow: hidden` — the page cannot scroll in
+  any state, proven against the REAL viewport. Zone system v2 (`zoneLayout.ts`, pure + unit-tested)
+  replaces the 21/9/28/42 percentages with a CLAMPED-FLEX law: the table band is fixed; opponents,
+  centre stage and my area each have px min/max; surplus flows to MY AREA first (the thumb zone, the
+  largest by A2), then the opponents, then the stage — so the idle centre stage COLLAPSES toward its
+  content (the void is gone) and the tightest screen (360x740) never clips a legal move (my area is
+  protected on shrink). The board fills the shell edge-to-edge — no centered min()-box, no felt margins.
+- **P2 — THE LAYER SCALE (LAW): one ordered stack, no magic z.** Every zIndex is drawn from the ONE
+  `LAYERS` scale in tokens (felt < board < myArea < wheel < ticker < stage < nav < inspect < dropBand
+  < dragGhost < surface < sheet < advice < toast < end < badge < hud); an eslint gate bans raw numeric
+  zIndex literals in mobile src, and a test asserts the ordering. This fixed three owner-shot bugs:
+  (a) the dark slab over the wheel during a drag was the inspect overlay's full-board scrim staying up
+  mid-drag — it now goes transparent while the card is carried; (b) ticker-over-card was DOM-order
+  luck — the ticker is now pinned lowest on the stage, staged content above it; (c) the my-area sleep
+  dim is gated on `!myTurn`, so it never touches the hand on my own turn.
+- **P3 — THUMB-SIZED DROPS (LAW): a legal move is unmissable.** While a card is dragged, its eligible
+  zones INFLATE into a drop band over my property board — one slot PER ELIGIBLE SET (≥64px, the set's
+  banner colour + name) and a bank strip (≥72px); the in-place zones suppress their `data-drop` so the
+  band is the one target per zone and the K1 magnet reads the big rect. NEAR-MISS FORGIVENESS
+  (`DRAG_PHYSICS.nearMissRadiusPx`, pure + tested): a slow release just outside EXACTLY ONE eligible
+  zone still commits to it (two or more near = ambiguous, never guessed). NO SILENT MYSTERY: a miss
+  with eligible zones pulses them + a hint toast; a card with no legal play shows its F7 why-line on
+  release.
+- **P4 — DECORATIVE vs COMPREHENSION SPLIT (LAW) + PACING FLOORS.** Decorative motion (`MOTION_MS`
+  travel/reveal/surface) may go instant under `prefers-reduced-motion`; the COMPREHENSION timings — the
+  bot-play reveal HOLD and the turn beats (`BOT_PACING` / `BEAT_MS` / `HUMAN_PLAY_BEAT_MS`, plain
+  setTimeouts) — are NEVER reduced. Pacing raised (owner "bots tooo fast"): first beat 900ms,
+  subsequent 600ms, floor 400ms, per-turn cap 4000ms (one table, owner-tunable). The stage spotlight
+  stays the brightest element (it lives in the stage zone, not my-area, so the off-turn dim never
+  touches it; LAYERS.stage sits above the ticker).
+- **P5 — WHEEL FEEL (LAW): spread, magnify, contain, lift.** The peeked card magnifies to 1.15x and
+  its neighbours part (a gap wave, 11/4px by distance) so the chosen card reads unmistakably; the wheel
+  stays contained (every readable strip in frame). LIFT ASSIST (`DRAG_PHYSICS.liftAssistPxPerMs`,
+  pure + tested): a fresh lift seeds the spring with a small velocity toward the nearest eligible zone
+  — "a slight pull toward the card section" — capped below the fling floor so it nudges, never launches.
+  Micro-audio (tick/thock) is DEFERRED (a follow-up pass; not shipped as dead code).
+- **P7 — REARRANGE HANDLE ON THE CARD (LAW).** The "Move wildcard:" chip row is removed; each movable
+  placed wildcard carries its own ◈ handle ON its group — drag to a set (primary) or tap for the
+  chooser — implemented off the H4-memoized SetCascade so there is no perf regression.
+- **P8 — THE SHELL (LAW): a front door + a rules book + a way out.** HOME (#/): felt, the SAUDA
+  wordmark code-drawn in a rubber-stamp ring, the theme tagline, KHELO (inline setup → deal into
+  #/play), VS FRIENDS (stamped COMING SOON; pass-and-play removed from the UI), NIYAM (the Book), and
+  a first-run ribbon shown only until a game is completed. THE BOOK (#/niyam): a contents page + 8
+  chapters whose every NUMBER is derived from the engine constants (so it can never drift) and whose
+  pictures are REAL CardFace renders. IN-GAME NAV: a top-left home glyph opens the pause sheet
+  (Resume · Niyam-over-the-paused-game · Home with an "abandoned — sure?" confirm); while it is open
+  the bot timer, auto-draw, auto-resolve and the turn-token auto-end drain are all frozen.

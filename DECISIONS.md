@@ -310,3 +310,50 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   left Vite's HMR replaying stale transforms (old `?t=` versions) that React recovers from — noisy
   console, working UI. A dev-server restart clears it; source + production build are clean throughout
   (verified per commit). Not a code issue.
+
+## PHONE-1 — real-device recovery + shell (owner phone test 1 Aug)
+
+- **The void was two bugs, not one (P1).** The centered `min(96vw,460px) × min(90vh,780px)` board
+  left felt margins on every side AND the fixed 28% centre stage was empty when idle. Fixed both: a
+  full-bleed 100dvh shell (no margins) and a clamped-flex zone law where the idle stage collapses to
+  its content. The remaining open space at game start lives in MY AREA (surplus flows there first, per
+  the owner's ask) — that is the property board where deeds land, labelled by the ticker, not a void;
+  it fills as you play and is consumed by the P3 inflated drop band during a drag.
+- **Zone heights are JS-computed, not pure CSS flex (P1).** Pure `flex` min/max would render the
+  clamp but can't be unit-tested and could drift from the HUD/capture numbers. `resolveZones()` is a
+  pure function the board applies as explicit px heights, so the law is provable and the on-device
+  numbers match it exactly.
+- **The dark-slab root cause was the inspect scrim, not the drag placeholder (P2).** The owner's
+  "dark slab over the wheel during a drag" was `InspectCard`'s full-board 8% scrim staying mounted
+  after a drag started from inspect. Fix: the scrim goes transparent while the card is carried. The
+  "sleep scrim on my hand during my turn" did NOT reproduce — the dim is gated on `!myTurn`.
+- **Local card-stacking stays computed; only literals are banned (P2).** The eslint z-index gate bans
+  literal `zIndex:` numbers but allows computed ones (`zIndex: index`, `isPeek ? …`), which are
+  legitimate within-component stacking (the fan order, the cascade order) relative to their own
+  context — they are not part of the global overlay scale.
+- **Near-miss forgiveness is unambiguous-or-nothing (P3).** A slow release commits to an eligible zone
+  within 120px ONLY if exactly one is near; two or more near returns null (spring home), so it never
+  guesses the wrong set. Same rule as the fling cone.
+- **Reduced-motion drag-commit was silently broken; fixed under P3/P4.** The controller stored no
+  physics state under reduced motion, so a reduced-motion release cleared the preview WITHOUT
+  committing — drops did nothing. Now a `reducedCarry` ref lets a reduced-motion release hit-test,
+  forgive a near-miss, commit, and report a miss — same outcomes as the animated path.
+- **Micro-audio deferred, not stubbed (P5).** "Defer with a flag" was interpreted as a documented
+  deferral (this entry + the report), not an unwired WebAudio module — shipping dead code would
+  violate the readability contract. It is a one-file add + light wiring when picked up.
+- **P7 handle lives in MiniGroup, not SetCascade (P7).** SetCascade is H4-memoized on content; adding
+  per-card drag handlers there would break the memo (fresh closures) and re-run ~44 cascades per
+  commit. The ◈ handle renders in the (un-memoized) MiniGroup wrapper instead — same drag/tap paths,
+  no perf regression.
+- **The Book's win count is a labelled literal (P8).** Every Book number is derived from engine
+  constants EXCEPT "3 complete sets of distinct colours", which lives inline in `sets.ts`
+  (`hasThreeCompleteSets`) with no exported constant. Since the engine is byte-identical-locked this
+  pass, the Book mirrors it as a clearly-commented `SETS_TO_WIN = 3`; everything else is computed.
+- **P6 (Munshi redesign) NOT done this pass.** The advisor's advice LINE is generated in
+  `@sauda/bots` (Munshi.advise), which is byte-identical-locked, so its copy can't be rewritten here;
+  and the layout redesign is polish on an already-functional consult-only surface. Deferred behind the
+  higher-value rage fixes (P1–P4) and the front door (P8). Logged as a remaining flag.
+- **`useHash` reads the live hash each render (P8).** Rather than cache the hash in state (which races
+  the newGame re-render and depends on jsdom firing hashchange), the hook returns `window.location.hash`
+  live and uses the event only to force a re-render — so KHELO's `newGame()`-then-set-hash lands on
+  #/play on the very next render.

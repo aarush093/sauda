@@ -201,3 +201,33 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   upscale case, use CSS `zoom` instead — the browser re-lays-out the card at the bigger size, so its
   vector text rasterises at native device pixels (crisp). Shrinking still uses the cheap transform.
   Now no card face is ever transform-scaled above 1.0 — the crispness law, proven live.
+
+## PHONE-1 — real-device recovery + shell (interview crib)
+
+- **A phone is not a desktop frame.** The whole pass is judged on a device testbed: Playwright
+  profiles at 360x740 / 360x800 / 384x832 / 412x915 at their real DPRs + a reduced-motion variant,
+  from ONE shared `deviceProfiles.json`. A `?hud=1` overlay shows the live viewport, DPR,
+  reduced-motion and measured zone heights — how you debug on-device without guessing.
+- **The void + the scroll (P1).** The play screen is a fixed 100dvh shell (dynamic viewport units, so
+  the phone URL bar can't reveal a scroll) with safe-area padding and page-scroll killed
+  (`overscroll-behavior:none`, `touch-action:manipulation`, `overflow:hidden`). The old percentage
+  zones became a clamped-flex law (`resolveZones`, pure + tested): fixed table band, px min/max per
+  zone, surplus to my area first — so the idle centre stage collapses and the void is gone. Proven:
+  doc height == viewport at every profile, no scroll.
+- **One layer scale ends the slab bugs (P2).** Every zIndex comes from the `LAYERS` token, low→high;
+  an eslint rule bans raw numbers and a test asserts the order. Root causes were concrete: the dark
+  slab over the wheel was the inspect scrim staying up mid-drag (now transparent while carrying); the
+  ticker-over-card was DOM-order luck (ticker pinned lowest, staged content above).
+- **Thumb-sized drops kill the MAKAAN rage (P3).** While dragging, eligible zones inflate into a band
+  of ≥64px slots (one per set, banner colour + name) + a ≥72px bank strip; the in-place zones drop
+  their `data-drop` so the magnet reads the big rect. Near-miss forgiveness commits a slow release to
+  the single eligible zone within 120px (never guesses when two are near). A missed drop always
+  explains itself — a pulse + hint, or the card's why-line.
+- **Decorative vs comprehension motion (P4).** Transforms may go instant under reduced motion; the
+  bot reveal-hold and turn beats are plain timers that never reduce, so a reduced-motion game is still
+  followable. Pacing raised to owner-tunable floors (900/600/400/4000ms). Also fixed a latent bug:
+  reduced motion never committed a drop — now it does.
+- **The front door (P8).** HOME is a real screen (stamp wordmark, KHELO→setup→deal, VS FRIENDS COMING
+  SOON, NIYAM). THE BOOK derives every number from engine constants and renders REAL card faces, so
+  it can't drift from the rules. An in-game home glyph opens a pause sheet that freezes every timer
+  (bot step, auto-draw, auto-resolve, the turn-token drain) — the first way back OUT of a game.
