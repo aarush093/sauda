@@ -4,7 +4,7 @@
  * numbers in the vintage token styles. The property parts additionally act as DROP ZONES
  * (A10): they carry a `data-drop` id and glow when a dragged card may land on them.
  */
-import type { CSSProperties } from 'react';
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import { SETS } from '@sauda/engine';
 import type { PropertyGroup, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
@@ -35,6 +35,24 @@ function nonEmptyGroups(properties: Record<SetId, PropertyGroup[]>): { set: SetI
   return out;
 }
 
+// The per-card pointer handlers the rearrange handle spreads (from useHandDrag) — one closure that
+// yields tap-vs-drag handlers for a card id.
+type CardHandlers = (cardId: string) => {
+  onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
+  onPointerMove: (event: ReactPointerEvent<HTMLElement>) => void;
+  onPointerUp: (event: ReactPointerEvent<HTMLElement>) => void;
+  onPointerCancel: () => void;
+};
+
+// P7: a placed wildcard I may move this turn (B8) carries its OWN ◈ handle now, ON the card, instead
+// of the old "Move wildcard:" chip row down on the play surface. Drag the handle to move it (primary,
+// K1); tap it to open the destination chooser. This is the shape MiniGroup needs to render them.
+interface GroupRearrange {
+  handlers: CardHandlers;
+  cardIds: string[]; // the rearrangeable wildcard ids that live in THIS group
+  draggingId: string | null; // the card being carried right now — faded here
+}
+
 // A property GROUP as a CASCADE of real cards (G4 LAW — no banner+count chip). It carries the
 // drop-zone id + glow when a dragged card may land on it, and taps open the full table view.
 function MiniGroup({
@@ -47,6 +65,7 @@ function MiniGroup({
   hot,
   onExpand,
   expandHint,
+  rearrange,
 }: {
   set: SetId;
   group: PropertyGroup;
@@ -57,6 +76,7 @@ function MiniGroup({
   hot?: boolean | undefined;
   onExpand?: (() => void) | undefined;
   expandHint?: boolean | undefined; // J4 touch audit: show a visible "tap to enlarge" glyph (my groups)
+  rearrange?: GroupRearrange | undefined; // P7: ◈ handles for this group's movable wildcards
 }) {
   const theme = SETS[set];
   const boxShadow = hot ? GLOW.hot : soft ? GLOW.soft : undefined;
@@ -74,9 +94,43 @@ function MiniGroup({
       {expandHint && (
         <span aria-hidden style={expandHintStyle}>⤢</span>
       )}
+      {/* P7: the ◈ rearrange handle(s) — one per movable wildcard in this group, top-right, stacked.
+          It stops the group's expand-tap (its own tap opens the chooser), captures the drag itself. */}
+      {rearrange?.cardIds.map((cardId, index) => (
+        <div
+          key={cardId}
+          {...rearrange.handlers(cardId)}
+          {...(import.meta.env.DEV && { 'data-card-id': cardId })}
+          onClick={(event) => event.stopPropagation()}
+          onContextMenu={(event) => event.preventDefault()}
+          title="Move this wildcard — drag to a set, or tap"
+          style={{ ...rearrangeHandleStyle, top: 2 + index * 20, opacity: rearrange.draggingId === cardId ? 0.3 : 1 }}
+        >
+          ◈
+        </div>
+      ))}
     </div>
   );
 }
+
+// The ◈ handle: a small gold token pinned top-right ON the placed wildcard's group.
+const rearrangeHandleStyle: CSSProperties = {
+  position: 'absolute',
+  right: 2,
+  zIndex: LAYERS.badge,
+  width: 18,
+  height: 18,
+  borderRadius: '50%',
+  border: `1px solid ${INK.gold}`,
+  background: STAGE.scrimSheet,
+  color: STAGE.accentGold,
+  fontSize: 11,
+  lineHeight: '16px',
+  textAlign: 'center',
+  cursor: 'grab',
+  touchAction: 'none',
+  userSelect: 'none',
+};
 
 const expandHintStyle: CSSProperties = {
   position: 'absolute',
@@ -125,6 +179,7 @@ export function GroupRow({
   onExpand,
   onSetPlace,
   suppressDrop,
+  rearrange,
 }: {
   properties: Record<SetId, PropertyGroup[]>;
   kiraya?: Record<SetId, number[]> | undefined;
@@ -139,6 +194,8 @@ export function GroupRow({
   // P3: while the inflated thumb drop band is up, drop the in-place data-drop ids so the band is the
   // one target per set (the cascades still render, just no longer as tiny drop zones).
   suppressDrop?: boolean | undefined;
+  // P7: the ◈ rearrange handles for my movable wildcards, rendered ON their group (not a chip row).
+  rearrange?: GroupRearrange | undefined;
 }) {
   const groups = nonEmptyGroups(properties);
   const existing = new Set(groups.map((entry) => entry.set));
@@ -174,6 +231,11 @@ export function GroupRow({
             // show the ⤢ only when the tap actually EXPANDS (not during receive-placement, where the
             // glowing sets are the affordance and a tap places the card instead).
             expandHint={!onSetPlace && Boolean(onExpand)}
+            rearrange={
+              rearrange
+                ? { ...rearrange, cardIds: group.cards.filter((cardId) => rearrange.cardIds.includes(cardId)) }
+                : undefined
+            }
           />
         );
       })}

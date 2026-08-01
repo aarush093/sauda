@@ -24,7 +24,7 @@ import { useMeasuredHeight } from '../game/useMeasuredWidth';
 import { resolveZones } from '../game/zoneLayout';
 import { useDragController } from '../game/useDragController';
 import type { CarrySpec } from '../game/useDragController';
-import { describeCard, cardVerbHint } from '../game/labels';
+import { cardVerbHint } from '../game/labels';
 import { CardFace, ScaledCard } from './CardFace';
 import { DropBand } from './DropBand';
 import { StageSpotlight } from './StageSpotlight';
@@ -44,20 +44,6 @@ import { tallyRender } from '../game/renderTally';
 
 
 const STAGE_CARD_PX = 112; // the received-card stage size — bigger than a table card, fully readable
-
-// A placed wildcard's rearrange handle (B8): drag it onto a group, or tap for the chooser.
-const rearrangeToken: CSSProperties = {
-  padding: '4px 10px',
-  borderRadius: 999,
-  border: `1px solid ${INK.gold}`,
-  color: STAGE.accentGold,
-  fontFamily: FONT.display,
-  fontWeight: 700,
-  fontSize: 11,
-  cursor: 'grab',
-  touchAction: 'none',
-  userSelect: 'none',
-};
 
 // The stable id each drop zone carries in the DOM (`data-drop`), so the drag hit-test and
 // the commit both name zones the same way.
@@ -438,23 +424,19 @@ export function Board({
             onExpand={() => setExpandedView({ kind: 'me' })}
             onSetPlace={receive ? placeReceivedIn : undefined}
             suppressDrop={dragActive}
+            rearrange={
+              rearrangeableIds.size > 0
+                ? { handlers: cardHandlers, cardIds: [...rearrangeableIds], draggingId: drag?.cardId ?? null }
+                : undefined
+            }
           />
           {/* P3: the inflated thumb drop band overlays this board area while a card is dragged. */}
           {dragActive && (eligibleSets.size > 0 || bankEligible) && (
             <DropBand sets={[...eligibleSets]} bankEligible={bankEligible} hotZoneId={hotZoneId} />
           )}
         </div>
-        {rearrangeableIds.size > 0 && (
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: FONT.serif, fontSize: 11, opacity: 0.8 }}>Move wildcard:</span>
-            {[...rearrangeableIds].map((id) => (
-              // {...data-card-id} is a dev-only capture marker (see HandFan) — tree-shaken from prod.
-              <div key={id} {...cardHandlers(id)} {...(import.meta.env.DEV && { 'data-card-id': id })} onContextMenu={(event) => event.preventDefault()} style={{ ...rearrangeToken, opacity: drag?.cardId === id ? 0.3 : 1 }}>
-                ◈ {describeCard(id).replace('Wildcard ', '')}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* P7: the "Move wildcard:" chip row is GONE. Each movable wildcard now carries its own ◈
+            handle ON its group (drag it, or tap for the chooser) — see the GroupRow rearrange prop. */}
         {/* bottom band: the hand WHEEL (G2), hub at bottom-centre, spanning the FULL my-area width —
             no control shares this band (End turn moved to the header, H2b), so the wheel stays widest
             and nothing ever overlaps a card. It sits directly under the property board above (P1). */}
