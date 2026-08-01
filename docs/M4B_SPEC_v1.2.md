@@ -417,3 +417,64 @@ and captured (`docs/captures/playtest-fixes-2/`). Where A13 conflicts with A1/A1
   auto-ends most turns so it is usually hidden). Nothing scrolls in any state, overlays included.
 
 *End of A13.*
+
+---
+
+## K — M4 feel + shell pass (owner reorder, 31 Jul)
+
+The owner's phone-era verdict: the game WORKS but plays "binary and Mario-esque" — brittle discrete
+steps — when it should feel like one continuous motion, and the entry point should be a captivating
+game, not a config page. This pass pulls the motion-continuity slice of M4c and the Home/Learn slice
+of M4d forward. Part 1 (K1–K5, feel) built and committed BEFORE Part 2 (shell). Each law below
+SUPERSEDES the earlier rule it names.
+
+- **K1 — DRAG PHYSICS (LAW): magnetic assist + fling-to-commit.** Layered ON TOP of the existing
+  contract (tap = inspect, drag = commit, `legalActions` the only oracle — unchanged). A single drag
+  CONTROLLER owns every carry: the dragged card follows the finger via a critically-damped spring
+  (steady lag ~20px at a normal drag, sub-stepped so a throttled frame stays stable); a magnet
+  projects ~120ms ahead and, when the aim enters an ELIGIBLE zone's radius, leans the card a few px
+  (capped — never a yank) toward it and lights it hot early; a release above a conservative speed
+  aimed within a 30° cone of EXACTLY ONE eligible zone flings the card there and commits (two-in-cone
+  or too slow → normal release rules). Every animation is retargetable — a spring-home or a fling can
+  be re-grabbed instantly (the anti-Mario law). Illegal zones never attract, never accept, never win
+  a fling. All tunables in one module (`dragPhysics.ts` · `DRAG_PHYSICS`); the pure parts are
+  unit-tested (velocity estimate, spring, aim/assist, fling cone).
+
+- **K2 — MOTION CONTINUITY (LAW): nothing teleports.** A just-played card (a bot's or mine) REVEALS
+  on centre stage (scale + fade) then TRAVELS toward its home — an opponent's card up to their row,
+  mine down to my area. The stage spotlight is FITTED to the stage so it can never overflow behind
+  the ticker (the owner-shot bug), sits above the ticker and is the brightest thing on screen.
+  Overlays (inspect, TableView, payment, interrupt, discard, end, the auto beats) EASE IN (fade +
+  scale from their origin, ~180ms) rather than pop; the interrupt prompt eases in; the ticker's
+  newest line slides up. Transform/opacity only; the H4 memoisation holds. ONE motion switch
+  (`design/motion.ts`) makes `prefers-reduced-motion` collapse every duration to instant — the
+  foundation the later M4c reduced-motion path reuses.
+
+- **K3 — THE TURN TOKEN (LAW): auto-end v2 supersedes F2 + H2b.** One centred gold control in my row
+  replaces the End turn button, the F2 "turn over" beat AND the centre-stage Declare button. Three
+  play circles fill as plays are SPENT (spent-counting — the owner's direction). Once every play is
+  spent and no win is declarable, a ~2.5s gold ring drains, then END_TURN auto-dispatches — a
+  rearrange drag PAUSES the drain, a tap ends now; ending still routes into the discard step when
+  hand > 7. With plays in hand, a tap ARMS an early end ("End turn?", ~2s), a second tap commits (H2a
+  preserved). When DECLARE_WIN is legal the token becomes the gold SAUDA! declare, and auto-end NEVER
+  fires while a win is declarable. (Supersedes F2's sole-action auto-end and H2b's End-turn header
+  slot.) The Munshi advisor is restyled — seal + "Munshi" microlabel + use-pips — so it can never be
+  confused with the token. The token's mode matrix is unit-tested.
+
+- **K4 — THE BANK TRAY.** The bank is a first-class landing target: a brass-edged, embossed ledger
+  tray at the right of my row showing the top banked notes as REAL mini faces (the bank is public by
+  rule) + the total in gold mono; the empty state is a quiet embossed "Bank ₹0 Cr" tray with no
+  dashes. While a bankable card is in the air the tray EXPANDS into a generous landing strip (it grows
+  toward the centre, the flex row yields) and glows soft, hot under the pointer; because the drag
+  controller re-reads the zone rect each frame, the K1 magnet follows the tray as it grows. It carries
+  `data-drop="bank"`; the zone semantics are unchanged (money / bankable actions only, never a
+  wildcard — A4).
+
+- **K5 — CRISPNESS LAW (spec amendment) + TableView escape.** No card face ever renders through a
+  transform scale > 1.0 of its drawn base. An UPSCALED face (the 200px inspect card) renders via CSS
+  `zoom`, which re-lays-out the face so its vector text rasterises at native device pixels
+  ("native-width rendering"); DOWNSCALING keeps the cheap compositor `transform` (H4 — crisp when
+  shrinking, no memory cost, one identical design at every size). TableView: a tap literally ANYWHERE
+  off a card closes it (the full-screen backdrop owns the tap; only the cards swallow it) plus an
+  explicit ✕ top-right; cards render at ≥ 96px and a rich board scrolls INTERNALLY at that floor
+  rather than clipping.

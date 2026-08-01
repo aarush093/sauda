@@ -165,3 +165,39 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   *cursor-only* — my own sets were tap-to-expand with only a hover cursor + tooltip to say so, invisible
   on a phone. Same fix as the opponents got: a visible ⤢ glyph. Then `vite --host` + a terminal QR puts
   the build on the real phone (with a USB `adb reverse` fallback for wifi that isolates clients).
+
+## M4 — feel + shell pass (K): one continuous motion, and a real front door
+
+- **Physics on top of the oracle, not instead of it.** The owner wanted a "dating-app" drag —
+  choose in one motion, place in the second. I layered a spring/magnet/fling controller ON TOP of the
+  existing rule that a card only commits to a zone `legalActions` already offered. The magnet only
+  ever leans toward — and the fling only ever lands on — an ELIGIBLE zone, so no amount of physics can
+  make an illegal move. The commit decision is still "released over a legal zone, or flung at exactly
+  one." That separation is why the feel is all new but the game's legality is untouched.
+- **A spring you can read aloud.** The card follows the finger with a critically-damped spring (the
+  fastest follow that never overshoots — so it reads as "attached", not "wobbly"). The trick for
+  stability: I integrate it in ≤8ms slices, so even a janky 32ms frame under CPU throttle can't make
+  the simple `a = -k·x - c·v` explode. No closed-form magic; just a plain spring, sub-stepped.
+- **Fling = fast AND aimed at exactly one thing.** A release only "flings" if it's above a
+  conservative speed AND its direction points within a 30° cone of exactly ONE eligible zone. Two
+  zones in the cone (ambiguous) or a slow release → no fling, normal rules. That "exactly one" rule is
+  the whole safety: a flick can commit without landing on the zone, but never guesses between two.
+- **The "dimmed card behind the ticker" bug was just overflow.** I measured it: a 112px stage card is
+  162px tall, but the stage band is only ~117px — so the card bled 22px up into the ticker. The fix
+  isn't a z-index hack; it's fitting the card to the stage height so it can never overflow, then
+  giving it its own glow and lifting it above the ticker. Now every play reveals on the stage and
+  travels toward its home instead of teleporting.
+- **One switch turns all motion off.** Every animation — the drag spring, the stage travel, the
+  overlay eases, the ticker slide — reads reduced-motion from a single module. So
+  `prefers-reduced-motion` collapses the whole game to instant in ONE place, and nothing breaks. That
+  same switch is the foundation the later juice milestone reuses.
+- **The turn token is a tiny state machine.** One control carries the whole end-of-turn story: three
+  circles that fill as plays are spent, a 2.5s draining ring that auto-ends once they're gone (paused
+  if you're still rearranging a wildcard, tappable to end now), an arm-then-confirm early end, and the
+  gold SAUDA! declare. The mode decision is a pure function so the whole matrix — including the safety
+  that a declarable win can never auto-end the turn — is unit-tested without a browser.
+- **Crisp big cards without re-drawing them.** A card is drawn at 132px; blowing it up to the 200px
+  inspect size with a CSS transform upscales a small bitmap (blurry). The fix is one line: for the
+  upscale case, use CSS `zoom` instead — the browser re-lays-out the card at the bigger size, so its
+  vector text rasterises at native device pixels (crisp). Shrinking still uses the cheap transform.
+  Now no card face is ever transform-scaled above 1.0 — the crispness law, proven live.

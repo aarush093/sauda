@@ -253,3 +253,60 @@ Converts the excellence pass's open flags into finished work and hands the game 
 - **J3 — value-badge legibility floor, built behind a toggle, DEFAULT OFF (owner rules).** H3 flag 1: the wheel value badge measured 7.3 device px against the 10px bar and geometry alone can't reach it. Added a scale-aware floor (`badgeFloor.ts`): below the scale where the numerals would drop under 10 device px, the badge grows (anchored at its corner — the map-label pattern) so they hold at exactly the floor. Applies to SCALED renders only; the full-size face is byte-identical (proven — the OFF/ON dev-card screenshots hash equal). Ships OFF (`BADGE_FLOOR_DEFAULT=false`); a `?badgeFloor=1` param flips it for the A/B stills (`docs/captures/m4b-closeout/badge-floor/`, wheel n=7/n=11 + a board cascade). The owner picks from the stills; the default is not flipped here. [`badgeFloor.ts`, `CardFace.tsx ValueBadge`]
 - **J4 — the game on the owner's Android phone.** `pnpm dev:lan` (vite --host, pinned 5174) + `pnpm phone` (LAN URL + terminal QR via `qrcode-terminal`); USB `adb reverse tcp:5174 tcp:5174` fallback for client-isolating wifi. Both documented in `docs/PHONE_PLAYTEST.md`. Verified off-localhost breaks nothing dev-critical: `__replay`/`__saudaCapturePaused`/autostart are hash-based + in-page + `DEV`-gated, plate URLs are root-relative (`import.meta.glob ?url`), vite `base` is `/`, and no absolute host string exists in `apps/mobile/src`. Touch audit: all gestures already use pointer events (`useFanGesture`/`useHandDrag` + `setPointerCapture`), drag/wheel layers set `touch-action:none`, `contextmenu` is suppressed on every draggable, and there are no hover-only handlers — the one cursor-only sibling of the H1a find (my OWN groups were tap-to-expand via `cursor`+`title` only) got the same visible ⤢ affordance opponents got. [`BoardParts.tsx MiniGroup`, `phone-connect.mjs`]
 - **Relevance-weighted bot pacing — IDENTIFIED and PARKED (pending the owner's phone-playtest verdict on H5 pacing).** Idea: instead of the current uniform beat table, weight a bot beat by how much it concerns the human — a FULL beat only for plays that TARGET the human (a charge/steal/swap against me, which I must see), the FLOOR beat for neutral plays (a bot banking or placing its own property). This would tighten dead time further without hiding anything that matters to the human. NOT implemented — H5's flat paced table is the current baseline and the owner may find it already good on-device; if the phone playtest says bot turns still drag, this is the first lever to pull. [would touch `interaction.ts botBeatDelayMs` + the beat driver in `Table.tsx`]
+
+## M4 — feel + shell pass (K, owner reorder 31 Jul)
+
+Pulls the motion-continuity slice of M4c and the Home/Learn slice of M4d forward, per the owner's
+phone-era verdict ("binary and Mario-esque; the entry point should be a game, not a config page").
+Part 1 (K1–K5, feel) built + committed before Part 2. Engine + bots byte-identical throughout;
+full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
+
+- **K1 — drag physics LAYERS on the oracle, it does not replace it (owner reorder, 31 Jul).** The
+  spring/magnet/fling live in one controller that all four drag sources feed; the tap-vs-drag split
+  and the commit contract are unchanged — a commit still only ever fires `onCommit(cardId, zoneId)`
+  for an ELIGIBLE zone the caller derived from `legalActions`. Fling adds a way to CHOOSE an eligible
+  zone (fast flick within a 30° cone of exactly one), never a new zone; the magnet leans the RENDER a
+  few px and lights a zone hot early but never commits on its own (commit stays release-over-zone OR
+  fling). So "illegal zones never attract/accept" holds by construction. The under-pointer hit-test
+  stays at the raw finger (parity with the old DOM test); the assist lean is display-only. Pure parts
+  unit-tested; the rAF controller proven by a live drag (no errors, no accidental commit).
+- **K2 — the dimmed-Rs10-behind-ticker bug was an OVERSIZE overflow, not a scrim (owner reorder, 31
+  Jul).** Measured: the 112px stage spotlight (→162px tall) overflowed the ~117px play band by ~22px
+  into the ticker row above. Fix: a `StageSpotlight` that FITS the card to the whole stage zone
+  height (measured), sits above the ticker (z 4) with its own gold glow, and is exempt from the
+  my-area sleep dim (it is a sibling of the stage, not inside my-area). Verified on-device it lands
+  ~91–112px, fully within the stage. Bot AND human plays now reveal-on-stage then travel toward the
+  actor's board (opponent up / me down) — driven by the same `lastPlayedCard` events, no fragile
+  cross-container rect tracking.
+- **K2 — surface eases are ENTER-ONLY by scope (owner reorder, 31 Jul).** `Surface` fades+scales a
+  panel in on mount; an accurate reverse-OUT would mean threading a two-phase close through every
+  overlay's gate. The enter ease is the felt win (nothing pops); exit staying instant is a documented
+  line, revisitable in M4c. `prefers-reduced-motion` collapses all of it via one switch
+  (`design/motion.ts`).
+- **K3 — AUTO-END v2 supersedes F2's sole-action rule AND H2b's End-turn slot (owner reorder, 31
+  Jul).** The turn no longer auto-ends from `Table` when `legalActions == [END_TURN]`; instead the
+  turn TOKEN owns the end. New rule: with 0 plays and no declarable win, a ~2.5s drain ends the turn
+  (pausable by a rearrange drag, tappable to end now). The edge case "plays remain but nothing is
+  playable" now ends via the token's arm-tap rather than auto — matching the owner's explicit
+  plays==0 tie. `interaction.ts shouldAutoEndTurn` is retained (still a valid, tested pure helper) but
+  is no longer wired to the UI. The centre-stage Declare SAUDA! button is REMOVED — the token becomes
+  the declare (the owner's "the token becomes the gold SAUDA! declare"); A11's "one celebratory
+  centre button" is superseded. Plays are spent-counting (three circles fill as plays are used), and
+  the You-chip play pips are gone (the token is the sole plays indicator).
+- **K4 — the bank tray IS the drop zone (owner reorder, 31 Jul).** `data-drop="bank"` moved onto the
+  tray so its rect (which grows when a bank drop is eligible) is what the hit-test and the K1 magnet
+  read — the magnet follows the expanding landing strip for free. The old `BankStack` (stylised cream
+  rectangles + a dashed ₹0 box) is retired; the tray shows real mini faces (bank is public) and a
+  quiet embossed empty state. A raw colour literal I first used for the tray well was rejected by the
+  tokens-only guard test and replaced with `STAGE.scrimSheet`.
+- **K5 — crispness via CSS `zoom`, not a re-authored 264 base (owner reorder, 31 Jul).** CardFace has
+  ~61 hardcoded px sizes; re-authoring them to a metric-doubled base is high-risk. The spec allows
+  "native-width rendering — implementer's call." `ScaledCard` now UPSCALES via `zoom` (which
+  re-lays-out the face so text rasterises at native device pixels — crisp) and keeps `transform` only
+  for downscaling (H4). Verified live: the 200px inspect renders at `zoom 1.515` and there are ZERO
+  transform-upscaled faces on screen. TableView gained tap-anywhere-off-a-card dismiss (only cards
+  swallow the tap) + an explicit ✕, a ≥96px card floor, and internal scroll for a rich board.
+- **Dev-server HMR churn during the K run (housekeeping).** Rapid sequential edits to `Board`/`Table`
+  left Vite's HMR replaying stale transforms (old `?t=` versions) that React recovers from — noisy
+  console, working UI. A dev-server restart clears it; source + production build are clean throughout
+  (verified per commit). Not a code issue.
