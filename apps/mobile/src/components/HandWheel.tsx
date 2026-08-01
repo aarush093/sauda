@@ -22,10 +22,22 @@ import { useFanGesture } from '../game/useFanGesture';
 import { useMeasuredWidth } from '../game/useMeasuredWidth';
 import { CARD } from '../design/tokens';
 
-const PEEK_LIFT_PX = 24; // the scrubbed card rises this far, clear of its neighbours
-const PEEK_SCALE = 1.08; // and grows a touch so it reads as the focused card
+const PEEK_LIFT_PX = 26; // the scrubbed card rises this far, clear of its neighbours
+const PEEK_SCALE = 1.15; // P5: grows more so the chosen card reads unmistakably (was 1.08)
 const REDISTRIBUTE_MS = 175; // the seamless re-spacing glide when the hand size changes (carve-out)
 const WHEEL_FALLBACK_WIDTH = 320; // before the slot is measured (and under jsdom, no layout)
+
+// P5: the parting "gap wave" — the peeked card's immediate neighbours slide slightly AWAY from it
+// so the chosen card sits in a clear gap. Decreases with distance; rides the redistribute glide so
+// it eases open and closes crisply. Returns the lateral px offset for a card `distance` slots from
+// the peek (signed by which side it's on). Containment holds — these are small, and wheelLayout
+// keeps every card's readable strip inside the frame regardless.
+function partOffsetPx(distanceFromPeek: number): number {
+  const steps = Math.abs(distanceFromPeek);
+  if (steps === 0) return 0; // the peek itself lifts on the inner layer, it does not part
+  const magnitude = steps === 1 ? 11 : steps === 2 ? 4 : 0;
+  return Math.sign(distanceFromPeek) * magnitude;
+}
 
 export function HandWheel({
   cards,
@@ -92,6 +104,9 @@ export function HandWheel({
           const slot = slots[index]!;
           const isPeek = id === peekCardId;
           const isDragging = id === carriedCardId;
+          // P5 parting: shift this card away from the peek (0 when nothing is peeked).
+          const peekIndex = peekCardId ? cards.indexOf(peekCardId) : -1;
+          const partX = peekIndex >= 0 ? partOffsetPx(index - peekIndex) : 0;
           return (
             <div
               key={id}
@@ -102,9 +117,10 @@ export function HandWheel({
                 top: 0,
                 width: cardWidth,
                 height: cardHeight,
-                // OUTER layer: position + spoke angle, with the redistribution transition. n-change
-                // moves this → the card glides; a peek does NOT change it → no unwanted ease.
-                transform: `translate(${slot.x}px, ${slot.y}px) rotate(${slot.angleDeg}deg)`,
+                // OUTER layer: position + spoke angle + P5 part offset, with the redistribution
+                // transition. n-change or a new peek moves this → the card glides (the gap wave); a
+                // steady peek does not, so the pickup itself stays instant (inner layer).
+                transform: `translate(${slot.x + partX}px, ${slot.y}px) rotate(${slot.angleDeg}deg)`,
                 transformOrigin: 'bottom center',
                 transition: `transform ${REDISTRIBUTE_MS}ms ease-out`,
                 zIndex: isPeek ? cards.length + 1 : slot.z,

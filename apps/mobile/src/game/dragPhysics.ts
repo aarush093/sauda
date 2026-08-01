@@ -74,6 +74,12 @@ export const DRAG_PHYSICS = {
   flightMaxMs: 420, // safety cap: a flight always resolves within this, even if it never fully settles
 
   velocityWindowMs: 80, // estimate velocity over the last ~80ms of pointer samples (the K1 spec window)
+
+  // ── Lift assist (P5, owner phone test 1 Aug) — "a slight pull toward the card section" ───────
+  // The instant a peeked card is lifted into a drag, seed the spring with a small velocity toward
+  // its nearest eligible zone, so the card visibly leans that way and the K1 projection magnet takes
+  // it from there. Tiny and capped — it nudges, it does not launch (a fling is 0.6+ px/ms).
+  liftAssistPxPerMs: 0.35, // the seed speed toward the nearest eligible zone at lift-off
 } as const;
 
 /**
@@ -217,6 +223,35 @@ export function nearMissZone(
     }
   }
   return withinRadius === 1 ? winner : null;
+}
+
+/**
+ * Lift-assist impulse (P5). Returns a small velocity (px/ms) pointed at the nearest eligible zone,
+ * to seed the spring at the moment of lift so the card leans toward where it can go. Zero when there
+ * are no eligible zones (nothing to lean toward). The magnitude is a fixed small constant — a nudge,
+ * never a launch — and the K1 projection magnet does the rest.
+ */
+export function liftImpulse(
+  pos: Vec2,
+  zones: ZoneGeometry[],
+  config: typeof DRAG_PHYSICS = DRAG_PHYSICS,
+): Vec2 {
+  let nearest: ZoneGeometry | null = null;
+  let bestDistance = Infinity;
+  for (const zone of zones) {
+    const distance = Math.hypot(zone.cx - pos.x, zone.cy - pos.y);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      nearest = zone;
+    }
+  }
+  if (!nearest || bestDistance === 0) {
+    return { x: 0, y: 0 };
+  }
+  return {
+    x: ((nearest.cx - pos.x) / bestDistance) * config.liftAssistPxPerMs,
+    y: ((nearest.cy - pos.y) / bestDistance) * config.liftAssistPxPerMs,
+  };
 }
 
 /**

@@ -29,6 +29,7 @@ import {
   assistOffset,
   estimateVelocity,
   flingTarget,
+  liftImpulse,
   nearMissZone,
   springTo,
   type PointerSample,
@@ -191,12 +192,17 @@ export function useDragController() {
       // Re-grabbing the SAME card mid-flight keeps its position (continuous); a different card
       // starts fresh at the finger. Either way we adopt the new carry at once (retargetable).
       const continuous = previous !== null && previous.cardId === cardId;
+      // P5 lift assist: a fresh lift seeds the spring with a small velocity toward the nearest
+      // eligible zone — "a slight pull toward the card section". A re-grab keeps its momentum.
+      const liftVel = continuous
+        ? previous.vel
+        : liftImpulse({ x, y }, readZoneGeometry(spec.eligibleZones(cardId)));
       physics.current = {
         mode: 'carrying',
         cardId,
         spec,
         pos: continuous ? previous.pos : { x, y },
-        vel: continuous ? previous.vel : { x: 0, y: 0 },
+        vel: liftVel,
         finger: { x, y },
         origin: { x, y },
         samples: [{ x, y, t: now() }],

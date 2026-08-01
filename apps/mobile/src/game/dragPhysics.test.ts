@@ -11,6 +11,7 @@ import {
   aimedZone,
   assistOffset,
   flingTarget,
+  liftImpulse,
   nearMissZone,
   type PointerSample,
   type Vec2,
@@ -209,5 +210,21 @@ describe('nearMissZone (P3 forgiveness)', () => {
 
   it('returns null when there are no eligible zones at all', () => {
     expect(nearMissZone({ x: 0, y: 0 }, [])).toBeNull();
+  });
+});
+
+describe('liftImpulse (P5 lift assist)', () => {
+  it('is zero when there are no eligible zones to lean toward', () => {
+    expect(liftImpulse({ x: 0, y: 0 }, [])).toEqual({ x: 0, y: 0 });
+  });
+
+  it('points at the nearest eligible zone, at the fixed small assist speed (a nudge, not a fling)', () => {
+    const near: ZoneGeometry = { id: 'set:a', cx: 0, cy: -100 }; // straight up, closest
+    const far: ZoneGeometry = { id: 'bank', cx: 300, cy: -100 };
+    const v = liftImpulse({ x: 0, y: 0 }, [near, far]);
+    expect(v.x).toBeCloseTo(0, 5);
+    expect(v.y).toBeCloseTo(-DRAG_PHYSICS.liftAssistPxPerMs, 5); // toward the near zone, capped speed
+    const speed = Math.hypot(v.x, v.y);
+    expect(speed).toBeLessThan(DRAG_PHYSICS.flingSpeedPxPerMs); // never enough to be a fling on its own
   });
 });
