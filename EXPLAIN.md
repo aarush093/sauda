@@ -231,3 +231,30 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   SOON, NIYAM). THE BOOK derives every number from engine constants and renders REAL card faces, so
   it can't drift from the rules. An in-game home glyph opens a pause sheet that freezes every timer
   (bot step, auto-draw, auto-resolve, the turn-token drain) — the first way back OUT of a game.
+
+## PHONE-2 — closing the PHONE-1 gaps (interview crib)
+
+- **A "feel" pass is proved with motion, not stills.** The PHONE-1 report flagged that a still can't
+  evidence a fling, a parting wheel, or a bot beat. So PHONE-2 reuses the excellence-pass webm recorder
+  on the phone device profiles (412x915 + one 360x740): money flinging into the bank, a MAKAAN
+  thumb-drop, the wheel's parting-wave scrub, a near-miss pulse, Home→setup→deal-in — and, crucially,
+  the SAME bot turn recorded motion-on and reduced-motion, so the comprehension-vs-decoration split is
+  visible side by side. Anything that genuinely won't render is reported with its error, never faked
+  with a still.
+- **Where UI copy lives vs. where behaviour lives.** The PHONE-1 P6 note wrongly assumed the bot freeze
+  blocked rewriting Munshi's advice text. It doesn't: the byte-identical lock covers the bot's DECISION
+  (which move + a `reason` enum), not the sentence shown. So the copy moved to the mobile layer
+  (`munshiAdviceLine`), where every line is now a full sentence that names the move and gives one
+  concrete reason — the same rename-in-one-file pattern the codebase already uses for card/set names.
+- **Overlap is a layout bug, fixed with layout.** The advisor card was breaking (pips/mini-cards over
+  text). The fix isn't nudging z-indexes — it's a plain flex row (medallion · `minWidth:0` wrapping
+  sentence · `flexShrink:0` card) so nothing can ever occupy the same space. The medallion loads the
+  owner's `munshi.webp` if present, else a code-drawn bust, and floats transform-only unless reduced
+  motion is on.
+- **Reduced motion must announce itself.** If the OS forces `prefers-reduced-motion`, the player can't
+  otherwise tell the feel layer was switched off. Two quiet disclosures now exist: an unmissable red
+  HUD banner (dev), and one permanent line in the pause sheet (shipped) — discoverable truth, no nag.
+- **An honest lint gate.** The 7 "pre-existing" errors are gone: dead vars/blocks in dev capture
+  scripts removed, and a lone `eslint-disable` pointing at an uninstalled `react-hooks` rule replaced
+  with a plain note (installing the plugin would have added a dependency and unbounded new lint surface
+  under a freeze). `pnpm verify` now runs lint first, so zero can't silently become seven again.

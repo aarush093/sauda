@@ -57,7 +57,12 @@ export function Hud() {
       <div style={{ fontWeight: 700 }}>
         {reading.vw}×{reading.vh} · dpr {reading.dpr}
       </div>
-      <div>reduced-motion: {reading.reduced ? 'ON' : 'off'}</div>
+      {/* PHONE-2 Q3: reduced-motion is the one HUD line a session most needs to NOT miss — the owner's
+          first phone game may have run with it forced on (battery saver) and nothing told him. So when
+          it is ON this line is a filled red banner, unmissable; when off it stays quiet. */}
+      <div style={reading.reduced ? reducedOnStyle : reducedOffStyle}>
+        reduced-motion: {reading.reduced ? 'ON' : 'off'}
+      </div>
       <div>visual vp: {reading.visualVh}px</div>
       {reading.zones.length > 0 && (
         <div style={{ marginTop: 4, opacity: 0.85 }}>
@@ -89,6 +94,20 @@ function snapshot() {
     zones: measureZones(),
   };
 }
+
+// PHONE-2 Q3: ON = a filled red banner that reads at a glance; off = a dim ordinary line. Colours
+// are the shared stamp-red / half-strength gold from tokens (this is the debug instrument, not the
+// game's visual language, so it may use its own emphasis).
+const reducedOnStyle = {
+  margin: '2px -3px',
+  padding: '1px 4px',
+  borderRadius: 3,
+  background: DEV_HUD.alertFill,
+  color: DEV_HUD.alertText,
+  fontWeight: 700,
+  letterSpacing: 0.3,
+} as const;
+const reducedOffStyle = { opacity: 0.7 } as const;
 
 const panel = {
   position: 'fixed',

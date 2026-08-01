@@ -357,3 +357,39 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   the newGame re-render and depends on jsdom firing hashchange), the hook returns `window.location.hash`
   live and uses the event only to force a re-render — so KHELO's `newGame()`-then-set-hash lands on
   #/play on the very next render.
+
+## PHONE-2 — close the PHONE-1 gaps (owner phone test 1 Aug, follow-up)
+
+- **Munshi advice copy is UI-layer, not a bots rewrite (Q2 — the PHONE-1 P6 reasoning was wrong).**
+  The byte-identical bots lock protects the bot's BEHAVIOUR — `recommend()` decides which move and
+  tags it with one of six `reason` enums. The human-facing SENTENCE is display copy, so it maps in
+  the mobile layer (`labels.ts:munshiAdviceLine`), exactly like card/set renames do, leaving
+  `packages/bots` untouched. `Munshi.advise` still returns its own `line` for the CLI/tests; the
+  phone UI ignores it and renders the rewritten copy. So P6's "can't rewrite the copy under the
+  freeze" was mistaken: the freeze never covered display strings.
+- **The advice card is a non-overlapping flex row (Q2).** The owner's screenshot showed pips/mini-cards
+  over the advice text. The rebuilt card is one `flex` row — medallion left, `minWidth:0` centre
+  (so the sentence WRAPS instead of shoving the card off), ScaledCard `flexShrink:0` right — which
+  makes overlap structurally impossible at 360px and 412px alike. No absolute positioning.
+- **The medallion is asset-or-silhouette (Q2).** It loads `assets/plates/munshi.webp` via the same
+  zero-config plate glob the cards use (dropping the owner's lithograph in needs no code change), and
+  falls back to a code-drawn vintage bust in a gold ring so the advisor always has a face. Its idle
+  float is transform-only (`translateY`, GPU-composited) and is not applied under reduced motion,
+  with a `@media (prefers-reduced-motion: reduce)` guard as a second belt.
+- **Reduced motion is now disclosed, not silent (Q3).** The owner's first phone session likely ran
+  with battery-saver forcing `prefers-reduced-motion`, so he may never have seen the feel layer and
+  nothing told him. Two disclosures: the dev HUD's reduced-motion line becomes an unmissable filled-red
+  banner when ON, and the in-game pause sheet carries one quiet permanent footer line ("Reduced motion
+  is on — your device or browser requested it.") — discoverable truth, not a nag or toast.
+- **SETS_TO_WIN stays an intentional literal (Q5).** Re-checked under the freeze: the engine has NO
+  `SETS_TO_WIN` constant to re-export — the "3" is embedded in `sets.ts:hasThreeCompleteSets` as
+  `>= 3`. Introducing a constant would edit frozen engine LOGIC (change the comparison + rename the
+  predicate), which is not the "pure re-export" Q5 gated on. So the engine is left byte-identical and
+  the Book's win count remains the clearly-commented local `SETS_TO_WIN = 3`, as PHONE-1 already ruled.
+- **Lint is zero and gated; react-hooks reference removed, not installed (Q4).** The 7 errors were 6
+  unused-var/empty-block hits in dev-only capture scripts (removed the dead code) plus a lone
+  `eslint-disable react-hooks/exhaustive-deps` in `useDragController` referencing a plugin that was
+  never installed. Under the "no new features / small pass" limit, installing the plugin would add a
+  new dependency and surface pre-existing hook violations across the app (unbounded scope); so the
+  honest fix is to remove the dead reference and replace it with a plain note. `pnpm verify` now runs
+  `pnpm lint` first, so the count can never drift back up unnoticed.

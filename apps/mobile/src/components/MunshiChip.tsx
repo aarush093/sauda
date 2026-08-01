@@ -18,8 +18,10 @@ import type { Action } from '@sauda/engine';
 import { MUNSHI_USES_PER_GAME } from '@sauda/bots';
 import type { MunshiAdvice } from '@sauda/bots';
 import { useGame } from '../game/store';
-import { actionCardId, describeCard } from '../game/labels';
+import { actionCardId, describeCard, munshiAdviceLine } from '../game/labels';
 import { ScaledCard } from './CardFace';
+import { plateUrl } from '../design/plates';
+import { useReducedMotion } from '../design/motion';
 import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 // The recommended move as one brief label, plus the hand card it concerns (if any) so the
@@ -64,6 +66,7 @@ export function MunshiChip({ available }: { available: boolean }) {
   }
 
   const move = advice ? describeMove(advice.action) : null;
+  const reduced = useReducedMotion();
 
   return (
     <>
@@ -93,16 +96,58 @@ export function MunshiChip({ available }: { available: boolean }) {
           <div style={cardStyle} onClick={(event) => event.stopPropagation()}>
             <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 16, color: INK.deepInk }}>Munshi ki Salah</div>
             <div style={{ fontFamily: FONT.serif, fontSize: 12, color: INK.mutedBrown }}>Advice only — you still make the move.</div>
-            <div style={moveRowStyle}>
-              {move.cardId && <ScaledCard cardId={move.cardId} width={46} />}
-              <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 15, color: INK.deepInk }}>{move.label}</div>
+
+            {/* PHONE-2 Q2 — the advice body is one flex ROW, never overlapping: the munshi's medallion
+                on the LEFT, the named move + counsel sentence in the CENTRE (it may wrap — minWidth:0
+                lets it, so text can never spill under the card), and the recommended card as a real
+                ScaledCard on the RIGHT (flexShrink:0 so it keeps its size at 360px and 412px alike). */}
+            <div style={adviceRowStyle}>
+              <MunshiMedallion reduced={reduced} />
+              <div style={adviceCentreStyle}>
+                <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 15, color: INK.deepInk }}>{move.label}</div>
+                <div style={{ fontFamily: FONT.serif, fontSize: 13, color: INK.deepInk, lineHeight: 1.35 }}>{munshiAdviceLine(advice)}</div>
+              </div>
+              {move.cardId && (
+                <div style={adviceCardWellStyle}>
+                  <ScaledCard cardId={move.cardId} width={52} />
+                </div>
+              )}
             </div>
-            <div style={{ fontFamily: FONT.serif, fontSize: 14, color: INK.deepInk, lineHeight: 1.35 }}>{advice.line}</div>
+
             <button type="button" onClick={() => setAdvice(null)} style={dismissStyle}>Got it</button>
           </div>
         </div>
       )}
     </>
+  );
+}
+
+// PHONE-2 Q2 — the munshi's portrait medallion. It shows the owner's vintage lithograph if
+// assets/plates/munshi.webp has been dropped in (picked up with zero config by the plate glob),
+// and otherwise a code-drawn vintage bust silhouette in a gold ring — so the advisor always has a
+// face. It floats gently (transform-only, GPU-cheap) unless reduced motion is on, in which case it
+// sits perfectly still (the animation is simply not applied; a CSS media guard is a second belt).
+function MunshiMedallion({ reduced }: { reduced: boolean }) {
+  const portrait = plateUrl('munshi');
+  return (
+    <div
+      className="munshi-medallion"
+      style={{ ...medallionStyle, animation: reduced ? undefined : 'munshi-idle-float 3.2s ease-in-out infinite' }}
+      aria-hidden
+    >
+      {portrait ? <img src={portrait} alt="" style={medallionImgStyle} /> : <MunshiSilhouette />}
+    </div>
+  );
+}
+
+// A plain vintage bust: head + shoulders in aged cream on the felt, ringed in gold by the medallion
+// frame. Deliberately simple — a recognisable portrait silhouette, not an illustration.
+function MunshiSilhouette() {
+  return (
+    <svg viewBox="0 0 40 40" width="100%" height="100%" aria-hidden style={{ display: 'block' }}>
+      <circle cx="20" cy="15.5" r="7" fill={STAGE.textOnFelt} />
+      <path d="M7 40 C7 30, 33 30, 33 40 Z" fill={STAGE.textOnFelt} />
+    </svg>
   );
 }
 
@@ -152,7 +197,7 @@ const scrimStyle: CSSProperties = {
 };
 
 const cardStyle: CSSProperties = {
-  maxWidth: 300,
+  maxWidth: 320,
   width: '100%',
   display: 'flex',
   flexDirection: 'column',
@@ -163,14 +208,39 @@ const cardStyle: CSSProperties = {
   boxShadow: STAGE.glowGold,
 };
 
-const moveRowStyle: CSSProperties = {
+// The three-column advice body. alignItems flex-start so the medallion, the wrapping sentence and
+// the card all hang from the same top edge — none can ride over another.
+const adviceRowStyle: CSSProperties = {
   display: 'flex',
-  alignItems: 'center',
-  gap: 10,
-  padding: '8px 0',
+  alignItems: 'flex-start',
+  gap: 12,
+  padding: '10px 0',
   borderTop: `1px solid ${INK.agedLine}`,
   borderBottom: `1px solid ${INK.agedLine}`,
 };
+// The centre column. minWidth:0 is the key: without it a flex item refuses to shrink below its
+// content's intrinsic width, and a long sentence would push the card off the row. With it, the
+// sentence wraps and the row stays put at every phone width.
+const adviceCentreStyle: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+};
+const adviceCardWellStyle: CSSProperties = { flexShrink: 0 };
+
+const medallionStyle: CSSProperties = {
+  flexShrink: 0,
+  width: 46,
+  height: 46,
+  borderRadius: '50%',
+  border: `2px solid ${INK.gold}`,
+  background: STAGE.felt,
+  overflow: 'hidden',
+  boxShadow: STAGE.glowGold,
+};
+const medallionImgStyle: CSSProperties = { width: '100%', height: '100%', objectFit: 'cover', display: 'block' };
 
 const dismissStyle: CSSProperties = {
   alignSelf: 'flex-end',

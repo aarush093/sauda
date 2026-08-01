@@ -113,12 +113,6 @@ async function legibility(browser) {
     const zoneEl = container?.parentElement?.parentElement;
     const zone = zoneEl?.getBoundingClientRect();
     const spaceAboveWheel = cRect && zone ? +(cRect.top - zone.top).toFixed(1) : null;
-    // The on-screen scale of the CardFace inside a wheel card = its painted width / 132 (fullWidth).
-    function faceScale(cardEl) {
-      const face = cardEl.querySelector('img,svg')?.closest('[style*="width"]');
-      const r = cardEl.getBoundingClientRect();
-      return r.width / 132; // the card's rendered box is exactly cardWidth; face is 132 → scale
-    }
     // every element that directly holds visible text, with its rendered (post-transform) font px.
     function texts(root) {
       const out = [];

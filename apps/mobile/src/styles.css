@@ -6,6 +6,24 @@
 * {
   box-sizing: border-box;
 }
+
+/* PHONE-2 Q2: the Munshi medallion's gentle idle float — transform-only, so it composites on the GPU
+   and never touches layout. It is applied inline in MunshiChip only when reduced motion is OFF; this
+   media guard is a second belt, so the portrait can never drift under prefers-reduced-motion. */
+@keyframes munshi-idle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .munshi-medallion {
+    animation: none !important;
+  }
+}
 /* P1 (owner phone test 1 Aug): the document itself never scrolls or bounces. The play screen is a
    fixed 100dvh shell (see Table.tsx shellStyle); these globals stop the PAGE behind it from
    scrolling under the URL bar or pull-to-refreshing on a real phone. */

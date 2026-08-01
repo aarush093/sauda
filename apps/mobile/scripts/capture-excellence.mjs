@@ -14,7 +14,7 @@
  *   node scripts/capture-excellence.mjs [--only=<name,name>] [--port=5174]
  */
 import { chromium } from 'playwright';
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, renameSync, rmSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, renameSync, rmSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join } from 'node:path';
 
@@ -39,8 +39,6 @@ const KILL_MOTION = '*,*::before,*::after{animation:none!important;transition:no
 const RECEIVE = { seed: 1, actions: [{ type: 'DRAW' }, { type: 'PLACE_PROPERTY', cardId: 'prop_puraniDilli_0', set: 'puraniDilli' }, { type: 'PLACE_PROPERTY', cardId: 'prop_bangalore_2', set: 'bangalore' }, { type: 'PLACE_PROPERTY', cardId: 'prop_junction_2', set: 'junction' }, { type: 'END_TURN' }, { type: 'DRAW' }, { type: 'PLACE_PROPERTY', cardId: 'wild_jaipur_kolkata_0', set: 'jaipur' }, { type: 'PLACE_PROPERTY', cardId: 'prop_kashi_1', set: 'kashi' }, { type: 'PLACE_PROPERTY', cardId: 'wild_newDelhi_junction_0', set: 'newDelhi' }, { type: 'END_TURN' }, { type: 'DRAW' }, { type: 'PLACE_PROPERTY', cardId: 'wild_any_0', set: 'puraniDilli' }, { type: 'PLAY_ACTION', cardId: 'action_haathKiSafai_2', params: { action: 'haathKiSafai', target: 0, cardId: 'prop_puraniDilli_0' } }, { type: 'RESPOND_ALLOW' }, { type: 'PLACE_PROPERTY', cardId: 'prop_chennai_2', set: 'chennai' }, { type: 'END_TURN' }, { type: 'DRAW' }, { type: 'PLACE_PROPERTY', cardId: 'wild_mumbai_newDelhi_0', set: 'mumbai' }, { type: 'PLACE_PROPERTY', cardId: 'prop_jaipur_0', set: 'jaipur' }, { type: 'PLACE_PROPERTY', cardId: 'prop_bangalore_0', set: 'bangalore' }, { type: 'END_TURN' }, { type: 'DRAW' }, { type: 'PLAY_ACTION', cardId: 'action_haathKiSafai_1', params: { action: 'haathKiSafai', target: 1, cardId: 'wild_newDelhi_junction_0' } }, { type: 'RESPOND_ALLOW' }] };
 
 // ---- gesture helpers (real pointer input) ---------------------------------
-async function boxLeft(page, sel) { const b = await page.locator(sel).first().boundingBox(); if (!b) throw new Error(`no ${sel}`); return { x: b.x + Math.min(12, b.width / 2), y: b.y + b.height / 2 }; }
-async function boxCenter(page, sel) { const b = await page.locator(sel).first().boundingBox(); if (!b) throw new Error(`no ${sel}`); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; }
 async function frames(page, ms) { await page.waitForTimeout(ms); }
 
 // ---------------------------------------------------------------------------
@@ -275,7 +273,7 @@ async function main() {
     }
   } finally {
     await browser.close();
-    try { rmSync(VIDEO_DIR, { recursive: true, force: true }); } catch {}
+    try { rmSync(VIDEO_DIR, { recursive: true, force: true }); } catch { /* temp video dir may already be gone */ }
   }
   writeIndex(results);
   console.log(`\ncapture-excellence: ${results.filter((r) => r.ok).length}/${results.length} scenes → ${OUT}`);

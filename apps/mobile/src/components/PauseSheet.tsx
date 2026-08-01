@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Surface } from './Surface';
+import { useReducedMotion } from '../design/motion';
 import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 export function PauseSheet({
@@ -21,6 +22,7 @@ export function PauseSheet({
   onHome: () => void;
 }) {
   const [confirmingHome, setConfirmingHome] = useState(false);
+  const reduced = useReducedMotion();
   return (
     <div style={backdropStyle} onClick={onResume}>
       <Surface origin="center" onClick={(event) => event.stopPropagation()} style={sheetStyle}>
@@ -38,6 +40,10 @@ export function PauseSheet({
             <button style={secondaryButton} onClick={() => setConfirmingHome(false)}>Keep playing</button>
           </>
         )}
+        {/* PHONE-2 Q3: a quiet, permanent disclosure — not a nag or a toast, just discoverable truth.
+            When the device or browser has forced reduced motion, the player can otherwise never tell
+            the animation layer was switched off (the owner's first phone session, on battery saver). */}
+        {reduced && <div style={reducedNoteStyle}>Reduced motion is on — your device or browser requested it.</div>}
       </Surface>
     </div>
   );
@@ -67,6 +73,8 @@ const sheetStyle: CSSProperties = {
 };
 const titleStyle: CSSProperties = { fontFamily: FONT.display, fontWeight: 700, fontSize: 20, color: INK.deepInk, textAlign: 'center' };
 const confirmText: CSSProperties = { fontFamily: FONT.serif, fontSize: 15, color: INK.deepInk, textAlign: 'center', padding: '4px 0' };
+// A quiet footer line — smaller, muted, centred. Present only when reduced motion is active.
+const reducedNoteStyle: CSSProperties = { fontFamily: FONT.serif, fontSize: 12, color: INK.mutedBrown, textAlign: 'center', padding: '2px 0' };
 
 const baseButton: CSSProperties = {
   width: '100%',

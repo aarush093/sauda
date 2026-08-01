@@ -5,6 +5,7 @@
  */
 import { ACTIONS, KIRAYA_DESCRIPTOR, KIRAYA_NAME, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
 import type { Action, GameEvent, InterruptView, SetId } from '@sauda/engine';
+import type { MunshiAdvice } from '@sauda/bots';
 
 const CARD_BY_ID = new Map(buildDeck().map((card) => [card.id, card]));
 
@@ -78,6 +79,53 @@ export function cardVerbHint(cardId: string): { verbKey: string; reason: string 
   }
   const key = card.kind === 'kiraya' ? 'kiraya' : card.kind === 'action' ? card.action : null;
   return key !== null ? (VERB_HINTS[key] ?? null) : null;
+}
+
+// §PHONE-2 Q2 — Munshi advice copy lives HERE, in the UI layer, not in @sauda/bots.
+// The byte-identical bot freeze protects the bot's BEHAVIOUR: recommend() decides WHICH move and
+// tags it with one of six `reason` enums. That decision is untouched. The human-facing SENTENCE is
+// display copy, so it maps in the mobile layer exactly like card and set names do — a rename is one
+// file edit. (@sauda/bots still ships its own advice.line for CLI/tests; the phone UI ignores it.)
+//
+// Each line is a full, plain-English sentence that NAMES the recommended move and gives ONE concrete
+// reason. The set colour, where a move concerns one, is read from the action so the wording matches
+// the exact board (never a fragment, never a mismatched colour).
+function munshiSetLabel(action: Action): string {
+  switch (action.type) {
+    case 'PLACE_PROPERTY':
+      return SETS[action.set].label;
+    case 'REARRANGE_WILDCARD':
+      return SETS[action.toSet].label;
+    case 'RESPOND_PLACE_RECEIVED':
+      return SETS[action.set].label;
+    case 'PLAY_ACTION':
+      // Only KABZA (seize a whole colour) carries a set; every other action does not.
+      return action.params.action === 'kabza' ? SETS[action.params.set].label : '';
+    default:
+      return '';
+  }
+}
+
+export function munshiAdviceLine(advice: MunshiAdvice): string {
+  const setLabel = munshiSetLabel(advice.action);
+  switch (advice.reason) {
+    case 'completesSet':
+      return setLabel
+        ? `Play this into your ${setLabel} set — it completes the colour and counts toward the three sets you need to win.`
+        : 'Play this card — it completes a set and counts toward the three sets you need to win.';
+    case 'deniesSet':
+      return setLabel
+        ? `Play Kabza on their ${setLabel} set — you seize a finished colour and set back their run at the win.`
+        : 'Play Kabza on that finished set — you seize a whole colour and set back their run at the win.';
+    case 'protectsSet':
+      return 'Play Nahi Chalega to cancel this — the threat is dangerous enough to spend your counter on.';
+    case 'bestValue':
+      return 'Take this now — it is the best value on the board, so grab it before an opponent can.';
+    case 'preservesCounter':
+      return 'Let this one through — save your Nahi Chalega for a bigger threat than this.';
+    case 'generic':
+      return 'Make this play — it is the soundest move on the board, keeping you building toward your sets.';
+  }
 }
 
 // The hand card an action operates on (for grouping in the UI), or null.

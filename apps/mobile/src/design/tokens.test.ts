@@ -83,10 +83,10 @@ describe('LAYERS: the one stacking scale, low → high', () => {
       LAYERS.dragGhost,
       LAYERS.surface,
       LAYERS.sheet,
-      LAYERS.advice,
       LAYERS.toast,
       LAYERS.end,
       LAYERS.badge,
+      LAYERS.advice,
       LAYERS.hud,
     ];
     for (let i = 1; i < order.length; i++) {
@@ -104,6 +104,9 @@ describe('LAYERS: the one stacking scale, low → high', () => {
     // Response sheets over generic surfaces; the advice card over the sheets it explains.
     expect(LAYERS.sheet).toBeGreaterThan(LAYERS.surface);
     expect(LAYERS.advice).toBeGreaterThan(LAYERS.sheet);
+    // PHONE-2 Q2: the advice card must also clear the board's pinned badges (FULL SET / rent / money
+    // pips), or they punch through it — the owner-flagged "pips overlapping the advice text" break.
+    expect(LAYERS.advice).toBeGreaterThan(LAYERS.badge);
     // The end panel is above every in-play surface; the HUD is above everything.
     expect(LAYERS.end).toBeGreaterThan(LAYERS.sheet);
     expect(LAYERS.hud).toBe(Math.max(...Object.values(LAYERS)));

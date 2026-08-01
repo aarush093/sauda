@@ -42,6 +42,8 @@ export const DEV_HUD = {
   panelFill: 'rgba(20,18,31,0.82)', // dark ink scrim so the readout is legible over any zone
   panelText: INK.creamBlue,
   panelBorder: 'rgba(232,184,75,0.5)', // the gold accent at half strength
+  alertFill: INK.stampRed, // PHONE-2 Q3: the reduced-motion "ON" banner — an unmissable filled red
+  alertText: '#FFFFFF', // pure white on that red banner for maximum contrast (dev instrument only)
 } as const;
 
 // Soft elevation only (2–8 dp) — the vintage-paper world has weight, not neon.
@@ -101,10 +103,14 @@ export const LAYERS = {
   dragGhost: 20, // the floating dragged card — above the board + inspect, below modal surfaces
   surface: 30, // modal surfaces the game waits on: discard, targeting, rearrange, table view, beat
   sheet: 40, // response windows: the payment sheet, the NAHI CHALEGA prompt
-  advice: 45, // the Munshi advice card — above sheets (it explains the board beneath it)
   toast: 50, // P3: a transient one-line hint ("drop on a glowing set")
   end: 60, // the game-over panel — above every in-play surface
   badge: 70, // a label/badge pinned over its own card art (local, but on the shared scale)
+  // PHONE-2 Q2: the Munshi advice card is a full-screen consult that must sit above EVERYTHING it
+  // explains — including the board's own pinned badges (FULL SET / rent / money pips at `badge`).
+  // At its old 45 those badges punched through the card (the owner's "pips overlapping the advice"
+  // break). It sits just under the dev HUD so nothing in-play can overlap it.
+  advice: 80, // the Munshi advice card — above the board, its sheets AND its pinned badges
   hud: 90, // the dev HUD debug instrument — top of everything
 } as const;
 

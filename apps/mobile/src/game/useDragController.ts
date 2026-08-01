@@ -302,7 +302,11 @@ export function useDragController() {
     state.lastFrameT = now();
     state.spec.onMiss?.(state.cardId);
     schedule();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Deps are intentionally just [preview, schedule]: everything else this callback touches is a
+    // ref (physics, reducedCarry) or a module-level pure helper, both stable across renders, so
+    // widening the array would only re-create the handler for no behavioural gain. (No react-hooks
+    // lint plugin is installed — see eslint.config.js / DECISIONS — so this is a plain note, not a
+    // suppression of a rule that isn't loaded.)
   }, [preview, schedule]);
 
   const cancel = useCallback(() => {
