@@ -20,7 +20,8 @@ import type { SeatConfig } from '../game/store';
 import { dropZonesForCard, rearrangeDestinations } from '../game/interaction';
 import type { DropZone } from '../game/interaction';
 import { useHandDrag } from '../game/useHandDrag';
-import type { DragState } from '../game/useFanGesture';
+import { useDragController } from '../game/useDragController';
+import type { CarrySpec } from '../game/useDragController';
 import { describeCard } from '../game/labels';
 import { CardFace, ScaledCard } from './CardFace';
 import { InspectCard } from './InspectCard';
@@ -213,12 +214,24 @@ export function Board({
     return new Set(dropZonesForCard(actions, cardId).map(dropZoneId));
   }
 
-  // Two drag sources feed one board drag: the hand-fan scrub (useFanGesture, reported up from
-  // HandFan) and the placed-wildcard rearrange token (useHandDrag). They are mutually exclusive
-  // — you can only carry one thing — so the board reads whichever is active.
-  const { drag: rearrangeDrag, cardHandlers } = useHandDrag({ eligibleZones, onTap: onTapCard, onDrop: onDropCard });
-  const [fanDrag, setFanDrag] = useState<DragState | null>(null);
-  const [inspectDrag, setInspectDrag] = useState<DragState | null>(null); // a drag begun on the inspected card
+  // ONE drag controller owns every carry (K1): the hand-fan scrub, the placed-wildcard rearrange
+  // token, a received card, and the inspect overlay all feed it, so there is a single springy,
+  // magnetic, flingable floating preview. The board reads its `preview` (aliased `drag` below, so
+  // the existing zone-glow + floating-preview code is untouched).
+  const dragCtl = useDragController();
+  const preview = dragCtl.preview;
+
+  // The main carry spec — the hand wheel, the rearrange token and the inspect overlay all commit
+  // through onDropCard using the board's own eligibleZones (both derived above from legalActions).
+  const mainSpec: CarrySpec = { eligibleZones, onCommit: onDropCard };
+  const startMainDrag = (cardId: string, x: number, y: number) => dragCtl.begin(cardId, x, y, mainSpec);
+  const { cardHandlers } = useHandDrag({
+    onTap: onTapCard,
+    onDragStart: startMainDrag,
+    onDragMove: dragCtl.move,
+    onDragEnd: dragCtl.release,
+    onDragCancel: dragCtl.cancel,
+  });
 
   // G6: the received card on stage is draggable onto a glowing destination set (tap a set as the
   // fallback). Both fire the exact RESPOND_PLACE_RECEIVED the engine enumerated for that set.
@@ -233,16 +246,22 @@ export function Board({
   }
   const receiveZones = (_cardId: string): Set<string> =>
     receive ? new Set([...receive.bySet.keys()].map((set) => `set:${set}`)) : new Set();
-  const { drag: receiveDrag, cardHandlers: receiveHandlers } = useHandDrag({
+  const receiveSpec: CarrySpec = {
     eligibleZones: receiveZones,
-    onTap: () => {}, // a plain tap on the staged received card does nothing — placement is on the sets
-    onDrop: (_cardId, zoneId) => {
+    onCommit: (_cardId, zoneId) => {
       if (zoneId.startsWith('set:')) {
         placeReceivedIn(zoneId.slice(4) as SetId);
       }
     },
+  };
+  const { cardHandlers: receiveHandlers } = useHandDrag({
+    onTap: () => {}, // a plain tap on the staged received card does nothing — placement is on the sets
+    onDragStart: (cardId, x, y) => dragCtl.begin(cardId, x, y, receiveSpec),
+    onDragMove: dragCtl.move,
+    onDragEnd: dragCtl.release,
+    onDragCancel: dragCtl.cancel,
   });
-  const drag = fanDrag ?? rearrangeDrag ?? inspectDrag ?? receiveDrag;
+  const drag = preview;
 
   // Which zones glow while a card is in the air (soft = eligible, hot = under the pointer).
   // A placed wildcard being dragged lights only its legal destination groups (B8).
@@ -399,11 +418,12 @@ export function Board({
           <HandWheel
             cards={observation.myHand}
             interactiveIds={handTappableIds}
-            drag={drag}
-            eligibleZones={eligibleZones}
+            carriedCardId={preview?.cardId ?? null}
             onTap={onTapCard}
-            onDrop={onDropCard}
-            onDragChange={setFanDrag}
+            onDragStart={startMainDrag}
+            onDragMove={dragCtl.move}
+            onDragEnd={dragCtl.release}
+            onDragCancel={dragCtl.cancel}
           />
         </div>
       </div>
@@ -493,10 +513,12 @@ export function Board({
         <InspectCard
           cardId={inspecting}
           actions={actions}
-          eligibleZones={eligibleZones}
-          onDrop={onDropCard}
+          dragging={preview?.cardId === inspecting}
           onDismiss={() => setInspectingCardId(null)}
-          onDragChange={setInspectDrag}
+          onDragStart={startMainDrag}
+          onDragMove={dragCtl.move}
+          onDragEnd={dragCtl.release}
+          onDragCancel={dragCtl.cancel}
         />
       )}
     </div>

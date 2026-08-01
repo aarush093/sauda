@@ -43,11 +43,12 @@ export function DevWheel({ count }: { count: number }) {
         <HandWheel
           cards={cards}
           interactiveIds={interactive}
-          drag={null}
-          eligibleZones={() => new Set()}
+          carriedCardId={null}
           onTap={(id) => setCards((current) => current.filter((card) => card !== id))}
-          onDrop={(id) => setCards((current) => current.filter((card) => card !== id))}
-          onDragChange={() => {}}
+          onDragStart={() => {}}
+          onDragMove={() => {}}
+          onDragEnd={() => {}}
+          onDragCancel={() => {}}
         />
       </div>
     </div>

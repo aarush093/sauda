@@ -6,20 +6,19 @@
  *
  * Interaction is the SCRUB (reused from the fan): a finger glides over the wheel, the card under the
  * pointer lifts upright and clear of its neighbours, sliding re-targets, lifting ~40px above the
- * band turns the peek into a drag, and a release in the band taps (→ INSPECT, G1). The gesture lives
- * on the container so the heavy overlap never traps a card; the cards themselves are inert.
+ * band lifts the peek into a drag, and a release in the band taps (→ INSPECT, G1). Once a drag
+ * begins the shared drag CONTROLLER (K1) owns the carry; this component just reports the gesture up
+ * and fades whichever card is currently in the air.
  *
  * Motion: each card carries ONE transform-only transition (~175ms ease-out) on its OUTER layer
  * (position + spoke angle) so when the hand size changes the remaining cards GLIDE to their new even
- * spacing — the owner's "seamless readjustment", the single M4b motion carve-out. The peek lives on
- * an INNER layer with no transition, so the pickup stays instant (its dedicated ease is M4c).
+ * spacing — the owner's "seamless readjustment". The peek lives on an INNER layer with no
+ * transition, so the pickup stays instant.
  */
-import { useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { CardFace } from './CardFace';
 import { wheelLayout } from '../game/wheelLayout';
 import { useFanGesture } from '../game/useFanGesture';
-import type { DragState } from '../game/useFanGesture';
 import { useMeasuredWidth } from '../game/useMeasuredWidth';
 import { CARD } from '../design/tokens';
 
@@ -31,19 +30,21 @@ const WHEEL_FALLBACK_WIDTH = 320; // before the slot is measured (and under jsdo
 export function HandWheel({
   cards,
   interactiveIds,
-  drag,
-  eligibleZones,
+  carriedCardId,
   onTap,
-  onDrop,
-  onDragChange,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
+  onDragCancel,
 }: {
   cards: string[];
   interactiveIds: Set<string>;
-  drag: DragState | null; // the merged board drag — used only to fade the card being carried
-  eligibleZones: (cardId: string) => Set<string>;
+  carriedCardId: string | null; // the card currently in the air (from the controller) — faded here
   onTap: (cardId: string) => void;
-  onDrop: (cardId: string, zoneId: string) => void;
-  onDragChange: (drag: DragState | null) => void;
+  onDragStart: (cardId: string, x: number, y: number) => void;
+  onDragMove: (x: number, y: number) => void;
+  onDragEnd: (x: number, y: number) => void;
+  onDragCancel: () => void;
 }) {
   const [containerRef, measured] = useMeasuredWidth<HTMLDivElement>();
   const available = measured || WHEEL_FALLBACK_WIDTH;
@@ -75,12 +76,7 @@ export function HandWheel({
     return found;
   }
 
-  const { peekCardId, drag: fanDrag, fanHandlers } = useFanGesture({ cardAtX, eligibleZones, onTap, onDrop });
-
-  // Report the wheel's drag up so the board can render the floating preview + drop-zone glow.
-  useEffect(() => {
-    onDragChange(fanDrag);
-  }, [fanDrag, onDragChange]);
+  const { peekCardId, fanHandlers } = useFanGesture({ cardAtX, onTap, onDragStart, onDragMove, onDragEnd, onDragCancel });
 
   return (
     <div
@@ -95,7 +91,7 @@ export function HandWheel({
         cards.map((id, index) => {
           const slot = slots[index]!;
           const isPeek = id === peekCardId;
-          const isDragging = drag?.cardId === id;
+          const isDragging = id === carriedCardId;
           return (
             <div
               key={id}
@@ -117,7 +113,7 @@ export function HandWheel({
               }}
             >
               {/* INNER layer: the peek straighten (counter the spoke angle) + lift + grow, INSTANT
-                  (no transition) so the pickup doesn't ease — its dedicated ~90ms ease is M4c. */}
+                  (no transition) so the pickup doesn't ease. */}
               <div
                 style={{
                   width: cardWidth,
