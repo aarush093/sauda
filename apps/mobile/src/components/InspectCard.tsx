@@ -22,7 +22,7 @@ import { railForCard } from '../game/staging';
 import { cardVerbHint } from '../game/labels';
 import { useHandDrag } from '../game/useHandDrag';
 import { Surface } from './Surface';
-import { STAGE, INK, FONT } from '../design/tokens';
+import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 const INSPECT_CARD_PX = 200; // ~56% of the 360 frame — large and fully readable (G1)
 
@@ -57,7 +57,17 @@ export function InspectCard({
   const { cardHandlers } = useHandDrag({ onTap: onDismiss, onDragStart, onDragMove, onDragEnd, onDragCancel });
 
   return (
-    <div onClick={onDismiss} style={{ ...overlayStyle, pointerEvents: dragging ? 'none' : 'auto' }}>
+    <div
+      onClick={onDismiss}
+      style={{
+        ...overlayStyle,
+        pointerEvents: dragging ? 'none' : 'auto',
+        // P2 bug (a) fix: once the inspected card is being DRAGGED, drop the dark scrim to
+        // transparent — otherwise this full-board absolute scrim (8% ink) paints over the hand
+        // wheel and reads as a "dark slab covering the cards" (the owner's deal-breaker).
+        background: dragging ? 'transparent' : STAGE.scrimDrag,
+      }}
+    >
       {/* the card + optional why-line eases up from centre (K2); a tap here is the card's own
           gesture, not a scrim tap. The Surface freezes to instant under reduced motion. */}
       <Surface origin="center" onClick={(event) => event.stopPropagation()} style={columnStyle}>
@@ -80,7 +90,7 @@ export function InspectCard({
 const overlayStyle: CSSProperties = {
   position: 'absolute',
   inset: 0,
-  zIndex: 5,
+  zIndex: LAYERS.inspect,
   background: STAGE.scrimDrag, // the light stage scrim — the table stays visible behind it (A5)
   display: 'flex',
   flexDirection: 'column',

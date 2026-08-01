@@ -21,7 +21,7 @@ import type { CSSProperties } from 'react';
 import { ScaledCard } from './CardFace';
 import { useMeasuredSize } from '../game/useMeasuredWidth';
 import { MOTION_MS, useReducedMotion } from '../design/motion';
-import { CARD, STAGE } from '../design/tokens';
+import { CARD, STAGE, LAYERS } from '../design/tokens';
 
 const MAX_STAGE_WIDTH = 112; // the old fixed stage size — now an upper bound; height usually wins
 const STAGE_PADDING = 12; // breathing room so the fitted card never kisses the band edges
@@ -146,12 +146,14 @@ function SpotlightCard({
   );
 }
 
-// The spotlight fills the stage cell and centres the card, elevated above the ticker/felt (z 4, well
-// under the drag preview's z 50). pointer-events off — it is a display beat, not a target.
+// The spotlight fills the stage cell and centres the card, elevated above the ticker (LAYERS.stage >
+// LAYERS.ticker) and well under the drag ghost. pointer-events off — it is a display beat, not a
+// target. LAYERS.stage is the brightest in-board layer, so a played card always reads over the ticker
+// (the owner-shot "card behind the ticker" bug — now guaranteed by the scale, P2).
 const containerStyle: CSSProperties = {
   position: 'absolute',
   inset: 0,
-  zIndex: 4,
+  zIndex: LAYERS.stage,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

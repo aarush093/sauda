@@ -11,7 +11,7 @@ import type { CSSProperties } from 'react';
 import type { InterruptView } from '@sauda/engine';
 import { describeThreat } from '../game/labels';
 import { Surface } from './Surface';
-import { STAGE, INK, FONT } from '../design/tokens';
+import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 const TIMEOUT_MS = 10000; // D4: the window auto-allows after ten seconds
 
@@ -67,7 +67,7 @@ export function InterruptPrompt({
 const overlayStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
-  zIndex: 10,
+  zIndex: LAYERS.sheet,
   background: STAGE.scrimDrag, // light — the table stays visible (§7)
   display: 'flex',
   alignItems: 'center',

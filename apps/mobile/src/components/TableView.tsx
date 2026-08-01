@@ -11,7 +11,7 @@ import { SETS } from '@sauda/engine';
 import type { PropertyGroup, SetId } from '@sauda/engine';
 import { SetCascade } from './SetCascade';
 import { Surface } from './Surface';
-import { STAGE, INK, FONT } from '../design/tokens';
+import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 const EXPAND_CARD_PX = 96; // K5 legibility floor: cards render at >= 96px wide (was 92)
@@ -91,7 +91,7 @@ export function TableView({
 const overlayStyle: CSSProperties = {
   position: 'absolute',
   inset: 0,
-  zIndex: 7,
+  zIndex: LAYERS.surface,
   background: STAGE.scrimSheet,
   backdropFilter: 'blur(3px)', // static blur (no animation — M4c owns motion)
   display: 'flex',
@@ -116,7 +116,7 @@ const closeXStyle: CSSProperties = {
   position: 'absolute',
   top: 10,
   right: 12,
-  zIndex: 1,
+  zIndex: LAYERS.badge, // the close ✕ pinned over the scrolling grid within the modal
   width: 30,
   height: 30,
   borderRadius: '50%',

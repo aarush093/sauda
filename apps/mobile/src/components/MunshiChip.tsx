@@ -20,7 +20,7 @@ import type { MunshiAdvice } from '@sauda/bots';
 import { useGame } from '../game/store';
 import { actionCardId, describeCard } from '../game/labels';
 import { ScaledCard } from './CardFace';
-import { STAGE, INK, FONT } from '../design/tokens';
+import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 // The recommended move as one brief label, plus the hand card it concerns (if any) so the
 // advice card can show its face. Presentation only — it reads the action, decides no rule.
@@ -143,7 +143,7 @@ function pipStyle(filled: boolean): CSSProperties {
 const scrimStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
-  zIndex: 12, // above the rail (5), sheet & prompt (10) — they all sleep under the advice card
+  zIndex: LAYERS.advice, // above the sheets — they sleep under the advice card (it explains them)
   background: STAGE.scrimSheet,
   display: 'flex',
   alignItems: 'center',

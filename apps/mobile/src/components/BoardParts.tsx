@@ -12,7 +12,7 @@ import { CardBack } from './CardBack';
 import { ScaledCard } from './CardFace';
 import { SetCascade } from './SetCascade';
 import { useMeasuredWidth } from '../game/useMeasuredWidth';
-import { STAGE, INK, FONT, CARD, GLOW } from '../design/tokens';
+import { STAGE, INK, FONT, CARD, GLOW, LAYERS } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 export const PLAYS_PER_TURN = 3; // §7 rules default; pips render 3 slots
@@ -82,7 +82,7 @@ const expandHintStyle: CSSProperties = {
   position: 'absolute',
   top: 2,
   left: 2,
-  zIndex: 100,
+  zIndex: LAYERS.badge,
   padding: '0 2px',
   borderRadius: 3,
   background: STAGE.scrimSheet,

@@ -38,7 +38,7 @@ import { MunshiChip } from './MunshiChip';
 import { TurnToken } from './TurnToken';
 import { DiscardTop, DrawPile, GroupRow, OpponentGroupStrip, PlayerHeader, seatName } from './BoardParts';
 import { BankTray } from './BankTray';
-import { STAGE, INK, SHADOW, FONT, GLOW } from '../design/tokens';
+import { STAGE, INK, SHADOW, FONT, GLOW, LAYERS } from '../design/tokens';
 import { tallyRender } from '../game/renderTally';
 
 
@@ -330,7 +330,7 @@ export function Board({
           stage never shrinks the reveal. */}
       <div data-zone="stage" style={zone(zones.stage, { display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'visible' })}>
         <Ticker lines={tickerLines} />
-        <div data-drop="play" style={{ flex: 1, minHeight: 0, margin: '0 8px 6px', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hotZoneId === 'play' ? GLOW.hot : playEligible ? GLOW.soft : 'none' }}>
+        <div data-drop="play" style={{ position: 'relative', zIndex: LAYERS.stage, flex: 1, minHeight: 0, margin: '0 8px 6px', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hotZoneId === 'play' ? GLOW.hot : playEligible ? GLOW.soft : 'none' }}>
           {receive ? (
             // G6: a wildcard reached me as payment — it sits on stage; I drag it to a glowing set
             // (or tap one). Its legal sets glow below; dragging follows the pointer like any card.
@@ -436,7 +436,7 @@ export function Board({
       {/* the floating drag preview — lifted above the finger, pointer-events:none so it never
           hides the drop zone beneath it from the hit-test. */}
       {drag && (
-        <div style={{ position: 'fixed', left: drag.x, top: drag.y, pointerEvents: 'none', zIndex: 50 }}>
+        <div style={{ position: 'fixed', left: drag.x, top: drag.y, pointerEvents: 'none', zIndex: LAYERS.dragGhost }}>
           <div style={{ transform: 'translate(-50%, -100%) translateY(-32px) scale(0.62)', transformOrigin: 'bottom center' }}>
             <div style={{ boxShadow: SHADOW.dragLift, borderRadius: 8 }}>
               <CardFace cardId={drag.cardId} />

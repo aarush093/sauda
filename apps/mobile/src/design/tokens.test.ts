@@ -13,6 +13,7 @@ import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { LAYERS } from './tokens';
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), '..'); // apps/mobile/src
 const TOKENS_FILE = join('design', 'tokens.ts'); // the single source of colour
@@ -61,5 +62,49 @@ describe('visual constancy: colours live only in design/tokens.ts', () => {
       offenders,
       `raw colour literals found — move them into design/tokens.ts:\n${offenders.join('\n')}`,
     ).toEqual([]);
+  });
+});
+
+// P2 (owner phone test 1 Aug): the ONE stacking scale. This locks the ordering the layer audit
+// depends on, so a future edit that reshuffles a value can't silently reintroduce a slab-over-card
+// or ticker-over-card bug — the relationships are asserted, not eyeballed.
+describe('LAYERS: the one stacking scale, low → high', () => {
+  it('is strictly increasing in its documented order', () => {
+    const order = [
+      LAYERS.felt,
+      LAYERS.board,
+      LAYERS.myArea,
+      LAYERS.wheel,
+      LAYERS.ticker,
+      LAYERS.stage,
+      LAYERS.inspect,
+      LAYERS.dropBand,
+      LAYERS.dragGhost,
+      LAYERS.surface,
+      LAYERS.sheet,
+      LAYERS.advice,
+      LAYERS.toast,
+      LAYERS.end,
+      LAYERS.badge,
+      LAYERS.hud,
+    ];
+    for (let i = 1; i < order.length; i++) {
+      expect(order[i]!).toBeGreaterThan(order[i - 1]!);
+    }
+  });
+
+  it('holds the relationships the three owner-shot bugs depend on', () => {
+    // A played/received card always beats the ticker (bug: ticker over the card).
+    expect(LAYERS.stage).toBeGreaterThan(LAYERS.ticker);
+    // The drag ghost rides above the inspect overlay (so you can drag a card out of it)…
+    expect(LAYERS.dragGhost).toBeGreaterThan(LAYERS.inspect);
+    // …but under the modal response surfaces the game waits on.
+    expect(LAYERS.surface).toBeGreaterThan(LAYERS.dragGhost);
+    // Response sheets over generic surfaces; the advice card over the sheets it explains.
+    expect(LAYERS.sheet).toBeGreaterThan(LAYERS.surface);
+    expect(LAYERS.advice).toBeGreaterThan(LAYERS.sheet);
+    // The end panel is above every in-play surface; the HUD is above everything.
+    expect(LAYERS.end).toBeGreaterThan(LAYERS.sheet);
+    expect(LAYERS.hud).toBe(Math.max(...Object.values(LAYERS)));
   });
 });

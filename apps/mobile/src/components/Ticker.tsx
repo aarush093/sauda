@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { STAGE, FONT } from '../design/tokens';
+import { STAGE, FONT, LAYERS } from '../design/tokens';
 import { MOTION_MS, reduce, useReducedMotion } from '../design/motion';
 
 export function Ticker({ lines }: { lines: string[] }) {
@@ -53,7 +53,12 @@ function TickerLine({ text }: { text: string }) {
   );
 }
 
+// P2: the ticker is the LOWEST thing on the stage (LAYERS.ticker). A played/received/inspected card
+// always draws above it (LAYERS.stage / inspect), so ticker text can never print over a card again
+// (the owner-shot bug). position:relative is required for the z-index to take effect.
 const wrapStyle: CSSProperties = {
+  position: 'relative',
+  zIndex: LAYERS.ticker,
   minHeight: 26,
   display: 'flex',
   flexDirection: 'column',

@@ -12,7 +12,7 @@ import type { Action, CardId, PlayerId, SetId } from '@sauda/engine';
 import { actionTargeting, kirayaPlan } from '../game/interaction';
 import type { KirayaPlan, TargetStep } from '../game/interaction';
 import { ScaledCard } from './CardFace';
-import { STAGE, INK, FONT } from '../design/tokens';
+import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 export function TargetingOverlay({
   cardId,
@@ -147,7 +147,7 @@ function CancelRow({ onCancel }: { onCancel: () => void }) {
 const overlayStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
-  zIndex: 6,
+  zIndex: LAYERS.surface,
   background: STAGE.scrimSheet,
   display: 'flex',
   alignItems: 'center',

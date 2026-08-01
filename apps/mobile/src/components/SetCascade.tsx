@@ -11,7 +11,7 @@ import type { CSSProperties } from 'react';
 import { isSetComplete } from '@sauda/engine';
 import type { PropertyGroup } from '@sauda/engine';
 import { ScaledCard } from './CardFace';
-import { CARD, STAGE, INK, FONT } from '../design/tokens';
+import { CARD, STAGE, INK, FONT, LAYERS } from '../design/tokens';
 import { tallyRender } from '../game/renderTally';
 
 const BANNER_STRIP = 0.26; // each stacked card reveals ~the top 26% (banner + value badge) of the next
@@ -84,7 +84,7 @@ const ribbonStyle: CSSProperties = {
   position: 'absolute',
   top: 2,
   right: 2,
-  zIndex: 100,
+  zIndex: LAYERS.badge,
   background: STAGE.accentGold,
   color: INK.deepInk,
   fontFamily: FONT.display,
@@ -97,7 +97,7 @@ const rentBadgeStyle: CSSProperties = {
   position: 'absolute',
   bottom: 2,
   right: 2,
-  zIndex: 100,
+  zIndex: LAYERS.badge,
   background: INK.gold,
   color: INK.deepInk,
   fontFamily: FONT.mono,
@@ -110,7 +110,7 @@ const buildingBadgeStyle: CSSProperties = {
   position: 'absolute',
   bottom: 2,
   left: 2,
-  zIndex: 100,
+  zIndex: LAYERS.badge,
   background: INK.stampRed,
   color: INK.cardCream,
   fontFamily: FONT.mono,

@@ -8,7 +8,7 @@ import type { CSSProperties } from 'react';
 import type { Action, CardId } from '@sauda/engine';
 import type { RearrangeTarget } from '../game/interaction';
 import { ScaledCard } from './CardFace';
-import { STAGE, INK, FONT } from '../design/tokens';
+import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 export function RearrangeChooser({
   cardId,
@@ -41,7 +41,7 @@ export function RearrangeChooser({
   );
 }
 
-const overlayStyle: CSSProperties = { position: 'fixed', inset: 0, zIndex: 6, background: STAGE.scrimSheet, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const overlayStyle: CSSProperties = { position: 'fixed', inset: 0, zIndex: LAYERS.surface, background: STAGE.scrimSheet, display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const panelStyle: CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, maxWidth: '88vw' };
 const promptStyle: CSSProperties = { fontFamily: FONT.display, fontWeight: 700, fontSize: 15, color: STAGE.cardCream };
 const chipRowStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' };

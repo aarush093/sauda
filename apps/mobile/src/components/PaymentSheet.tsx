@@ -18,7 +18,7 @@ import type { PayableCard } from '../game/paymentModel';
 import { paymentDetails, paymentDisclosure, selectedTotal } from '../game/paymentModel';
 import { ScaledCard } from './CardFace';
 import { Surface } from './Surface';
-import { STAGE, INK, FONT, SHADOW } from '../design/tokens';
+import { STAGE, INK, FONT, SHADOW, LAYERS } from '../design/tokens';
 
 const PAY_CARD_PX = 76; // the payment options — REAL scaled card faces (G4 · fixes the F4 regression)
 
@@ -135,7 +135,7 @@ export function PaymentSheet({
 const overlayStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
-  zIndex: 10,
+  zIndex: LAYERS.sheet,
   background: STAGE.scrimSheet,
   display: 'flex',
   flexDirection: 'column',

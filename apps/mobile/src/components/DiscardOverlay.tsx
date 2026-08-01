@@ -11,7 +11,7 @@
 import type { CSSProperties } from 'react';
 import { ScaledCard } from './CardFace';
 import { Surface } from './Surface';
-import { GLOW, STAGE, INK, FONT } from '../design/tokens';
+import { GLOW, STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 const HAND_LIMIT = 7; // §4.4 / Niyam Card 3
 const DISCARD_CARD_PX = 82; // readable, and small enough that up to ~11 cards fit in two rows at 360
@@ -52,7 +52,7 @@ const panelStyle: CSSProperties = {
 const overlayStyle: CSSProperties = {
   position: 'absolute',
   inset: 0,
-  zIndex: 6, // above the board turn-flow, below the response sheets (payment/prompt at z10)
+  zIndex: LAYERS.surface, // above the board, below the response sheets (payment/prompt)
   background: STAGE.scrimSheet, // the static dim
   backdropFilter: 'blur(3px)', // the static blur — no animation (M4c owns motion)
   display: 'flex',

@@ -12,7 +12,7 @@ import { SETS } from '@sauda/engine';
 import type { PropertyGroup, SetId } from '@sauda/engine';
 import { SetCascade } from './SetCascade';
 import { Surface } from './Surface';
-import { STAGE, INK, FONT } from '../design/tokens';
+import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 const WIN_CARD_PX = 62; // the winning sets as real card cascades (G4 END OVERLAY)
 
@@ -49,7 +49,7 @@ export function EndOverlay({
 const overlayStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
-  zIndex: 20, // above every play surface — the game is over
+  zIndex: LAYERS.end, // above every play surface — the game is over
   background: STAGE.scrimSheet,
   display: 'flex',
   alignItems: 'center',

@@ -25,7 +25,7 @@ import { PaymentSheet } from './PaymentSheet';
 import { InterruptPrompt } from './InterruptPrompt';
 import { HandoffOverlay } from './HandoffOverlay';
 import { EndOverlay } from './EndOverlay';
-import { STAGE, INK, FONT } from '../design/tokens';
+import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 
@@ -332,7 +332,7 @@ const shellStyle = {
 const beatOverlayStyle = {
   position: 'fixed',
   inset: 0,
-  zIndex: 8,
+  zIndex: LAYERS.surface,
   background: STAGE.scrimDrag,
   display: 'flex',
   alignItems: 'center',
