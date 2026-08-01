@@ -6,6 +6,18 @@
 * {
   box-sizing: border-box;
 }
+/* P1 (owner phone test 1 Aug): the document itself never scrolls or bounces. The play screen is a
+   fixed 100dvh shell (see Table.tsx shellStyle); these globals stop the PAGE behind it from
+   scrolling under the URL bar or pull-to-refreshing on a real phone. */
+html,
+body,
+#root {
+  height: 100%;
+}
+html,
+body {
+  overscroll-behavior: none;
+}
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;

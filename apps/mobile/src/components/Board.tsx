@@ -20,6 +20,8 @@ import type { SeatConfig } from '../game/store';
 import { dropZonesForCard, rearrangeDestinations } from '../game/interaction';
 import type { DropZone } from '../game/interaction';
 import { useHandDrag } from '../game/useHandDrag';
+import { useMeasuredHeight } from '../game/useMeasuredWidth';
+import { resolveZones } from '../game/zoneLayout';
 import { useDragController } from '../game/useDragController';
 import type { CarrySpec } from '../game/useDragController';
 import { describeCard } from '../game/labels';
@@ -266,13 +268,26 @@ export function Board({
   }
   const hotZoneId = drag?.hotZoneId ?? null;
 
-  const zone = (basisPct: number, extra?: CSSProperties): CSSProperties => ({ flex: `0 0 ${basisPct}%`, minHeight: 0, padding: 8, ...extra });
+  // P1: measure the board's REAL box (the shell is 100dvh minus safe-area padding, so this is the
+  // true height on the phone) and split it with the clamped-flex law — no percentages, no void.
+  const [boardRef, boardHeight] = useMeasuredHeight<HTMLDivElement>(740);
+  const zones = resolveZones(boardHeight);
+
+  // A zone is a fixed-height flex row: an explicit px height from the law above, so the HUD and the
+  // captures read exactly what resolveZones computed. `data-zone` lets the HUD/capture measure it.
+  const zone = (heightPx: number, extra?: CSSProperties): CSSProperties => ({
+    flex: `0 0 ${heightPx}px`,
+    height: heightPx,
+    minHeight: 0,
+    padding: 8,
+    ...extra,
+  });
 
   return (
-    <div style={boardStyle}>
-      {/* opponent row (21%, G4 zone retune) — pills + their REAL card cascades; tap a row to expand
-          to that opponent's full readable table view. */}
-      <div style={zone(21, { display: 'flex', gap: 8, overflow: 'hidden' })}>
+    <div ref={boardRef} style={boardStyle}>
+      {/* opponent row — pills + their REAL card cascades; tap a row to expand to that opponent's
+          full readable table view. Height from the zone law (min/max px, clamped-flex). */}
+      <div data-zone="opponents" style={zone(zones.opponents, { display: 'flex', gap: 8, overflow: 'hidden' })}>
         {observation.opponents.map((opponent) => (
           // H1a (excellence pass): the WHOLE opponent column is the tap target (not just the card
           // strip), and it carries a VISIBLE expand affordance — so on a touch screen (no cursor) it
@@ -290,8 +305,8 @@ export function Board({
         ))}
       </div>
 
-      {/* table band (9%) — draw pile · turn chip · discard */}
-      <div style={zone(9, { display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${STAGE.scrimSheet}`, borderBottom: `1px solid ${STAGE.scrimSheet}` })}>
+      {/* table band — draw pile · turn chip · discard (fixed slim strip) */}
+      <div data-zone="table" style={zone(zones.table, { display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${STAGE.scrimSheet}`, borderBottom: `1px solid ${STAGE.scrimSheet}` })}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {/* L4: the pile is display only — the turn-start draw is automatic, never a tap. */}
           <DrawPile count={observation.drawPileCount} />
@@ -309,10 +324,11 @@ export function Board({
         </div>
       </div>
 
-      {/* centre stage (28%, G4 zone retune) — the 2-line ticker (§8), then open felt / the tapped
-          card's overlay / the centre PLAY drop zone / the Declare SAUDA! button (A11). Positioned so
-          the K2 spotlight can overlay the WHOLE stage (ticker + play), fitting large and bright. */}
-      <div style={zone(28, { display: 'flex', flexDirection: 'column', position: 'relative' })}>
+      {/* centre stage — the 2-line ticker (§8), then open felt / the tapped card's overlay / the
+          centre PLAY drop zone. Clamped-flex: idle it collapses toward the ticker (no void, P1); a
+          played card's spotlight overlays it and may overflow (overflow visible) so a short idle
+          stage never shrinks the reveal. */}
+      <div data-zone="stage" style={zone(zones.stage, { display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'visible' })}>
         <Ticker lines={tickerLines} />
         <div data-drop="play" style={{ flex: 1, minHeight: 0, margin: '0 8px 6px', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hotZoneId === 'play' ? GLOW.hot : playEligible ? GLOW.soft : 'none' }}>
           {receive ? (
@@ -342,8 +358,9 @@ export function Board({
         <StageSpotlight cardId={receive ? null : spotlightCardId} fromOpponent={spotlightFromOpponent} />
       </div>
 
-      {/* my area (42%, G4 zone retune) — still the largest zone (hierarchy law A2); sleeps off-turn. */}
-      <div style={zone(42, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
+      {/* my area — the largest zone (hierarchy law A2), absorbing surplus height first; sleeps
+          off-turn. This is the thumb zone: the hand wheel, my groups, and the bank tray. */}
+      <div data-zone="myArea" style={zone(zones.myArea, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           {/* left: the You identity + the Munshi advisor chip (K3 — restyled to read unmistakably as
               an advisor, never confusable with the turn token). */}
@@ -373,7 +390,10 @@ export function Board({
             hot={hotZoneId === 'bank'}
           />
         </div>
-        <div style={{ minHeight: 0, overflow: 'hidden' }}>
+        {/* my property board — the GROWTH area of my zone: it absorbs the surplus height (P1) so
+            the empty felt reads as "where my deeds go" (the ticker points here at game start), not a
+            random void, and the wheel sits directly below it instead of floating at the far bottom. */}
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <GroupRow
             properties={observation.myProperties}
             kiraya={observation.myKiraya}
@@ -398,8 +418,8 @@ export function Board({
         )}
         {/* bottom band: the hand WHEEL (G2), hub at bottom-centre, spanning the FULL my-area width —
             no control shares this band (End turn moved to the header, H2b), so the wheel stays widest
-            and nothing ever overlaps a card. */}
-        <div style={{ marginTop: 'auto' }}>
+            and nothing ever overlaps a card. It sits directly under the property board above (P1). */}
+        <div>
           <HandWheel
             cards={observation.myHand}
             interactiveIds={handTappableIds}
@@ -510,16 +530,16 @@ export function Board({
   );
 }
 
+// P1: the board FILLS its shell (the fixed 100dvh, safe-area-padded container in Table.tsx) — no
+// centered min()-capped box, so there are no felt margins and no void. Height flows to the zone law.
 const boardStyle: CSSProperties = {
-  width: 'min(96vw, 460px)',
-  height: 'min(90vh, 780px)',
-  margin: '0 auto',
+  width: '100%',
+  height: '100%',
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
   background: STAGE.felt,
   color: STAGE.textOnFelt,
-  borderRadius: 12,
   overflow: 'hidden',
   fontFamily: FONT.serif,
 };

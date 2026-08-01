@@ -28,10 +28,12 @@ function AutoStartTable() {
       newGame({ seats: FRAME_SEATS, seed: 424242 });
     }
   }, [state, newGame]);
+  // P1 scroll guard — now against the REAL viewport (the play screen is a fixed 100dvh shell, so a
+  // correct layout keeps the document exactly the viewport height in every device profile).
   useEffect(() => {
     const root = document.documentElement;
     if (root.scrollHeight > window.innerHeight + 1) {
-      console.warn(`[frame360] play screen scrolls: ${root.scrollHeight}px > ${window.innerHeight}px viewport`);
+      console.warn(`[scroll-guard] play screen scrolls: ${root.scrollHeight}px > ${window.innerHeight}px viewport`);
     }
   });
   return state ? (
@@ -85,10 +87,12 @@ export function App() {
     );
   }
 
+  // Home keeps the plain centered .app menu; the Table provides its own fixed 100dvh shell (P1),
+  // so it must NOT be wrapped in .app's max-width/padding box. The HUD floats above either.
   return (
-    <div className="app">
-      {state === null ? <Home /> : <Table />}
+    <>
+      {state === null ? <div className="app"><Home /></div> : <Table />}
       {hudEnabled() && <Hud />}
-    </div>
+    </>
   );
 }

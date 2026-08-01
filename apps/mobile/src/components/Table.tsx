@@ -249,7 +249,7 @@ export function Table() {
   const showPaymentSheet = payAction?.type === 'RESPOND_PAY' && autoResolve === null;
 
   return (
-    <div className="table" style={{ background: STAGE.felt, color: STAGE.textOnFelt, minHeight: '100vh', paddingBottom: 24 }}>
+    <div className="table" style={shellStyle}>
       <Board
         observation={observation}
         seats={seats}
@@ -307,6 +307,27 @@ export function Table() {
     </div>
   );
 }
+
+// P1: the app shell. Fixed to the viewport at the DYNAMIC viewport height (100dvh — so the phone's
+// URL bar showing/hiding can never reveal a scroll), padded by the safe-area insets (notch / home
+// indicator), and locked down: overscroll-behavior none kills pull-to-refresh, touch-action
+// manipulation kills the double-tap zoom, and overflow hidden means the page can never scroll in any
+// state. The felt fills edge to edge — no centered box, no void (owner phone test 1 Aug).
+const shellStyle = {
+  position: 'fixed',
+  inset: 0,
+  height: '100dvh',
+  width: '100vw',
+  paddingTop: 'env(safe-area-inset-top, 0px)',
+  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+  paddingLeft: 'env(safe-area-inset-left, 0px)',
+  paddingRight: 'env(safe-area-inset-right, 0px)',
+  background: STAGE.felt,
+  color: STAGE.textOnFelt,
+  overflow: 'hidden',
+  overscrollBehavior: 'none',
+  touchAction: 'manipulation',
+} as const;
 
 const beatOverlayStyle = {
   position: 'fixed',
