@@ -284,17 +284,19 @@ export function shouldAutoEndTurn(actions: Action[]): boolean {
   return actions.length === 1 && actions[0]!.type === 'END_TURN';
 }
 
-// H5 (excellence pass): bot pacing as ONE constant table. A bot's turn plays as a run of beats
-// (draw · each play · end), each held long enough to be watchable (I1) but no longer. The FIRST beat
-// of a bot's turn holds longest ("here comes the bot"); later beats are quicker; and as a turn nears
-// its presentation cap the beats trim toward a floor so a long turn never drags into dead time —
-// but every card is still SHOWN (we slow, never skip). Flat 700ms/beat gave 6-8s waits between my
-// turns; this keeps a typical bot turn ~1.5-2.5s and caps the worst near ~3s.
+// Bot pacing as ONE constant table (H5, RAISED in P4 — owner "bots tooo fast" on the phone). A bot's
+// turn plays as a run of beats (draw · each play · end), each held long enough to be watchable (I1).
+// These are COMPREHENSION timings, NOT decoration: they are plain setTimeout delays, so they are the
+// SAME whether motion is full or reduced — the reveal HOLD and the turn beats persist under
+// prefers-reduced-motion (only the transforms go instant, in motion.ts). The FIRST beat holds
+// longest ("here comes the bot"); later beats are quicker; as a turn nears its cap the beats trim
+// toward a floor so a long turn never drags — but every card is still SHOWN (we slow, never skip).
+// The owner tunes these on-device; raised from 700/450/350/3000 which still read as too fast.
 export const BOT_PACING = {
-  firstBeatMs: 700, // the opening beat of a bot's turn — longest, so the turn's start reads
-  beatMs: 450, // each subsequent beat within the same turn
-  floorMs: 350, // never faster than this — a card must still be seen
-  turnCapMs: 3000, // soft cap: once a turn has shown this much, beats trim toward the floor
+  firstBeatMs: 900, // the opening beat of a bot's turn — longest, so the turn's start reads
+  beatMs: 600, // each subsequent beat within the same turn
+  floorMs: 400, // never faster than this — a card must still be seen
+  turnCapMs: 4000, // soft cap: once a turn has shown this much, beats trim toward the floor
 } as const;
 
 // The delay BEFORE the next beat of a bot's turn, given how many beats this turn has already shown

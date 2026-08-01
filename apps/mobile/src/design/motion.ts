@@ -7,9 +7,16 @@
  */
 import { useEffect, useState } from 'react';
 
-// The motion-continuity durations (K2). One small table so every travel/reveal/surface reads the
-// same tempo; all within the owner's 150–260ms windows. `prefers-reduced-motion` collapses each to
-// 0 through `reduce()` below, so the whole game stops moving in ONE place.
+// DECORATIVE motion durations (K2). One small table so every travel/reveal/surface reads the same
+// tempo; all within the owner's 150–260ms windows. `prefers-reduced-motion` collapses each to 0
+// through `reduce()` below, so the whole game stops MOVING in ONE place.
+//
+// P4 — the decorative / comprehension split. These are the DECORATIVE half: how things travel.
+// They may go instant under reduced motion. The COMPREHENSION half — how long a played card is
+// HELD so it can be read, and the turn beats — lives in BOT_PACING / BEAT_MS / HUMAN_PLAY_BEAT_MS
+// as plain setTimeout delays that are NEVER gated by reduced motion. So under reduced motion the
+// bot still reveals and holds each card for the full beat; only the slide/scale is skipped. The two
+// halves must stay separate: never drive a comprehension hold off a value in this table.
 export const MOTION_MS = {
   travel: 230, // a card changing container — measured first→last, inverted, eased (200–260ms spec)
   reveal: 200, // a card appearing on centre stage (a bot's or my just-played card)

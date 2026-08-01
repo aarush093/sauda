@@ -242,26 +242,26 @@ describe('shouldAutoEndTurn — auto-end only when nothing else is legal (F2)', 
 // H5 (excellence pass): bot pacing as ONE constant table — first beat longest, later beats quicker,
 // trimming toward the floor near the ~3s cap, never below the floor (a card is always seen).
 describe('botBeatDelayMs — the bot-turn pacing table (H5)', () => {
-  it('the FIRST beat of a bot turn holds longest', () => {
+  it('the FIRST beat of a bot turn holds longest (P4 raised: 900ms)', () => {
     expect(botBeatDelayMs(0, 0)).toBe(BOT_PACING.firstBeatMs);
-    expect(BOT_PACING.firstBeatMs).toBe(700);
+    expect(BOT_PACING.firstBeatMs).toBe(900);
   });
 
-  it('subsequent beats run at the quicker beat rate while there is budget', () => {
-    expect(botBeatDelayMs(1, 700)).toBe(BOT_PACING.beatMs); // 450
-    expect(botBeatDelayMs(2, 1150)).toBe(BOT_PACING.beatMs);
-    expect(botBeatDelayMs(3, 1600)).toBe(BOT_PACING.beatMs);
+  it('subsequent beats run at the quicker beat rate while there is budget (P4: 600ms)', () => {
+    expect(botBeatDelayMs(1, 900)).toBe(BOT_PACING.beatMs); // 600
+    expect(botBeatDelayMs(2, 1500)).toBe(BOT_PACING.beatMs);
+    expect(botBeatDelayMs(3, 2100)).toBe(BOT_PACING.beatMs);
   });
 
-  it('trims evenly toward the floor as the ~3s cap approaches', () => {
-    expect(botBeatDelayMs(6, 2600)).toBe(400); // min(450, 3000-2600)
-    expect(botBeatDelayMs(7, 2700)).toBe(BOT_PACING.floorMs); // max(350, 300) = 350
+  it('trims evenly toward the floor as the ~4s cap approaches', () => {
+    expect(botBeatDelayMs(6, 3500)).toBe(500); // min(600, 4000-3500)
+    expect(botBeatDelayMs(7, 3700)).toBe(BOT_PACING.floorMs); // max(400, 4000-3700=300) = 400
   });
 
   it('never drops below the floor once past the cap — a beat is always long enough to be seen', () => {
-    expect(botBeatDelayMs(9, 3000)).toBe(BOT_PACING.floorMs);
+    expect(botBeatDelayMs(9, 4000)).toBe(BOT_PACING.floorMs);
     expect(botBeatDelayMs(20, 9000)).toBe(BOT_PACING.floorMs);
-    expect(BOT_PACING.floorMs).toBe(350);
+    expect(BOT_PACING.floorMs).toBe(400);
   });
 
   it('is monotonically non-increasing after the first beat, and every beat is watchable', () => {
@@ -276,12 +276,21 @@ describe('botBeatDelayMs — the bot-turn pacing table (H5)', () => {
     }
   });
 
-  it('a typical 5-beat bot turn presents in well under the 3s cap', () => {
+  it('meets the P4 comprehension floors (bots "tooo fast" fix)', () => {
+    // These are the owner-tunable floors raised in P4; lock them so a future edit can't quietly
+    // speed the bots back up below what reads on a real phone.
+    expect(BOT_PACING.firstBeatMs).toBeGreaterThanOrEqual(900);
+    expect(BOT_PACING.beatMs).toBeGreaterThanOrEqual(600);
+    expect(BOT_PACING.floorMs).toBeGreaterThanOrEqual(400);
+    expect(BOT_PACING.turnCapMs).toBeGreaterThanOrEqual(4000);
+  });
+
+  it('a typical 5-beat bot turn presents in well under the 4s cap', () => {
     let elapsed = 0;
     for (let beat = 0; beat < 5; beat++) {
       elapsed += botBeatDelayMs(beat, elapsed);
     }
-    expect(elapsed).toBe(700 + 450 * 4); // 2500ms — no trim needed
+    expect(elapsed).toBe(900 + 600 * 4); // 3300ms — no trim needed
     expect(elapsed).toBeLessThan(BOT_PACING.turnCapMs);
   });
 });
