@@ -34,7 +34,8 @@ import { Ticker } from './Ticker';
 import { HandWheel } from './HandWheel';
 import { MunshiChip } from './MunshiChip';
 import { TurnToken } from './TurnToken';
-import { BankStack, DiscardTop, DrawPile, GroupRow, OpponentGroupStrip, PlayerHeader, seatName } from './BoardParts';
+import { DiscardTop, DrawPile, GroupRow, OpponentGroupStrip, PlayerHeader, seatName } from './BoardParts';
+import { BankTray } from './BankTray';
 import { STAGE, INK, SHADOW, FONT, GLOW } from '../design/tokens';
 import { tallyRender } from '../game/renderTally';
 
@@ -362,10 +363,15 @@ export function Board({
             onEndTurn={() => { if (endTurnAction && onAct) onAct(endTurnAction); }}
             onDeclareWin={() => { if (declareWinAction && onAct) onAct(declareWinAction); }}
           />
-          {/* right: the bank drop zone (money / bankable actions only; never a wildcard). */}
-          <div data-drop="bank" style={{ borderRadius: 8, padding: 3, flexShrink: 0, whiteSpace: 'nowrap', boxShadow: hotZoneId === 'bank' ? GLOW.hot : bankEligible ? GLOW.soft : 'none' }}>
-            <BankStack count={observation.myBank.length} total={observation.myBankTotal} />
-          </div>
+          {/* right: the bank TRAY (K4) — the drop zone itself (money / bankable actions only; never a
+              wildcard). It carries data-drop="bank" and expands into a landing strip while a bankable
+              card is dragged, the magnet following its live rect. */}
+          <BankTray
+            cards={observation.myBank}
+            total={observation.myBankTotal}
+            eligible={bankEligible}
+            hot={hotZoneId === 'bank'}
+          />
         </div>
         <div style={{ minHeight: 0, overflow: 'hidden' }}>
           <GroupRow

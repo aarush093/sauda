@@ -252,28 +252,6 @@ export function OpponentGroupStrip({
 }
 
 // My bank: an overlapping note stack + a mono ₹ total (G2 faint outline when empty).
-export function BankStack({ count, total }: { count: number; total: number }) {
-  if (count === 0) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ width: 34, height: 22, border: `1px dashed ${INK.agedLine}`, borderRadius: 3, opacity: 0.6 }} />
-        <span style={{ fontFamily: FONT.mono, fontWeight: 700, color: STAGE.textOnFelt }}>₹0 Cr</span>
-      </div>
-    );
-  }
-  const layers = Math.min(count, 5);
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{ position: 'relative', width: 34 + (layers - 1) * 4, height: 24 }}>
-        {Array.from({ length: layers }).map((_, index) => (
-          <div key={index} style={{ position: 'absolute', left: index * 4, top: index * -1, width: 34, height: 22, borderRadius: 3, background: STAGE.cardCream, border: `1px solid ${INK.gold}` }} />
-        ))}
-      </div>
-      <span style={{ fontFamily: FONT.mono, fontWeight: 700, fontSize: 16, color: STAGE.accentGold }}>₹{total} Cr</span>
-    </div>
-  );
-}
-
 // The face-down draw pile: up to three card backs offset to read as a stack.
 export function DrawPile({ count }: { count: number }) {
   const layers = Math.min(Math.max(count, 1), 3);
