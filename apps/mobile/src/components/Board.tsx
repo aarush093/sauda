@@ -24,6 +24,7 @@ import { useDragController } from '../game/useDragController';
 import type { CarrySpec } from '../game/useDragController';
 import { describeCard } from '../game/labels';
 import { CardFace, ScaledCard } from './CardFace';
+import { StageSpotlight } from './StageSpotlight';
 import { InspectCard } from './InspectCard';
 import { DiscardOverlay } from './DiscardOverlay';
 import { TableView } from './TableView';
@@ -96,6 +97,7 @@ export function Board({
   onAct,
   tickerLines = [],
   spotlightCardId = null,
+  spotlightFromOpponent = false,
   autoEnding = false,
   receive = null,
 }: {
@@ -105,6 +107,7 @@ export function Board({
   onAct?: (action: Action) => void;
   tickerLines?: string[];
   spotlightCardId?: string | null; // a bot's held card (I1) or the human's just-played beat (F4)
+  spotlightFromOpponent?: boolean; // K2: an opponent's card travels UP to their row, mine DOWN to my area
   autoEnding?: boolean; // F2: the turn is auto-ending — hide the manual End turn button
   // G6: a wildcard reached me as payment and needs a group (matrix C7). It lands on stage; its
   // legal destination sets glow; I drag it home (or tap a glowing set). bySet maps each legal set
@@ -332,8 +335,9 @@ export function Board({
       </div>
 
       {/* centre stage (28%, G4 zone retune) — the 2-line ticker (§8), then open felt / the tapped
-          card's overlay / the centre PLAY drop zone / the Declare SAUDA! button (A11). */}
-      <div style={zone(28, { display: 'flex', flexDirection: 'column' })}>
+          card's overlay / the centre PLAY drop zone / the Declare SAUDA! button (A11). Positioned so
+          the K2 spotlight can overlay the WHOLE stage (ticker + play), fitting large and bright. */}
+      <div style={zone(28, { display: 'flex', flexDirection: 'column', position: 'relative' })}>
         <Ticker lines={tickerLines} />
         <div data-drop="play" style={{ flex: 1, minHeight: 0, margin: '0 8px 6px', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hotZoneId === 'play' ? GLOW.hot : playEligible ? GLOW.soft : 'none' }}>
           {receive ? (
@@ -352,18 +356,17 @@ export function Board({
                 Drag it to a glowing set — or tap one
               </span>
             </div>
-          ) : spotlightCardId ? (
-            // The bot's card held on stage (I1), or the human's just-played card for a beat (F4) —
-            // the real full CardFace at stage size, both sides (G4 CENTRE STAGE).
-            <div style={{ boxShadow: STAGE.glowGold, borderRadius: 8 }}>
-              <ScaledCard cardId={spotlightCardId} width={STAGE_CARD_PX} />
-            </div>
           ) : declareWinAction && onAct ? (
             <button onClick={() => onAct(declareWinAction)} style={goldFilledButton}>Declare SAUDA!</button>
           ) : playEligible ? (
             <span style={{ fontFamily: FONT.display, fontWeight: 700, color: STAGE.accentGold }}>Play</span>
           ) : null}
         </div>
+        {/* K2: the just-played card (a bot's or mine) reveals + travels here. It overlays the WHOLE
+            stage (ticker + play) so it fits LARGE, sits ABOVE the ticker (z 4) and is the brightest
+            thing on screen — the fix for the owner-shot bug (an oversized card dimmed behind the
+            ticker). It yields to the interactive received-card flow, which owns the stage while up. */}
+        <StageSpotlight cardId={receive ? null : spotlightCardId} fromOpponent={spotlightFromOpponent} />
       </div>
 
       {/* my area (42%, G4 zone retune) — still the largest zone (hierarchy law A2); sleeps off-turn. */}

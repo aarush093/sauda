@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { InterruptView } from '@sauda/engine';
 import { describeThreat } from '../game/labels';
+import { Surface } from './Surface';
 import { STAGE, INK, FONT } from '../design/tokens';
 
 const TIMEOUT_MS = 10000; // D4: the window auto-allows after ten seconds
@@ -42,7 +43,8 @@ export function InterruptPrompt({
 
   return (
     <div style={overlayStyle}>
-      <div style={promptStyle}>
+      {/* K2: the interrupt prompt EASES in (never pops) — the owner's law for the NAHI window. */}
+      <Surface style={promptStyle}>
         <div style={threatStyle}>{describeThreat(interrupt)}</div>
         <div style={buttonRowStyle}>
           {canNahi && (
@@ -57,7 +59,7 @@ export function InterruptPrompt({
         <div style={timerTrackStyle}>
           <div style={{ height: '100%', background: STAGE.accentGold, width: draining ? '0%' : '100%', transition: `width ${TIMEOUT_MS}ms linear` }} />
         </div>
-      </div>
+      </Surface>
     </div>
   );
 }

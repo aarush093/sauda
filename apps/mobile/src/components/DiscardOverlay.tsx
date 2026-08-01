@@ -10,6 +10,7 @@
  */
 import type { CSSProperties } from 'react';
 import { ScaledCard } from './CardFace';
+import { Surface } from './Surface';
 import { GLOW, STAGE, INK, FONT } from '../design/tokens';
 
 const HAND_LIMIT = 7; // §4.4 / Niyam Card 3
@@ -19,23 +20,34 @@ export function DiscardOverlay({ cards, onDiscard }: { cards: string[]; onDiscar
   const over = cards.length - HAND_LIMIT; // the count-down: how many still to bury
   return (
     <div style={overlayStyle}>
-      <div style={headingStyle}>Over the limit — tap {over} to discard</div>
-      <div style={gridStyle}>
-        {cards.map((id) => (
-          <div
-            key={id}
-            onClick={() => onDiscard(id)}
-            {...(import.meta.env.DEV && { 'data-card-id': id })}
-            style={cardStyle}
-          >
-            <ScaledCard cardId={id} width={DISCARD_CARD_PX} />
-          </div>
-        ))}
-      </div>
-      <div style={subStyle}>Buried cards slide face-down under the draw pile — out of reach for a long time.</div>
+      {/* K2: the discard spread eases in (was a hard cut) — the dim/blur backdrop stays static. */}
+      <Surface style={panelStyle}>
+        <div style={headingStyle}>Over the limit — tap {over} to discard</div>
+        <div style={gridStyle}>
+          {cards.map((id) => (
+            <div
+              key={id}
+              onClick={() => onDiscard(id)}
+              {...(import.meta.env.DEV && { 'data-card-id': id })}
+              style={cardStyle}
+            >
+              <ScaledCard cardId={id} width={DISCARD_CARD_PX} />
+            </div>
+          ))}
+        </div>
+        <div style={subStyle}>Buried cards slide face-down under the draw pile — out of reach for a long time.</div>
+      </Surface>
     </div>
   );
 }
+
+const panelStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 14,
+  maxWidth: '100%',
+};
 
 const overlayStyle: CSSProperties = {
   position: 'absolute',

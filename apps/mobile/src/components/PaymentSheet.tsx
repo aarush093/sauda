@@ -17,6 +17,7 @@ import type { SeatConfig } from '../game/store';
 import type { PayableCard } from '../game/paymentModel';
 import { paymentDetails, paymentDisclosure, selectedTotal } from '../game/paymentModel';
 import { ScaledCard } from './CardFace';
+import { Surface } from './Surface';
 import { STAGE, INK, FONT, SHADOW } from '../design/tokens';
 
 const PAY_CARD_PX = 76; // the payment options — REAL scaled card faces (G4 · fixes the F4 regression)
@@ -97,7 +98,8 @@ export function PaymentSheet({
 
   return (
     <div style={overlayStyle}>
-      <div style={sheetStyle}>
+      {/* K2: the sheet eases up FROM the bottom edge (its origin) rather than snapping in. */}
+      <Surface origin="bottom center" style={sheetStyle}>
         <div style={titleStyle}>
           Pay ₹{details.amount} Cr to {seatName(seats, details.creditor)}
         </div>
@@ -125,7 +127,7 @@ export function PaymentSheet({
         <button disabled={!enough} onClick={() => onPay([...selected])} style={{ ...payButtonStyle, opacity: enough ? 1 : 0.5 }}>
           {details.mustPayAll ? 'Pay all I have' : `Pay ₹${details.amount} Cr`}
         </button>
-      </div>
+      </Surface>
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { ScaledCard } from './CardFace';
 import { railForCard } from '../game/staging';
 import { cardVerbHint } from '../game/labels';
 import { useHandDrag } from '../game/useHandDrag';
+import { Surface } from './Surface';
 import { STAGE, INK, FONT } from '../design/tokens';
 
 const INSPECT_CARD_PX = 200; // ~56% of the 360 frame — large and fully readable (G1)
@@ -57,8 +58,9 @@ export function InspectCard({
 
   return (
     <div onClick={onDismiss} style={{ ...overlayStyle, pointerEvents: dragging ? 'none' : 'auto' }}>
-      {/* the card + optional why-line; a tap here is the card's own gesture, not a scrim tap */}
-      <div onClick={(event) => event.stopPropagation()} style={columnStyle}>
+      {/* the card + optional why-line eases up from centre (K2); a tap here is the card's own
+          gesture, not a scrim tap. The Surface freezes to instant under reduced motion. */}
+      <Surface origin="center" onClick={(event) => event.stopPropagation()} style={columnStyle}>
         <div
           {...cardHandlers(cardId)}
           {...(import.meta.env.DEV && { 'data-card-id': cardId })}
@@ -70,7 +72,7 @@ export function InspectCard({
           <ScaledCard cardId={cardId} width={INSPECT_CARD_PX} />
         </div>
         {why && <div style={whyStyle}>{why}</div>}
-      </div>
+      </Surface>
     </div>
   );
 }

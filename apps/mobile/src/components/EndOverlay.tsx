@@ -11,6 +11,7 @@ import type { CSSProperties } from 'react';
 import { SETS } from '@sauda/engine';
 import type { PropertyGroup, SetId } from '@sauda/engine';
 import { SetCascade } from './SetCascade';
+import { Surface } from './Surface';
 import { STAGE, INK, FONT } from '../design/tokens';
 
 const WIN_CARD_PX = 62; // the winning sets as real card cascades (G4 END OVERLAY)
@@ -26,7 +27,8 @@ export function EndOverlay({
 }) {
   return (
     <div style={overlayStyle}>
-      <div style={panelStyle}>
+      {/* K2: the end panel eases in (the full stamp-slam spectacle is still M4c). */}
+      <Surface style={panelStyle}>
         <div style={titleStyle}>{title}</div>
         <div style={bannersRowStyle}>
           {sets.map(({ set, group }) => (
@@ -39,7 +41,7 @@ export function EndOverlay({
         <button type="button" style={newGameButtonStyle} onClick={onNewGame}>
           New game
         </button>
-      </div>
+      </Surface>
     </div>
   );
 }

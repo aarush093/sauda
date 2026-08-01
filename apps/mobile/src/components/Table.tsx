@@ -20,6 +20,7 @@ import { paymentDetails } from '../game/paymentModel';
 import { botBeatDelayMs, shouldAutoEndTurn, zeroPayableResponse } from '../game/interaction';
 import { describeThreat } from '../game/labels';
 import { Board } from './Board';
+import { Surface } from './Surface';
 import { PaymentSheet } from './PaymentSheet';
 import { InterruptPrompt } from './InterruptPrompt';
 import { HandoffOverlay } from './HandoffOverlay';
@@ -280,6 +281,7 @@ export function Table() {
         onAct={dispatch}
         tickerLines={tickerLines}
         spotlightCardId={spotlightCardId}
+        spotlightFromOpponent={botSpotlightCardId !== null}
         autoEnding={autoEndNote !== null}
         receive={receive}
       />
@@ -297,7 +299,7 @@ export function Table() {
       {/* L1: a brief non-interactive beat while the game auto-resolves a no-choice window. */}
       {autoResolve && (
         <div style={beatOverlayStyle}>
-          <div style={beatNoteStyle}>{autoResolve.note}</div>
+          <Surface style={beatNoteStyle}>{autoResolve.note}</Surface>
         </div>
       )}
 
@@ -305,7 +307,7 @@ export function Table() {
           hidden (Board `autoEnding`) so it never reads as the game asking permission. */}
       {autoEndNote && (
         <div style={beatOverlayStyle}>
-          <div style={beatNoteStyle}>{autoEndNote}</div>
+          <Surface style={beatNoteStyle}>{autoEndNote}</Surface>
         </div>
       )}
 

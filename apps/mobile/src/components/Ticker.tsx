@@ -4,18 +4,51 @@
  * play screen (the M3 log panel is retired). Every play and every auto-resolve (L1)
  * appends a line, so the player can always read what just happened without a log.
  */
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { STAGE, FONT } from '../design/tokens';
+import { MOTION_MS, reduce, useReducedMotion } from '../design/motion';
 
 export function Ticker({ lines }: { lines: string[] }) {
   const recent = lines.slice(-2);
   return (
     <div style={wrapStyle} aria-live="polite">
-      {recent.map((line, index) => (
-        <div key={index} style={index === recent.length - 1 ? latestLine : olderLine}>
-          {line}
-        </div>
-      ))}
+      {recent.map((line, index) =>
+        index === recent.length - 1 ? (
+          // K2: the newest line SLIDES up as it arrives (keyed by its text so a new event remounts
+          // it and re-plays the slide) — the ticker reads as a continuous feed, not a hard cut.
+          <TickerLine key={line} text={line} />
+        ) : (
+          <div key={`old:${line}`} style={olderLine}>
+            {line}
+          </div>
+        ),
+      )}
+    </div>
+  );
+}
+
+function TickerLine({ text }: { text: string }) {
+  const reduced = useReducedMotion();
+  const [entered, setEntered] = useState(reduced);
+  useEffect(() => {
+    if (reduced) {
+      return;
+    }
+    const id = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(id);
+  }, [reduced]);
+  const ms = reduce(MOTION_MS.ticker, reduced);
+  return (
+    <div
+      style={{
+        ...latestLine,
+        transform: entered ? 'translateY(0)' : 'translateY(8px)',
+        opacity: entered ? 1 : 0,
+        transition: `transform ${ms}ms ease-out, opacity ${ms}ms ease-out`,
+      }}
+    >
+      {text}
     </div>
   );
 }
