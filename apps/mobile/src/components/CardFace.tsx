@@ -71,6 +71,20 @@ export const CardFace = memo(function CardFace({ cardId, renderedWidth }: CardFa
 export const ScaledCard = memo(function ScaledCard({ cardId, width }: { cardId: string; width: number }) {
   const scale = width / CARD.fullWidth;
   const height = Math.round(width * CARD.ratio);
+  // K5 CRISPNESS LAW: a card face is never UPSCALED through a transform (that would blur a card drawn
+  // at 132 up to, say, the 200px inspect size). For width > the drawn base we use CSS `zoom`, which
+  // RE-LAYS OUT the face at the target size so its vector text rasterises at native device pixels —
+  // effectively "native-width rendering" per the spec. Downscaling keeps the cheap compositor
+  // `transform: scale` (H4: crisp when shrinking, no memory cost, one identical design at every size).
+  if (scale > 1) {
+    return (
+      <div style={{ width, height, position: 'relative' }}>
+        <div style={{ zoom: scale }}>
+          <CardFace cardId={cardId} renderedWidth={width} />
+        </div>
+      </div>
+    );
+  }
   return (
     <div style={{ width, height, position: 'relative' }}>
       <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
