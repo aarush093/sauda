@@ -61,6 +61,13 @@ export const DRAG_PHYSICS = {
   flingConeDeg: 30, // the half-angle of the aim cone; the fling only commits if ONE zone sits inside it
   flingMomentumKeep: 1, // fraction of the release velocity carried into the flight (1 = keep all of it)
 
+  // ── Near-miss forgiveness (P3, owner phone test 1 Aug) — the fix for the MAKAAN rage ─────────
+  // A slow release that lands just OUTSIDE the one eligible zone still commits to it, as long as
+  // exactly ONE eligible zone is within this radius of the release point (two or more = ambiguous,
+  // so we don't guess). With the inflated thumb-sized zones this makes a legal drop practically
+  // unmissable, while staying unambiguous. Larger than attractionRadius (that only telegraphs).
+  nearMissRadiusPx: 120, // px from the release point to the zone's centre
+
   // ── Arrival / settle — when a flight or a spring-home is "done" ────────────────────────────
   arriveDistancePx: 6, // a flight/home has arrived once this close to its target…
   arriveSpeedPxPerMs: 0.15, // …and this slow (so it settles, not just grazes past)
@@ -186,6 +193,30 @@ export function assistOffset(
     offsetY *= scale;
   }
   return { x: offsetX, y: offsetY };
+}
+
+/**
+ * Near-miss forgiveness (P3). A slow release (no fling) that lands NEAR exactly one eligible zone
+ * commits to it. Returns that single zone, or null when zero zones are near (a real miss) or two or
+ * more are near (ambiguous — don't guess). This is what makes a legal MAKAAN/place practically
+ * unmissable with a thumb, without ever committing to the wrong set. `zones` holds only eligible
+ * zones, so a near-miss can never land on anything illegal.
+ */
+export function nearMissZone(
+  pos: Vec2,
+  zones: ZoneGeometry[],
+  config: typeof DRAG_PHYSICS = DRAG_PHYSICS,
+): ZoneGeometry | null {
+  let winner: ZoneGeometry | null = null;
+  let withinRadius = 0;
+  for (const zone of zones) {
+    const distance = Math.hypot(pos.x - zone.cx, pos.y - zone.cy);
+    if (distance <= config.nearMissRadiusPx) {
+      withinRadius += 1;
+      winner = zone;
+    }
+  }
+  return withinRadius === 1 ? winner : null;
 }
 
 /**

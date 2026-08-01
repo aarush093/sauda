@@ -29,6 +29,7 @@ import {
   assistOffset,
   estimateVelocity,
   flingTarget,
+  nearMissZone,
   springTo,
   type PointerSample,
   type Vec2,
@@ -50,6 +51,9 @@ export interface DragPreview {
 export interface CarrySpec {
   eligibleZones: (cardId: string) => Set<string>;
   onCommit: (cardId: string, zoneId: string) => void;
+  // P3: a release that commits to NOTHING (springs home). The board uses it for the "no silent
+  // mystery" feedback — pulse the eligible zones + a hint, or the F7 why-line for an unplayable card.
+  onMiss?: (cardId: string) => void;
 }
 
 type Mode = 'carrying' | 'flinging' | 'homing';
@@ -91,6 +95,9 @@ function readZoneGeometry(ids: Set<string>): ZoneGeometry[] {
 export function useDragController() {
   const [preview, setPreview] = useState<DragPreview | null>(null);
   const physics = useRef<Physics | null>(null);
+  // Under reduced motion there is no physics loop, so we keep the carry's spec here instead — so a
+  // reduced-motion drop still hit-tests, forgives a near-miss, commits, and reports a miss (P3/P4).
+  const reducedCarry = useRef<{ cardId: string; spec: CarrySpec } | null>(null);
   const rafId = useRef<number>(0);
 
   // Advance one frame of whichever animation is running, then reschedule until it finishes.
@@ -171,12 +178,15 @@ export function useDragController() {
 
   const begin = useCallback(
     (cardId: string, x: number, y: number, spec: CarrySpec) => {
-      // Reduced motion: no spring, no loop — the preview simply is the finger.
+      // Reduced motion: no spring, no loop — the preview simply is the finger, but we remember the
+      // spec so a release still resolves (commit / near-miss / miss), same outcomes as the animated path.
       if (prefersReducedMotion()) {
         physics.current = null;
+        reducedCarry.current = { cardId, spec };
         setPreview({ cardId, x, y, hotZoneId: hotZoneAt(x, y, spec.eligibleZones(cardId)) });
         return;
       }
+      reducedCarry.current = null;
       const previous = physics.current;
       // Re-grabbing the SAME card mid-flight keeps its position (continuous); a different card
       // starts fresh at the finger. Either way we adopt the new carry at once (retargetable).
@@ -205,11 +215,9 @@ export function useDragController() {
       const state = physics.current;
       if (prefersReducedMotion()) {
         // Snap the preview to the finger; keep the hot zone honest via the DOM hit-test.
-        if (state ?? preview) {
-          const cardId = state?.cardId ?? preview!.cardId;
-          const spec = state?.spec;
-          const eligible = spec ? spec.eligibleZones(cardId) : new Set<string>();
-          setPreview({ cardId, x, y, hotZoneId: hotZoneAt(x, y, eligible) });
+        const carry = reducedCarry.current;
+        if (carry) {
+          setPreview({ cardId: carry.cardId, x, y, hotZoneId: hotZoneAt(x, y, carry.spec.eligibleZones(carry.cardId)) });
         }
         return;
       }
@@ -231,10 +239,20 @@ export function useDragController() {
   const release = useCallback((x: number, y: number) => {
     const state = physics.current;
     if (!state) {
-      // Reduced-motion carry has no physics state; resolve from the standing preview.
-      const standing = preview;
-      if (standing) {
-        setPreview(null);
+      // Reduced-motion carry: resolve the drop instantly (no travel) — commit under the finger, then
+      // forgive a near-miss, else report a miss. Same outcomes as the animated path, just no spring.
+      const carry = reducedCarry.current;
+      reducedCarry.current = null;
+      setPreview(null);
+      if (!carry) {
+        return;
+      }
+      const zones = readZoneGeometry(carry.spec.eligibleZones(carry.cardId));
+      const target = hotZoneAt(x, y, new Set(zones.map((zone) => zone.id))) ?? nearMissZone({ x, y }, zones)?.id ?? null;
+      if (target) {
+        carry.spec.onCommit(carry.cardId, target);
+      } else {
+        carry.spec.onMiss?.(carry.cardId);
       }
       return;
     }
@@ -259,16 +277,31 @@ export function useDragController() {
       schedule();
       return;
     }
-    // Released over nothing, no fling → spring home.
+    // P3 near-miss forgiveness: a slow release just outside exactly ONE eligible zone still commits
+    // to it — the fix for the MAKAAN rage. Flies to the zone centre like a fling, then commits.
+    const near = nearMissZone({ x, y }, zones);
+    if (near) {
+      state.mode = 'flinging';
+      state.flightZoneId = near.id;
+      state.flightTarget = { x: near.cx, y: near.cy };
+      state.flightStartT = now();
+      state.lastFrameT = now();
+      schedule();
+      return;
+    }
+    // Released over nothing, no fling, no near-miss → spring home, and tell the board it missed so
+    // it can explain why (P3 "no silent mystery").
     state.mode = 'homing';
     state.flightStartT = now();
     state.lastFrameT = now();
+    state.spec.onMiss?.(state.cardId);
     schedule();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preview, schedule]);
 
   const cancel = useCallback(() => {
     physics.current = null;
+    reducedCarry.current = null;
     setPreview(null);
   }, []);
 

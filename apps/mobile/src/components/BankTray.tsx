@@ -28,18 +28,22 @@ export function BankTray({
   total,
   eligible,
   hot,
+  suppressDrop,
 }: {
   cards: string[]; // the banked card ids (public); the newest are shown on top of the cascade
   total: number;
   eligible: boolean; // a bankable card is in the air → expand into a landing strip + soft glow
   hot: boolean; // the pointer is over the tray → hot glow
+  // P3: while the inflated drop band is up it owns the bank strip, so the header tray drops its
+  // data-drop (stays as a display of the bank total) — one bank target, thumb-sized, in the band.
+  suppressDrop?: boolean | undefined;
 }) {
   // Show the top few notes (most-recent last in the array → they sit on top of the cascade).
   const shown = cards.slice(-MAX_NOTES);
   const empty = cards.length === 0;
 
   return (
-    <div data-drop="bank" style={trayStyle(eligible, hot)}>
+    <div data-drop={suppressDrop ? undefined : 'bank'} style={trayStyle(eligible && !suppressDrop, hot && !suppressDrop)}>
       {empty ? (
         <span style={emptyLabelStyle}>Bank</span>
       ) : (

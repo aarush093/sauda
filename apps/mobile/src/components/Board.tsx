@@ -13,7 +13,7 @@
  * The static parts (groups, bank, pile, header) live in BoardParts; the hand fan and the
  * drag gesture in HandFan / useHandDrag — this file is the composer.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Action, CardId, Observation, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
@@ -24,8 +24,9 @@ import { useMeasuredHeight } from '../game/useMeasuredWidth';
 import { resolveZones } from '../game/zoneLayout';
 import { useDragController } from '../game/useDragController';
 import type { CarrySpec } from '../game/useDragController';
-import { describeCard } from '../game/labels';
+import { describeCard, cardVerbHint } from '../game/labels';
 import { CardFace, ScaledCard } from './CardFace';
+import { DropBand } from './DropBand';
 import { StageSpotlight } from './StageSpotlight';
 import { InspectCard } from './InspectCard';
 import { DiscardOverlay } from './DiscardOverlay';
@@ -191,6 +192,30 @@ export function Board({
     return new Set(dropZonesForCard(actions, cardId).map(dropZoneId));
   }
 
+  // P3 "no silent mystery": a release that commits to nothing leaves a short-lived hint + a pulse of
+  // the eligible zones (if the card HAD any) or the card's F7 why-line (if it had no legal play).
+  // Nothing ever just springs home unexplained.
+  const [missFeedback, setMissFeedback] = useState<{ hint: string; pulseSets: SetId[]; pulseBank: boolean } | null>(null);
+  useEffect(() => {
+    if (!missFeedback) {
+      return;
+    }
+    const timer = setTimeout(() => setMissFeedback(null), 1600);
+    return () => clearTimeout(timer);
+  }, [missFeedback]);
+
+  function onMissCard(cardId: string): void {
+    const zones = eligibleZones(cardId);
+    if (zones.size > 0) {
+      const pulseSets = [...zones].filter((id) => id.startsWith('set:')).map((id) => id.slice(4) as SetId);
+      setMissFeedback({ hint: 'Drop it on a glowing set', pulseSets, pulseBank: zones.has('bank') });
+    } else {
+      // A card with no legal play at all (dragged from inspect) — teach the rule, don't stonewall (F7).
+      const why = cardVerbHint(cardId)?.reason ?? 'No legal play for this card right now.';
+      setMissFeedback({ hint: why, pulseSets: [], pulseBank: false });
+    }
+  }
+
   // ONE drag controller owns every carry (K1): the hand-fan scrub, the placed-wildcard rearrange
   // token, a received card, and the inspect overlay all feed it, so there is a single springy,
   // magnetic, flingable floating preview. The board reads its `preview` (aliased `drag` below, so
@@ -200,7 +225,7 @@ export function Board({
 
   // The main carry spec — the hand wheel, the rearrange token and the inspect overlay all commit
   // through onDropCard using the board's own eligibleZones (both derived above from legalActions).
-  const mainSpec: CarrySpec = { eligibleZones, onCommit: onDropCard };
+  const mainSpec: CarrySpec = { eligibleZones, onCommit: onDropCard, onMiss: onMissCard };
   const startMainDrag = (cardId: string, x: number, y: number) => dragCtl.begin(cardId, x, y, mainSpec);
   const { cardHandlers } = useHandDrag({
     onTap: onTapCard,
@@ -230,6 +255,7 @@ export function Board({
         placeReceivedIn(zoneId.slice(4) as SetId);
       }
     },
+    onMiss: () => setMissFeedback({ hint: 'Drop it on a glowing set', pulseSets: [], pulseBank: false }),
   };
   const { cardHandlers: receiveHandlers } = useHandDrag({
     onTap: () => {}, // a plain tap on the staged received card does nothing — placement is on the sets
@@ -267,6 +293,13 @@ export function Board({
     }
   }
   const hotZoneId = drag?.hotZoneId ?? null;
+
+  // P3: while a card is in the air the inflated thumb DROP BAND is up. The in-place zones then
+  // suppress their data-drop (the band owns the target) but the felt behind still shows a glow —
+  // merged here with the post-miss pulse so a missed drop re-flashes the very zones it should hit.
+  const dragActive = drag !== null;
+  const glowSets = new Set<SetId>([...eligibleSets, ...(missFeedback?.pulseSets ?? [])]);
+  const bankGlow = bankEligible || (missFeedback?.pulseBank ?? false);
 
   // P1: measure the board's REAL box (the shell is 100dvh minus safe-area padding, so this is the
   // true height on the phone) and split it with the clamped-flex law — no percentages, no void.
@@ -386,24 +419,30 @@ export function Board({
           <BankTray
             cards={observation.myBank}
             total={observation.myBankTotal}
-            eligible={bankEligible}
+            eligible={bankGlow}
             hot={hotZoneId === 'bank'}
+            suppressDrop={dragActive}
           />
         </div>
         {/* my property board — the GROWTH area of my zone: it absorbs the surplus height (P1) so
             the empty felt reads as "where my deeds go" (the ticker points here at game start), not a
             random void, and the wheel sits directly below it instead of floating at the far bottom. */}
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <GroupRow
             properties={observation.myProperties}
             kiraya={observation.myKiraya}
             width={38}
             mine
-            dropSets={eligibleSets}
+            dropSets={glowSets}
             hotZoneId={hotZoneId}
             onExpand={() => setExpandedView({ kind: 'me' })}
             onSetPlace={receive ? placeReceivedIn : undefined}
+            suppressDrop={dragActive}
           />
+          {/* P3: the inflated thumb drop band overlays this board area while a card is dragged. */}
+          {dragActive && (eligibleSets.size > 0 || bankEligible) && (
+            <DropBand sets={[...eligibleSets]} bankEligible={bankEligible} hotZoneId={hotZoneId} />
+          )}
         </div>
         {rearrangeableIds.size > 0 && (
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -444,6 +483,10 @@ export function Board({
           </div>
         </div>
       )}
+
+      {/* P3 "no silent mystery": a missed drop's hint — pulse the zones + this line, or the F7
+          why-line for an unplayable card. Fixed above the wheel, non-interactive, auto-clears. */}
+      {missFeedback && <div style={missToastStyle}>{missFeedback.hint}</div>}
 
       {/* rearrange (B8): the tap fallback — a placed wildcard's legal destination groups. */}
       {rearranging !== null && onAct && (
@@ -529,6 +572,26 @@ export function Board({
     </div>
   );
 }
+
+// P3: the miss hint — a quiet cream pill fixed low on the felt (above the wheel), non-interactive.
+const missToastStyle: CSSProperties = {
+  position: 'fixed',
+  left: '50%',
+  bottom: '30%',
+  transform: 'translateX(-50%)',
+  zIndex: LAYERS.toast,
+  pointerEvents: 'none',
+  maxWidth: '80vw',
+  padding: '8px 16px',
+  borderRadius: 999,
+  background: STAGE.cardCream,
+  color: INK.deepInk,
+  fontFamily: FONT.serif,
+  fontSize: 13,
+  fontWeight: 700,
+  textAlign: 'center',
+  boxShadow: STAGE.glowGold,
+};
 
 // P1: the board FILLS its shell (the fixed 100dvh, safe-area-padded container in Table.tsx) — no
 // centered min()-capped box, so there are no felt margins and no void. Height flows to the zone law.

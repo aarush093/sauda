@@ -94,13 +94,14 @@ const expandHintStyle: CSSProperties = {
 };
 
 // A dashed placeholder where dragging a property/wildcard would START A NEW group of a
-// colour I don't yet hold (§3). It is a drop zone in its own right.
-function GhostSlot({ set, width, hot, onClick }: { set: SetId; width: number; hot: boolean; onClick?: (() => void) | undefined }) {
+// colour I don't yet hold (§3). It is a drop zone in its own right — unless `dropId` is undefined
+// (P3: while the inflated drop band is up, the band owns the data-drop so there is only one target).
+function GhostSlot({ set, width, hot, onClick, dropId }: { set: SetId; width: number; hot: boolean; onClick?: (() => void) | undefined; dropId?: string | undefined }) {
   const theme = SETS[set];
   const height = Math.round(width * 1.4);
   return (
     <div
-      data-drop={`set:${set}`}
+      data-drop={dropId}
       onClick={onClick}
       title={`New ${theme.label} set`}
       style={{ width, height, flex: '0 0 auto', borderRadius: 4, border: `1px dashed ${INK.gold}`, boxShadow: hot ? GLOW.hot : 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden', opacity: hot ? 1 : 0.85, cursor: onClick ? 'pointer' : undefined }}
@@ -123,6 +124,7 @@ export function GroupRow({
   hotZoneId,
   onExpand,
   onSetPlace,
+  suppressDrop,
 }: {
   properties: Record<SetId, PropertyGroup[]>;
   kiraya?: Record<SetId, number[]> | undefined;
@@ -134,6 +136,9 @@ export function GroupRow({
   // G6: while placing a received card, tapping a glowing set (or ghost slot) places it there
   // instead of opening the expand view.
   onSetPlace?: ((set: SetId) => void) | undefined;
+  // P3: while the inflated thumb drop band is up, drop the in-place data-drop ids so the band is the
+  // one target per set (the cascades still render, just no longer as tiny drop zones).
+  suppressDrop?: boolean | undefined;
 }) {
   const groups = nonEmptyGroups(properties);
   const existing = new Set(groups.map((entry) => entry.set));
@@ -162,9 +167,9 @@ export function GroupRow({
             group={group}
             width={width}
             rent={mine ? kiraya?.[set]?.[index] : undefined}
-            dropId={droppable ? `set:${set}` : undefined}
-            soft={droppable && !hot}
-            hot={hot}
+            dropId={droppable && !suppressDrop ? `set:${set}` : undefined}
+            soft={droppable && !hot && !suppressDrop}
+            hot={hot && !suppressDrop}
             onExpand={onSetPlace ? () => onSetPlace(set) : onExpand}
             // show the ⤢ only when the tap actually EXPANDS (not during receive-placement, where the
             // glowing sets are the affordance and a tap places the card instead).
@@ -177,8 +182,9 @@ export function GroupRow({
           key={`ghost-${set}`}
           set={set}
           width={width}
-          hot={hotZoneId === `set:${set}`}
+          hot={hotZoneId === `set:${set}` && !suppressDrop}
           onClick={onSetPlace ? () => onSetPlace(set) : undefined}
+          dropId={suppressDrop ? undefined : `set:${set}`}
         />
       ))}
     </div>

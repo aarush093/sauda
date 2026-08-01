@@ -11,6 +11,7 @@ import {
   aimedZone,
   assistOffset,
   flingTarget,
+  nearMissZone,
   type PointerSample,
   type Vec2,
   type ZoneGeometry,
@@ -183,5 +184,30 @@ describe('flingTarget', () => {
   it('does not fling when the flick points at no zone', () => {
     const down: Vec2 = { x: 0, y: 1 }; // fast, but away from both (which are above)
     expect(flingTarget({ x: 0, y: 0 }, down, [bank, setRed])).toBeNull();
+  });
+});
+
+describe('nearMissZone (P3 forgiveness)', () => {
+  const setChennai: ZoneGeometry = { id: 'set:chennai', cx: 100, cy: 100 };
+  const setMumbai: ZoneGeometry = { id: 'set:mumbai', cx: 400, cy: 100 };
+
+  it('commits to the one eligible zone when the release lands just outside it', () => {
+    // 110px away — a real thumb miss, but within the 120px forgiveness radius.
+    const hit = nearMissZone({ x: 100, y: 210 }, [setChennai, setMumbai]);
+    expect(hit?.id).toBe('set:chennai');
+  });
+
+  it('does not commit when the release is beyond the radius (a genuine miss)', () => {
+    expect(nearMissZone({ x: 100, y: 260 }, [setChennai])).toBeNull(); // 160px > 120
+  });
+
+  it('does not guess when two eligible zones are both within the radius', () => {
+    const a: ZoneGeometry = { id: 'set:a', cx: 100, cy: 100 };
+    const b: ZoneGeometry = { id: 'set:b', cx: 180, cy: 100 };
+    expect(nearMissZone({ x: 140, y: 100 }, [a, b])).toBeNull(); // both within 120 → ambiguous
+  });
+
+  it('returns null when there are no eligible zones at all', () => {
+    expect(nearMissZone({ x: 0, y: 0 }, [])).toBeNull();
   });
 });
