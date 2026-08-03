@@ -20,6 +20,7 @@ import { TurnToken } from './TurnToken';
 import { HandWheel } from './HandWheel';
 import { Ticker } from './Ticker';
 import { StageSpotlight } from './StageSpotlight';
+import { TableBand } from './TableBand';
 import { BotTabRail } from './BotTabRail';
 import { ScaledCard } from './CardFace';
 import { STAGE, FONT, GLOW, LAYERS } from '../design/tokens';
@@ -109,6 +110,13 @@ export function MyTurnLayout(props: MyTurnLayoutProps) {
 
           {/* CENTRE: the play stage — the action drop target + the just-played spotlight */}
           <div data-zone="stage" style={{ flex: 1, minWidth: 0, position: 'relative', display: 'flex', flexDirection: 'column' }}>
+            {/* L4: the shared-table gauge — draw count + discard top, pinned top-right of the stage
+                (clear of the centred ticker and the centred spotlight), non-interactive. */}
+            <TableBand
+              drawCount={observation.drawPileCount}
+              discardTop={observation.discardPile[observation.discardPile.length - 1]}
+              place={{ top: 4, right: 6 }}
+            />
             <Ticker lines={props.tickerLines} />
             <div
               data-drop="play"

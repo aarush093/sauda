@@ -17,6 +17,7 @@ import { GroupRow, PlayerHeader, seatName } from './BoardParts';
 import { CardBack } from './CardBack';
 import { Ticker } from './Ticker';
 import { StageSpotlight } from './StageSpotlight';
+import { TableBand } from './TableBand';
 import { BotTabRail } from './BotTabRail';
 import { StageCaption } from './StageCaption';
 import { STAGE, FONT } from '../design/tokens';
@@ -59,6 +60,14 @@ export function SpectateLayout(props: SpectateLayoutProps) {
             <div style={{ flex: 1, minHeight: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(event) => event.stopPropagation()}>
               <StageSpotlight cardId={props.spotlightCardId} fromOpponent />
               <StageCaption text={props.caption} />
+              {/* L4: the shared-table gauge — draw count + discard top, pinned bottom-right of the acting
+                  stage (clear of the top-centre caption, the centred spotlight, and the root-bottom-left
+                  ticker), non-interactive. */}
+              <TableBand
+                drawCount={observation.drawPileCount}
+                discardTop={observation.discardPile[observation.discardPile.length - 1]}
+                place={{ bottom: 4, right: 6 }}
+              />
             </div>
           </>
         ) : (
