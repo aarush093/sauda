@@ -75,6 +75,7 @@ export interface MyTurnLayoutProps {
   onPlaceReceived?: ((set: SetId) => void) | undefined;
   onExpandMine: () => void;
   onOpenBot: (id: number) => void;
+  onOpenBank: () => void; // R3: tap my bank tray → open the bank inspect
 }
 
 export function MyTurnLayout(props: MyTurnLayoutProps) {
@@ -147,7 +148,11 @@ export function MyTurnLayout(props: MyTurnLayoutProps) {
 
           {/* RIGHT: my controls — bank tray (drop target), Munshi chip, the turn token */}
           <div data-zone="myControls" style={{ width: zones.rightCol, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, overflow: 'hidden' }}>
-            <BankTray cards={observation.myBank} total={observation.myBankTotal} eligible={props.bankGlow} hot={props.hotZoneId === 'bank'} />
+            {/* R3: the tray is BOTH the bank drop zone (data-drop, inside) AND tap-to-inspect — a plain
+                tap (no drag) opens the bank view; a dragged bankable card still commits via data-drop. */}
+            <div onClick={props.onOpenBank} title="Tap to inspect your bank" style={{ cursor: 'pointer' }}>
+              <BankTray cards={observation.myBank} total={observation.myBankTotal} eligible={props.bankGlow} hot={props.hotZoneId === 'bank'} />
+            </div>
             <MunshiChip available={props.munshiAvailable} />
             <TurnToken
               active={props.turnToken.active}

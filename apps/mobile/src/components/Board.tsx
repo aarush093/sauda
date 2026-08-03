@@ -29,6 +29,7 @@ import { CardFace } from './CardFace';
 import { InspectCard } from './InspectCard';
 import { DiscardOverlay } from './DiscardOverlay';
 import { TableView } from './TableView';
+import { BankView } from './BankView';
 import { TargetingOverlay } from './TargetingOverlay';
 import { RearrangeChooser } from './RearrangeChooser';
 import { MyTurnLayout } from './MyTurnLayout';
@@ -113,6 +114,10 @@ export function Board({
 
   // Tap-to-expand table view (G4): whose full board is open, if any ('me' or an opponent seat).
   const [expandedView, setExpandedView] = useState<{ kind: 'me' } | { kind: 'opponent'; id: number } | null>(null);
+
+  // R3: whether the bank inspect overlay is open (tapping my bank tray). My own bank only — an
+  // opponent's bank reads inside their board zoom (the TableView bank row).
+  const [bankView, setBankView] = useState(false);
 
   // A targeted action mid-play: its card is on stage and legal targets glow (A10 targeting).
   // Cleared automatically once the card leaves the hand (committed) or the turn passes.
@@ -344,6 +349,7 @@ export function Board({
           onPlaceReceived={placeReceivedIn}
           onExpandMine={onExpandMine}
           onOpenBot={onOpenBot}
+          onOpenBank={() => setBankView(true)}
         />
       ) : (
         <SpectateLayout
@@ -428,6 +434,7 @@ export function Board({
               title="You"
               properties={observation.myProperties}
               bankTotal={observation.myBankTotal}
+              bank={observation.myBank}
               kiraya={observation.myKiraya}
               onClose={() => setExpandedView(null)}
             />
@@ -439,10 +446,17 @@ export function Board({
             title={seatName(seats, opponent.id)}
             properties={opponent.properties}
             bankTotal={opponent.bankTotal}
+            bank={opponent.bank}
             onClose={() => setExpandedView(null)}
           />
         ) : null;
       })()}
+
+      {/* R3: tapping my bank tray opens the bank inspect — every banked card as a real face, total in
+          gold. The bank is public in this genre; an opponent's bank shows the same way in their zoom. */}
+      {bankView && (
+        <BankView title="You" cards={observation.myBank} total={observation.myBankTotal} onClose={() => setBankView(false)} />
+      )}
 
       {/* inspect overlay (G1): a tapped hand card rises here CENTRED + LARGE, read-only — no
           buttons, no engine action. Tap to dismiss, or drag it straight to a zone to commit. */}

@@ -8,10 +8,13 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { SETS } from '@sauda/engine';
-import type { PropertyGroup, SetId } from '@sauda/engine';
+import type { CardId, PropertyGroup, SetId } from '@sauda/engine';
 import { SetCascade } from './SetCascade';
+import { ScaledCard } from './CardFace';
 import { Surface } from './Surface';
 import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
+
+const BANK_FACE_PX = 60; // R3: a banked card's real face in the zoom's bank row
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 const EXPAND_CARD_PX = 96; // K5 legibility floor: cards render at >= 96px wide (was 92)
@@ -26,12 +29,16 @@ export function TableView({
   title,
   properties,
   bankTotal,
+  bank,
   kiraya,
   onClose,
 }: {
   title: string;
   properties: Record<SetId, PropertyGroup[]>;
   bankTotal: number;
+  // R3: the banked cards (public — money AND banked actions), shown as real faces below the sets. The
+  // bank is public in this genre, so an opponent's zoom shows their real bank the same way mine does.
+  bank?: CardId[] | undefined;
   kiraya?: Record<SetId, number[]> | undefined; // my current rents per group; opponents show none
   onClose: () => void;
 }) {
@@ -82,6 +89,15 @@ export function TableView({
             ))
           )}
         </div>
+        {/* R3: the bank as real faces — money notes and banked action cards alike (public info). */}
+        {bank && bank.length > 0 && (
+          <div style={bankRowStyle} onClick={(event) => event.stopPropagation()}>
+            <span style={bankLabelStyle}>Bank</span>
+            {bank.map((cardId, index) => (
+              <ScaledCard key={`${cardId}-${index}`} cardId={cardId} width={BANK_FACE_PX} />
+            ))}
+          </div>
+        )}
         <div style={hintStyle}>Tap anywhere off a card — or ✕ — to close</div>
       </Surface>
     </div>
@@ -147,3 +163,16 @@ const groupColumnStyle: CSSProperties = { display: 'flex', flexDirection: 'colum
 const setLabelStyle: CSSProperties = { fontFamily: FONT.serif, fontWeight: 700, fontSize: 11, color: STAGE.cardCream };
 const emptyStyle: CSSProperties = { fontFamily: FONT.serif, fontStyle: 'italic', color: STAGE.textOnFelt, opacity: 0.8 };
 const hintStyle: CSSProperties = { fontFamily: FONT.serif, fontSize: 11, color: STAGE.textOnFelt, opacity: 0.7 };
+// R3: the bank row — a flex-wrap strip of real faces, self-contained (its own internal scroll comes
+// from the panel's grid above; the row itself just wraps).
+const bankRowStyle: CSSProperties = {
+  flexShrink: 0,
+  alignSelf: 'stretch',
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: 6,
+  paddingTop: 6,
+  borderTop: `1px solid ${STAGE.scrimSheet}`,
+};
+const bankLabelStyle: CSSProperties = { fontFamily: FONT.serif, fontWeight: 700, fontSize: 12, color: STAGE.cardCream, marginRight: 4 };

@@ -70,13 +70,15 @@ export function BotTabRail({
 }
 
 // The rail: a full-height column on the far edge, chips stacked top-down, scrolling internally if a
-// 4-bot table ever overflows the short landscape height (legal — internal scroll, not the page).
+// 4-bot table ever overflows the short landscape height (legal — internal scroll, not the page). The
+// top padding clears the in-game home/pause glyph (⌂), which lives fixed at the top-left over the rail
+// — so the glyph reads as the rail's cap and the first bot chip starts cleanly beneath it (no overlap).
 const railStyle: CSSProperties = {
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
   gap: 6,
-  padding: '4px 3px',
+  padding: '46px 3px 4px',
   overflowY: 'auto',
   flexShrink: 0,
 };

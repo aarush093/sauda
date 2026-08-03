@@ -435,3 +435,14 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   area.** The draw is automatic (L4), so the pile was display-only; the turn state now reads on the
   turn token and the "You"/bot headers. The draw/discard counts can be reintroduced in a corner if the
   owner wants them — flagged, not silently lost.
+
+### R3 — Bank inspect (2 Aug)
+
+- **Opponent bank composition is PUBLIC — no engine change needed (audit).** `OpponentView.bank:
+  CardId[]` is exposed by `observe.ts` (interface line 35, populated line 81: `bank: [...player.bank]`),
+  so the UI may show an opponent's banked cards as real faces. Tapping my bank tray opens a bank grid
+  (BankView); an opponent's bank shows the same way inside their board zoom (a bank row added to
+  TableView). The frozen engine was not touched.
+- **The bot rail is capped by the in-game home/pause glyph.** The ⌂ glyph is fixed at the top-left,
+  over the rail; the rail now pads its top so the first bot chip starts beneath it — the glyph reads as
+  the rail's cap. (Caught in a landscape capture where a chip tap opened the pause sheet instead.)
