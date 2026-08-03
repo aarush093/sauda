@@ -33,6 +33,7 @@ import { TargetingOverlay } from './TargetingOverlay';
 import { RearrangeChooser } from './RearrangeChooser';
 import { MyTurnLayout } from './MyTurnLayout';
 import { SpectateLayout } from './SpectateLayout';
+import { FocusTransition } from './FocusTransition';
 import { seatName } from './BoardParts';
 import { STAGE, INK, SHADOW, FONT, LAYERS } from '../design/tokens';
 import { tallyRender } from '../game/renderTally';
@@ -295,6 +296,9 @@ export function Board({
 
   return (
     <div ref={boardRef} style={boardStyle}>
+      {/* FOCUS FOLLOWS TURN: the key flips when control crosses my-turn ↔ spectate, so FocusTransition
+          remounts and plays one ~250ms slide/fade — no dead frame between the two states (R1). */}
+      <FocusTransition key={myTurn ? 'mine' : 'spectate'} direction={myTurn ? 'mine' : 'spectate'}>
       {myTurn ? (
         <MyTurnLayout
           observation={observation}
@@ -353,6 +357,7 @@ export function Board({
           onOpenBot={onOpenBot}
         />
       )}
+      </FocusTransition>
 
       {/* the floating drag preview — lifted above the finger, pointer-events:none so it never
           hides the drop zone beneath it from the hit-test. */}
