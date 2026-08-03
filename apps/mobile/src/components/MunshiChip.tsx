@@ -14,11 +14,12 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { SETS } from '@sauda/engine';
-import type { Action } from '@sauda/engine';
+import type { Action, Observation } from '@sauda/engine';
 import { MUNSHI_USES_PER_GAME } from '@sauda/bots';
 import type { MunshiAdvice } from '@sauda/bots';
 import { useGame } from '../game/store';
-import { actionCardId, describeCard, munshiAdviceLine } from '../game/labels';
+import { actionCardId, describeCard } from '../game/labels';
+import { composeMunshiAdvice } from '../game/munshiAdvice';
 import { ScaledCard } from './CardFace';
 import { plateUrl } from '../design/plates';
 import { useReducedMotion } from '../design/motion';
@@ -50,7 +51,9 @@ function describeMove(action: Action): { cardId: string | null; label: string } 
 export function MunshiChip({ available }: { available: boolean }) {
   const usesRemaining = useGame((store) => store.munshiUsesRemaining);
   const consultMunshi = useGame((store) => store.consultMunshi);
-  const [advice, setAdvice] = useState<MunshiAdvice | null>(null);
+  // R6: keep BOTH the recommendation and the observation it was made against, so the advice card can
+  // compose a nuanced line from the move PLUS concrete public facts (set progress, rival threats).
+  const [consult, setConsult] = useState<{ advice: MunshiAdvice; observation: Observation } | null>(null);
 
   const spent = usesRemaining <= 0;
   const enabled = available && !spent;
@@ -61,10 +64,11 @@ export function MunshiChip({ available }: { available: boolean }) {
     }
     const next = consultMunshi(); // spends one use; NEVER dispatches an engine action
     if (next) {
-      setAdvice(next); // null only in a race where it stopped being my turn — then stay at REST
+      setConsult(next); // null only in a race where it stopped being my turn — then stay at REST
     }
   }
 
+  const advice = consult?.advice ?? null;
   const move = advice ? describeMove(advice.action) : null;
   const reduced = useReducedMotion();
 
@@ -91,8 +95,8 @@ export function MunshiChip({ available }: { available: boolean }) {
 
       {/* The read-only advice card. The scrim (SCRIM_SHEET) sleeps everything beneath it (L2);
           tapping the scrim or Got it returns to REST. No control here plays the move. */}
-      {advice && move && (
-        <div style={scrimStyle} onClick={() => setAdvice(null)}>
+      {consult && advice && move && (
+        <div style={scrimStyle} onClick={() => setConsult(null)}>
           <div style={cardStyle} onClick={(event) => event.stopPropagation()}>
             <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 16, color: INK.deepInk }}>Munshi ki Salah</div>
             <div style={{ fontFamily: FONT.serif, fontSize: 12, color: INK.mutedBrown }}>Advice only — you still make the move.</div>
@@ -105,7 +109,7 @@ export function MunshiChip({ available }: { available: boolean }) {
               <MunshiMedallion reduced={reduced} />
               <div style={adviceCentreStyle}>
                 <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 15, color: INK.deepInk }}>{move.label}</div>
-                <div style={{ fontFamily: FONT.serif, fontSize: 13, color: INK.deepInk, lineHeight: 1.35 }}>{munshiAdviceLine(advice)}</div>
+                <div style={{ fontFamily: FONT.serif, fontSize: 13, color: INK.deepInk, lineHeight: 1.35 }}>{composeMunshiAdvice(consult.advice, consult.observation)}</div>
               </div>
               {move.cardId && (
                 <div style={adviceCardWellStyle}>
@@ -114,7 +118,7 @@ export function MunshiChip({ available }: { available: boolean }) {
               )}
             </div>
 
-            <button type="button" onClick={() => setAdvice(null)} style={dismissStyle}>Got it</button>
+            <button type="button" onClick={() => setConsult(null)} style={dismissStyle}>Got it</button>
           </div>
         </div>
       )}

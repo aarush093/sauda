@@ -9,7 +9,7 @@
  */
 import { create } from 'zustand';
 import { createGame, legalActions, mulberry32, observe, reduce } from '@sauda/engine';
-import type { Action, GameEvent, GameState, Rng } from '@sauda/engine';
+import type { Action, GameEvent, GameState, Observation, Rng } from '@sauda/engine';
 import { HeuristicBot, Munshi, MUNSHI_USES_PER_GAME } from '@sauda/bots';
 import type { Bot, Difficulty, MunshiAdvice } from '@sauda/bots';
 import { describeEvent } from './labels';
@@ -37,7 +37,9 @@ export interface GameStore {
   newGame: (config: GameConfig) => void;
   dispatch: (action: Action) => void;
   stepBot: () => void;
-  consultMunshi: () => MunshiAdvice | null; // read-only advice; spends one use, dispatches NOTHING
+  // read-only advice; spends one use, dispatches NOTHING. Returns the observation alongside so the
+  // UI can compose a nuanced line from the recommendation PLUS public facts (R6).
+  consultMunshi: () => { advice: MunshiAdvice; observation: Observation } | null;
   ackHandoff: () => void;
   reset: () => void;
 }
@@ -182,11 +184,13 @@ export const useGame = create<GameStore>((set, get) => {
       if (actor !== state.currentPlayerIndex || seats[actor]?.kind !== 'human') {
         return null; // a bot is up, or an interrupt has redirected control off my own turn
       }
-      const advice = munshi.advise(observe(state, actor), legalActions(state, actor));
-      if (advice) {
-        set({ munshiUsesRemaining: munshi.usesRemaining }); // mirror the spent use into the chip
+      const observation = observe(state, actor);
+      const advice = munshi.advise(observation, legalActions(state, actor));
+      if (!advice) {
+        return null;
       }
-      return advice;
+      set({ munshiUsesRemaining: munshi.usesRemaining }); // mirror the spent use into the chip
+      return { advice, observation };
     },
 
     ackHandoff: () => {

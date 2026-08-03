@@ -469,3 +469,23 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   onExpand → nothing glows, nothing taps), so a target can be chosen strategically ("I hold 2 Jaipur;
   take their Jaipur"). It is reference-only and cannot change what is targetable — the target chips
   remain the only commit path (BAD_TARGET stays unreachable from the UI).
+
+### R6 — Munshi portrait + nuanced advice (2 Aug)
+
+- **Munshi PORTRAIT: already wired, file simply absent — drop it at
+  `apps/mobile/src/assets/plates/munshi.webp`.** The medallion already calls `plateUrl('munshi')`
+  (PHONE-2), which returns the image via the plate glob if present and null otherwise (→ the code-drawn
+  bust silhouette fallback). There is no separate Gemini/plate-source folder in the repo — the plate
+  sources ARE `apps/mobile/src/assets/plates/*.webp`. So the owner drops the lithograph there as
+  `munshi.webp` (webp, ~600×870 like the other plates); it is picked up with zero code change, and
+  `build-plate-variants.mjs` will generate its downscaled tiers. No munshi image exists anywhere in the
+  repo today (searched), so the fallback silhouette is what renders until the file is dropped.
+- **Advice is now COMPOSED in the UI layer from the recommendation + public facts (packages/bots
+  byte-identical).** `composeMunshiAdvice(advice, observation)` writes the sentence from the bot's
+  frozen `reason` PLUS a concrete PUBLIC fact — set progress ("that makes 3 of 3"), a visible rival
+  threat ("Bot 2 is one card from a full Chennai"), the actual threat, a card value, or plays left.
+  Rule (unit-tested per reason with fact injection): every line names the move and cites ≥1 concrete
+  fact, and NEVER reads hidden info (opponent hands, deck order). `consultMunshi` now returns the
+  observation alongside the advice so the card can compose. Before: "Make this play — it is the
+  soundest move on the board…"; after: "Play Makaan — the soundest move on the board, and you have 2
+  plays left this turn."

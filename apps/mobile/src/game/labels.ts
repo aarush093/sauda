@@ -131,8 +131,8 @@ export function munshiAdviceLine(advice: MunshiAdvice): string {
 // R2 (owner landscape directive, 2 Aug) — the SPECTATE stage CAPTION. The old build rendered a bot's
 // play as text BEHIND the card on centre stage (the hidden-text bug). The fix moves the label BESIDE
 // the card as a short caption; shortLabel builds that string. Format: "B2 · Chennai Central" /
-// "B2 · VASOOLI → You" / "B2 · banked ₹3" — a seat chip + a short name, capped so the caption is one
-// short line. UI COPY ONLY: it reads the theme (like describeCard) and decides no rule.
+// "B2 · VASOOLI → You" / "B2 · banked ₹3" — a seat chip + a short name, capped so the caption stays
+// on a single row. UI COPY ONLY: it reads the theme (like describeCard) and decides no rule.
 export interface StagePlay {
   seat: number; // the acting player's seat → the "B{seat}" chip
   kind: 'placed' | 'banked' | 'built' | 'played' | 'received';
