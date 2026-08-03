@@ -29,9 +29,11 @@ describe('App', () => {
     render(<App />);
     fireEvent.click(screen.getByText('KHELO')); // opens the inline setup card
     fireEvent.click(screen.getByText('DEAL')); // deals with the default 3 bots + medium
-    // The Table renders the play table straight from the engine observation. Assert the turn chip —
-    // a stable label on the human's turn (the human is seat 0, whose turn it is at game start).
-    expect(screen.getByText('Your turn')).toBeTruthy();
+    // The Table renders the play table straight from the engine observation. It is the human's turn at
+    // game start (human is seat 0), so the landscape MY TURN view renders — assert my own "You" header,
+    // a stable board signal (LAYOUT v3 replaced the old "Your turn" table band with the focus-follows-
+    // turn composition; the turn state now reads on the turn token, not a text chip).
+    expect(screen.getByText('You')).toBeTruthy();
     expect(errorSpy).not.toHaveBeenCalled();
   });
 });

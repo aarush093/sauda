@@ -418,3 +418,20 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   Android sizes with width/height swapped (740x360, 800x360, 832x384, 915x412) plus a 915x412
   reduced-motion variant. The binding constraint flips from height (portrait) to the SHORT edge (360px
   tall); `legacy-740x360` is the tightest budget and stays the default single-still smoke subject.
+
+### R1 — Layout v3, focus follows turn (2 Aug)
+
+- **The play screen is now two states, chosen by whose turn it is (focus follows turn).** MY TURN
+  renders my world only — a far-edge bot rail, a top row of my sets · play stage · controls
+  (bank/Munshi/turn token), and the hand wheel spanning the full bottom width (hub bottom-centre).
+  SPECTATE (any bot's turn) splits the screen: the acting bot's panel (the larger share, their card
+  spotlit) and my panel (my sets + bank + hand as backs). Zone maths are pure + unit-tested
+  (`landscapeLayout.ts`); Board keeps all interaction glue and delegates only the composition to
+  `MyTurnLayout` / `SpectateLayout`.
+- **The wheel spans the full content width, so its arc is far wider than the old ~344px my-area** —
+  the "bigger, clearer roulette" the owner asked for. The no-clip invariant suite now also runs at the
+  landscape wheel-container widths (694/754/786/869), so containment is proven at the wider arcs.
+- **The old slim table band (draw-pile count · turn text · discard top) is dropped from the play
+  area.** The draw is automatic (L4), so the pile was display-only; the turn state now reads on the
+  turn token and the "You"/bot headers. The draw/discard counts can be reintroduced in a corner if the
+  owner wants them — flagged, not silently lost.

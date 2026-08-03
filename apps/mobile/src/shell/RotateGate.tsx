@@ -29,8 +29,9 @@ function RotatingPhoneGlyph({ animate }: { animate: boolean }) {
           animation: animate ? 'rotate-hint 2.6s ease-in-out infinite' : undefined,
         }}
       >
-        <rect x={18} y={16} width={12} height={22} rx={2.4} fill="none" stroke={INK.cardCream} strokeWidth={2} />
-        <line x1={21.5} y1={35} x2={26.5} y2={35} stroke={INK.cardCream} strokeWidth={1.6} strokeLinecap="round" />
+        {/* deep ink on the aged-cream card — the phone must read against the paper (not cream-on-cream) */}
+        <rect x={18} y={16} width={12} height={22} rx={2.4} fill="none" stroke={INK.deepInk} strokeWidth={2} />
+        <line x1={21.5} y1={35} x2={26.5} y2={35} stroke={INK.deepInk} strokeWidth={1.6} strokeLinecap="round" />
       </g>
     </svg>
   );

@@ -8,7 +8,11 @@
 import { describe, it, expect } from 'vitest';
 import { wheelLayout, READABLE_STRIP, type WheelSlot } from './wheelLayout';
 
-const CONTAINER_WIDTHS = [346, 436]; // board width at the 360 viewport and at the 460 cap
+// Portrait-era board widths (346, 436) PLUS the landscape wheel containers (owner landscape
+// directive, 2 Aug): the wheel now spans the full width minus the rail, so at the four landscape
+// profiles the container is 740/800/832/915 − 46 = 694/754/786/869. The no-clip invariant must hold
+// at these WIDER arcs too — R1 re-derives the wheel for landscape, so it is proven here.
+const CONTAINER_WIDTHS = [346, 436, 694, 754, 786, 869];
 const HAND_SIZES = Array.from({ length: 12 }, (_, index) => index + 1); // 1..12
 const EPS = 0.6; // sub-pixel rounding tolerance
 

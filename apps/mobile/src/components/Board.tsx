@@ -20,30 +20,22 @@ import type { SeatConfig } from '../game/store';
 import { dropZonesForCard, rearrangeDestinations } from '../game/interaction';
 import type { DropZone } from '../game/interaction';
 import { useHandDrag } from '../game/useHandDrag';
-import { useMeasuredHeight } from '../game/useMeasuredWidth';
-import { resolveZones } from '../game/zoneLayout';
+import { useMeasuredSize } from '../game/useMeasuredWidth';
+import { resolveMyTurn, resolveSpectate } from '../game/landscapeLayout';
 import { useDragController } from '../game/useDragController';
 import type { CarrySpec } from '../game/useDragController';
 import { cardVerbHint } from '../game/labels';
-import { CardFace, ScaledCard } from './CardFace';
-import { DropBand } from './DropBand';
-import { StageSpotlight } from './StageSpotlight';
+import { CardFace } from './CardFace';
 import { InspectCard } from './InspectCard';
 import { DiscardOverlay } from './DiscardOverlay';
 import { TableView } from './TableView';
 import { TargetingOverlay } from './TargetingOverlay';
 import { RearrangeChooser } from './RearrangeChooser';
-import { Ticker } from './Ticker';
-import { HandWheel } from './HandWheel';
-import { MunshiChip } from './MunshiChip';
-import { TurnToken } from './TurnToken';
-import { DiscardTop, DrawPile, GroupRow, OpponentGroupStrip, PlayerHeader, seatName } from './BoardParts';
-import { BankTray } from './BankTray';
-import { STAGE, INK, SHADOW, FONT, GLOW, LAYERS } from '../design/tokens';
+import { MyTurnLayout } from './MyTurnLayout';
+import { SpectateLayout } from './SpectateLayout';
+import { seatName } from './BoardParts';
+import { STAGE, INK, SHADOW, FONT, LAYERS } from '../design/tokens';
 import { tallyRender } from '../game/renderTally';
-
-
-const STAGE_CARD_PX = 112; // the received-card stage size — bigger than a table card, fully readable
 
 // The stable id each drop zone carries in the DOM (`data-drop`), so the drag hit-test and
 // the commit both name zones the same way.
@@ -79,7 +71,6 @@ export function Board({
 }) {
   if (import.meta.env.DEV) tallyRender('Board');
   const myTurn = observation.currentPlayer === observation.me;
-  const topDiscard = observation.discardPile[observation.discardPile.length - 1];
 
   // Turn-flow actions the engine offers directly (not tied to a staged hand card). DRAW is
   // NOT among them: it is auto-played at turn start (L4), never a tap.
@@ -285,177 +276,83 @@ export function Board({
   // P3: while a card is in the air the inflated thumb DROP BAND is up. The in-place zones then
   // suppress their data-drop (the band owns the target) but the felt behind still shows a glow —
   // merged here with the post-miss pulse so a missed drop re-flashes the very zones it should hit.
-  const dragActive = drag !== null;
   const glowSets = new Set<SetId>([...eligibleSets, ...(missFeedback?.pulseSets ?? [])]);
   const bankGlow = bankEligible || (missFeedback?.pulseBank ?? false);
 
-  // P1: measure the board's REAL box (the shell is 100dvh minus safe-area padding, so this is the
-  // true height on the phone) and split it with the clamped-flex law — no percentages, no void.
-  const [boardRef, boardHeight] = useMeasuredHeight<HTMLDivElement>(740);
-  const zones = resolveZones(boardHeight);
+  // LAYOUT v3 (owner landscape directive, 2 Aug): measure the board's REAL box and split it with the
+  // landscape zone maths. Which composition renders is FOCUS FOLLOWS TURN: my own turn shows my world
+  // only (MyTurnLayout); any bot's turn shows the spectate split (SpectateLayout). Board keeps ALL the
+  // interaction glue above and just hands each layout the props it needs; the ghost + overlays below
+  // stay here, in one place. Fallbacks (740×360) cover the first paint and jsdom (no layout engine).
+  const [boardRef, boardSize] = useMeasuredSize<HTMLDivElement>();
+  const width = boardSize.width > 0 ? boardSize.width : 740;
+  const height = boardSize.height > 0 ? boardSize.height : 360;
+  const myTurnZones = resolveMyTurn(width, height);
+  const spectateZones = resolveSpectate(width, height);
 
-  // A zone is a fixed-height flex row: an explicit px height from the law above, so the HUD and the
-  // captures read exactly what resolveZones computed. `data-zone` lets the HUD/capture measure it.
-  const zone = (heightPx: number, extra?: CSSProperties): CSSProperties => ({
-    flex: `0 0 ${heightPx}px`,
-    height: heightPx,
-    minHeight: 0,
-    padding: 8,
-    ...extra,
-  });
+  const onExpandMine = () => setExpandedView({ kind: 'me' });
+  const onOpenBot = (id: number) => setExpandedView({ kind: 'opponent', id });
 
   return (
     <div ref={boardRef} style={boardStyle}>
-      {/* opponent row — pills + their REAL card cascades; tap a row to expand to that opponent's
-          full readable table view. Height from the zone law (min/max px, clamped-flex). */}
-      <div data-zone="opponents" style={zone(zones.opponents, { display: 'flex', gap: 8, overflow: 'hidden' })}>
-        {observation.opponents.map((opponent) => (
-          // H1a (excellence pass): the WHOLE opponent column is the tap target (not just the card
-          // strip), and it carries a VISIBLE expand affordance — so on a touch screen (no cursor) it
-          // reads as "tap to open", the same as my own groups. Opens their full read-only table view.
-          <div
-            key={opponent.id}
-            {...(import.meta.env.DEV && { 'data-expand': `opponent-${opponent.id}` })}
-            onClick={() => setExpandedView({ kind: 'opponent', id: opponent.id })}
-            title={`${seatName(seats, opponent.id)} — tap to see their full board`}
-            style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, opacity: opponent.id === observation.currentPlayer ? 1 : 0.75, cursor: 'pointer' }}
-          >
-            <PlayerHeader name={seatName(seats, opponent.id)} bankTotal={opponent.bankTotal} handCount={opponent.handCount} active={opponent.id === observation.currentPlayer} expandable />
-            <OpponentGroupStrip properties={opponent.properties} />
-          </div>
-        ))}
-      </div>
-
-      {/* table band — draw pile · turn chip · discard (fixed slim strip) */}
-      <div data-zone="table" style={zone(zones.table, { display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${STAGE.scrimSheet}`, borderBottom: `1px solid ${STAGE.scrimSheet}` })}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {/* L4: the pile is display only — the turn-start draw is automatic, never a tap. */}
-          <DrawPile count={observation.drawPileCount} />
-          <span style={{ fontFamily: FONT.mono, fontSize: 12 }}>{observation.drawPileCount}</span>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 13, color: myTurn ? STAGE.accentGold : STAGE.cardCream }}>
-            {myTurn ? 'Your turn' : `${seatName(seats, observation.currentPlayer)}'s turn`}
-          </div>
-          <div style={{ fontFamily: FONT.mono, fontSize: 10, opacity: 0.8 }}>{observation.playsRemaining} plays left</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontFamily: FONT.mono, fontSize: 12 }}>{observation.discardPile.length}</span>
-          <DiscardTop topId={topDiscard} />
-        </div>
-      </div>
-
-      {/* centre stage — the 2-line ticker (§8), then open felt / the tapped card's overlay / the
-          centre PLAY drop zone. Clamped-flex: idle it collapses toward the ticker (no void, P1); a
-          played card's spotlight overlays it and may overflow (overflow visible) so a short idle
-          stage never shrinks the reveal. */}
-      <div data-zone="stage" style={zone(zones.stage, { display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'visible' })}>
-        <Ticker lines={tickerLines} />
-        <div data-drop="play" style={{ position: 'relative', zIndex: LAYERS.stage, flex: 1, minHeight: 0, margin: '0 8px 6px', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hotZoneId === 'play' ? GLOW.hot : playEligible ? GLOW.soft : 'none' }}>
-          {receive ? (
-            // G6: a wildcard reached me as payment — it sits on stage; I drag it to a glowing set
-            // (or tap one). Its legal sets glow below; dragging follows the pointer like any card.
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <div
-                {...receiveHandlers(receive.cardId)}
-                {...(import.meta.env.DEV && { 'data-card-id': receive.cardId })}
-                onContextMenu={(event) => event.preventDefault()}
-                style={{ touchAction: 'none', cursor: 'grab', boxShadow: STAGE.glowGold, borderRadius: 8, opacity: drag?.cardId === receive.cardId ? 0.3 : 1 }}
-              >
-                <ScaledCard cardId={receive.cardId} width={STAGE_CARD_PX} />
-              </div>
-              <span style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 12, color: STAGE.accentGold }}>
-                Drag it to a glowing set — or tap one
-              </span>
-            </div>
-          ) : playEligible ? (
-            <span style={{ fontFamily: FONT.display, fontWeight: 700, color: STAGE.accentGold }}>Play</span>
-          ) : null}
-        </div>
-        {/* K2: the just-played card (a bot's or mine) reveals + travels here. It overlays the WHOLE
-            stage (ticker + play) so it fits LARGE, sits ABOVE the ticker (z 4) and is the brightest
-            thing on screen — the fix for the owner-shot bug (an oversized card dimmed behind the
-            ticker). It yields to the interactive received-card flow, which owns the stage while up. */}
-        <StageSpotlight cardId={receive ? null : spotlightCardId} fromOpponent={spotlightFromOpponent} />
-      </div>
-
-      {/* my area — the largest zone (hierarchy law A2), absorbing surplus height first; sleeps
-          off-turn. This is the thumb zone: the hand wheel, my groups, and the bank tray. */}
-      <div data-zone="myArea" style={zone(zones.myArea, { display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${STAGE.scrimSheet}`, filter: myTurn ? undefined : STAGE.dimSleep, overflow: 'hidden' })}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          {/* left: the You identity + the Munshi advisor chip (K3 — restyled to read unmistakably as
-              an advisor, never confusable with the turn token). */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <PlayerHeader name="You" bankTotal={observation.myBankTotal} handCount={observation.myHand.length} active={myTurn} self />
-            <MunshiChip available={munshiAvailable} />
-          </div>
-          {/* centre: the TURN TOKEN (K3) — the plays display + end / auto-end / SAUDA! declare, all in
-              one gold control. It replaces the End turn button, the F2 "turn over" beat and the
-              centre-stage Declare button. */}
-          <TurnToken
-            active={myTurn && !inDiscardMode}
-            playsRemaining={observation.playsRemaining}
-            winLegal={!!declareWinAction}
-            endTurnLegal={!!endTurnAction}
-            rearrangeActive={rearrangeActive}
-            paused={paused}
-            onEndTurn={() => { if (endTurnAction && onAct) onAct(endTurnAction); }}
-            onDeclareWin={() => { if (declareWinAction && onAct) onAct(declareWinAction); }}
-          />
-          {/* right: the bank TRAY (K4) — the drop zone itself (money / bankable actions only; never a
-              wildcard). It carries data-drop="bank" and expands into a landing strip while a bankable
-              card is dragged, the magnet following its live rect. */}
-          <BankTray
-            cards={observation.myBank}
-            total={observation.myBankTotal}
-            eligible={bankGlow}
-            hot={hotZoneId === 'bank'}
-            suppressDrop={dragActive}
-          />
-        </div>
-        {/* my property board — the GROWTH area of my zone: it absorbs the surplus height (P1) so
-            the empty felt reads as "where my deeds go" (the ticker points here at game start), not a
-            random void, and the wheel sits directly below it instead of floating at the far bottom. */}
-        <div style={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          <GroupRow
-            properties={observation.myProperties}
-            kiraya={observation.myKiraya}
-            width={38}
-            mine
-            dropSets={glowSets}
-            hotZoneId={hotZoneId}
-            onExpand={() => setExpandedView({ kind: 'me' })}
-            onSetPlace={receive ? placeReceivedIn : undefined}
-            suppressDrop={dragActive}
-            rearrange={
-              rearrangeableIds.size > 0
-                ? { handlers: cardHandlers, cardIds: [...rearrangeableIds], draggingId: drag?.cardId ?? null }
-                : undefined
-            }
-          />
-          {/* P3: the inflated thumb drop band overlays this board area while a card is dragged. */}
-          {dragActive && (eligibleSets.size > 0 || bankEligible) && (
-            <DropBand sets={[...eligibleSets]} bankEligible={bankEligible} hotZoneId={hotZoneId} />
-          )}
-        </div>
-        {/* P7: the "Move wildcard:" chip row is GONE. Each movable wildcard now carries its own ◈
-            handle ON its group (drag it, or tap for the chooser) — see the GroupRow rearrange prop. */}
-        {/* bottom band: the hand WHEEL (G2), hub at bottom-centre, spanning the FULL my-area width —
-            no control shares this band (End turn moved to the header, H2b), so the wheel stays widest
-            and nothing ever overlaps a card. It sits directly under the property board above (P1). */}
-        <div>
-          <HandWheel
-            cards={observation.myHand}
-            interactiveIds={handTappableIds}
-            carriedCardId={preview?.cardId ?? null}
-            onTap={onTapCard}
-            onDragStart={startMainDrag}
-            onDragMove={dragCtl.move}
-            onDragEnd={dragCtl.release}
-            onDragCancel={dragCtl.cancel}
-          />
-        </div>
-      </div>
+      {myTurn ? (
+        <MyTurnLayout
+          observation={observation}
+          zones={myTurnZones}
+          glowSets={glowSets}
+          bankGlow={bankGlow}
+          playEligible={playEligible}
+          hotZoneId={hotZoneId}
+          spotlightCardId={spotlightCardId}
+          spotlightFromOpponent={spotlightFromOpponent}
+          munshiAvailable={munshiAvailable}
+          tickerLines={tickerLines}
+          turnToken={{
+            active: myTurn && !inDiscardMode,
+            playsRemaining: observation.playsRemaining,
+            winLegal: !!declareWinAction,
+            endTurnLegal: !!endTurnAction,
+            rearrangeActive,
+            paused,
+            onEndTurn: () => { if (endTurnAction && onAct) onAct(endTurnAction); },
+            onDeclareWin: () => { if (declareWinAction && onAct) onAct(declareWinAction); },
+          }}
+          wheel={{
+            cards: observation.myHand,
+            interactiveIds: handTappableIds,
+            carriedCardId: preview?.cardId ?? null,
+            onTap: onTapCard,
+            onDragStart: startMainDrag,
+            onDragMove: dragCtl.move,
+            onDragEnd: dragCtl.release,
+            onDragCancel: dragCtl.cancel,
+          }}
+          rearrange={
+            rearrangeableIds.size > 0
+              ? { handlers: cardHandlers, cardIds: [...rearrangeableIds], draggingId: drag?.cardId ?? null }
+              : undefined
+          }
+          receiveOnStage={
+            receive ? { cardId: receive.cardId, handlers: receiveHandlers, dragging: drag?.cardId === receive.cardId } : undefined
+          }
+          onPlaceReceived={placeReceivedIn}
+          onExpandMine={onExpandMine}
+          onOpenBot={onOpenBot}
+        />
+      ) : (
+        <SpectateLayout
+          observation={observation}
+          seats={seats}
+          zones={spectateZones}
+          actingId={observation.currentPlayer}
+          spotlightCardId={spotlightCardId}
+          caption={null}
+          tickerLines={tickerLines}
+          onExpandMine={onExpandMine}
+          onExpandActing={() => setExpandedView({ kind: 'opponent', id: observation.currentPlayer })}
+          onOpenBot={onOpenBot}
+        />
+      )}
 
       {/* the floating drag preview — lifted above the finger, pointer-events:none so it never
           hides the drop zone beneath it from the hit-test. */}
