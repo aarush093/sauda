@@ -393,3 +393,28 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   new dependency and surface pre-existing hook violations across the app (unbounded scope); so the
   honest fix is to remove the dead reference and replace it with a plain note. `pnpm verify` now runs
   `pnpm lint` first, so the count can never drift back up unnoticed.
+
+## LANDSCAPE REBUILD (R) — owner landscape directive (2 Aug)
+
+- **SAUDA is landscape-only, enforced by a rotate gate — the game never lays out in portrait.** A
+  browser cannot force orientation outside fullscreen, so rather than lay the board out at the wrong
+  aspect ratio, the App detects portrait (`orientationOf(w,h)`: `h > w`, a perfect square counts as
+  landscape so a mid-rotation `w===h` tie can't flicker the gate) and renders `RotateGate` INSTEAD of
+  the game. The game is UNMOUNTED, not merely covered: its state lives in the zustand store, so no bot
+  steps behind the gate (the bot timers live in Table's effects, which are gone), and rotating back to
+  landscape remounts and resumes exactly. This is the most defensible reading of "over a paused, hidden
+  game / never lays out in portrait." The pure dev ART routes (`#/dev/card`, `/plates`, `/wheel`) stay
+  ungated — they are review tools shot in a tall box, not the game.
+- **Fullscreen + orientation lock is a best-effort convenience, never a requirement.** The gate offers
+  one "Go fullscreen" control: from that user gesture it calls `requestFullscreen()` then
+  `screen.orientation.lock('landscape')`, each wrapped and failure-tolerant. On a browser that refuses
+  either (desktop Safari, an in-app webview) the player just rotates by hand and the gate clears — the
+  game never depends on the lock succeeding.
+- **The M5 Capacitor build locks landscape NATIVELY, so the web gate is a web-only fallback.** The
+  native Android manifest pins `android:screenOrientation="landscape"` (Capacitor
+  `orientation: 'landscape'`), so the packaged app can never be portrait and the rotate gate is dead
+  code there. The gate exists only for the web build, where the platform gives us no manifest.
+- **The device testbed rotated to landscape.** `deviceProfiles.json` now holds the four PHONE-1
+  Android sizes with width/height swapped (740x360, 800x360, 832x384, 915x412) plus a 915x412
+  reduced-motion variant. The binding constraint flips from height (portrait) to the SHORT edge (360px
+  tall); `legacy-740x360` is the tightest budget and stays the default single-still smoke subject.

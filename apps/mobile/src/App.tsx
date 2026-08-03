@@ -3,6 +3,8 @@ import { useGame } from './game/store';
 import type { SeatConfig } from './game/store';
 import { Home } from './shell/Home';
 import { Book } from './shell/Book';
+import { RotateGate } from './shell/RotateGate';
+import { useOrientation } from './game/orientation';
 import { markGameCompleted } from './shell/firstRun';
 import { Table } from './components/Table';
 import { PlateSheet } from './components/PlateSheet';
@@ -66,6 +68,7 @@ function AutoStartTable() {
 export function App() {
   const state = useGame((store) => store.state);
   const hash = useHash();
+  const orientation = useOrientation();
 
   // H4: warm every plate (fetch + async-decode) once on mount, so no card's first mid-game
   // appearance stalls on a webp decode on the target budget WebView.
@@ -101,15 +104,32 @@ export function App() {
     const n = Math.max(1, Math.min(12, Number(hash.slice('#/dev/wheel/'.length)) || 5));
     return <DevWheel count={n} />;
   }
+
+  // R0 (owner landscape directive, 2 Aug): SAUDA is LANDSCAPE-ONLY. In portrait the game never lays
+  // out — the rotate gate stands over an UNMOUNTED, paused game (its state waits safely in the store,
+  // so rotating back resumes exactly where we were, with no bot having stepped behind the gate). The
+  // pure dev ART routes above (#/dev/card, /plates, /wheel) are ungated: they are review tools shot in
+  // a tall box, not the game. The dev HUD rides above the gate so orientation stays debuggable.
+  const hud = hudEnabled() ? <Hud /> : null;
+  if (orientation === 'portrait') {
+    return (
+      <>
+        <RotateGate />
+        {hud}
+      </>
+    );
+  }
+
   if (hash === '#/autostart') {
-    return <AutoStartTable />;
+    return <AutoStartTable />; // AutoStartTable renders its own HUD
   }
   if (hash === '#/dev/frame360') {
-    // The live play screen inside an exact 360x740 box — an iframe, so the board's vw/vh
-    // resolve to the frame and not the desktop viewport. Neutral surround for captures.
+    // R0: the live play screen inside an exact LANDSCAPE box (740x360, the legacy tight profile) — an
+    // iframe, so the board's vw/vh resolve to the frame and not the desktop viewport, and the inner
+    // #/autostart sees a landscape viewport so it never gates. Neutral surround for captures.
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: INK.deepInk }}>
-        <iframe title="frame360" src={`${window.location.pathname}#/autostart`} style={{ width: 360, height: 740, border: 'none', borderRadius: 16, boxShadow: SHADOW.dragLift }} />
+        <iframe title="frame360" src={`${window.location.pathname}#/autostart`} style={{ width: 740, height: 360, border: 'none', borderRadius: 16, boxShadow: SHADOW.dragLift }} />
       </div>
     );
   }
@@ -117,7 +137,6 @@ export function App() {
   // P8 shell routing. HOME is the default door; the game lives at #/play; the Book at #/niyam.
   // Home and Book each own their own fixed felt shell, so neither is wrapped in .app.
   const route = hash.split('?')[0];
-  const hud = hudEnabled() ? <Hud /> : null;
   if (route === '#/niyam') {
     return (
       <>

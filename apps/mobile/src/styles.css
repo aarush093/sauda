@@ -19,8 +19,22 @@
     transform: translateY(-3px);
   }
 }
+/* R0 (owner landscape directive, 2 Aug): the rotate-gate phone glyph rocks a quarter-turn to MIME the
+   rotation the player should make. Transform-only (GPU, no layout). Applied inline in RotateGate only
+   when reduced motion is off; the media guard below is the second belt so it can never drift on. */
+@keyframes rotate-hint {
+  0%,
+  55% {
+    transform: rotate(0deg);
+  }
+  80%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .munshi-medallion {
+  .munshi-medallion,
+  .rotate-hint-glyph {
     animation: none !important;
   }
 }

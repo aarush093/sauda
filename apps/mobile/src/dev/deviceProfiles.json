@@ -1,10 +1,10 @@
 {
-  "note": "Real-device testbed (PHONE-1, owner phone test 1 Aug). The canonical portrait profiles every capture/measure/profile run drives, so 'works on my desktop' can never masquerade as 'works on a phone'. Shared single source: the TS wrapper (deviceProfiles.ts) and the Node capture script (capture-phone.mjs) both read THIS file, so a profile is edited in one place. Widths/heights are CSS px (the layout viewport); dpr is the real deviceScaleFactor; reducedMotion drives Playwright's reducedMotion + the app's prefers-reduced-motion.",
+  "note": "Real-device testbed — LANDSCAPE (owner landscape directive, 2 Aug). SAUDA is a landscape-only game (see R0 / DECISIONS), so every capture/measure/profile run drives these landscape profiles: the same four real Android devices as the PHONE-1 portrait set, ROTATED — width and height swapped — plus a reduced-motion variant. Widths/heights are CSS px (the layout viewport, long edge horizontal); dpr is the real deviceScaleFactor; reducedMotion drives Playwright's reducedMotion + the app's prefers-reduced-motion. The TS wrapper (deviceProfiles.ts) and the Node capture scripts both read THIS file, so a profile is edited in one place. The tightest budget is now the SHORT edge (360px height): legacy-740x360 is the default single-still smoke subject.",
   "profiles": [
-    { "id": "legacy-360x740", "label": "Legacy small (360x740)", "width": 360, "height": 740, "dpr": 3, "reducedMotion": false },
-    { "id": "compact-360x800", "label": "Compact (360x800)", "width": 360, "height": 800, "dpr": 3, "reducedMotion": false },
-    { "id": "mid-384x832", "label": "Mid (384x832)", "width": 384, "height": 832, "dpr": 2.75, "reducedMotion": false },
-    { "id": "tall-412x915", "label": "Tall (412x915)", "width": 412, "height": 915, "dpr": 2.625, "reducedMotion": false },
-    { "id": "reduced-412x915", "label": "Tall + reduced motion (412x915)", "width": 412, "height": 915, "dpr": 2.625, "reducedMotion": true }
+    { "id": "legacy-740x360", "label": "Legacy small (740x360)", "width": 740, "height": 360, "dpr": 3, "reducedMotion": false },
+    { "id": "compact-800x360", "label": "Compact (800x360)", "width": 800, "height": 360, "dpr": 3, "reducedMotion": false },
+    { "id": "mid-832x384", "label": "Mid (832x384)", "width": 832, "height": 384, "dpr": 2.75, "reducedMotion": false },
+    { "id": "tall-915x412", "label": "Wide (915x412)", "width": 915, "height": 412, "dpr": 2.625, "reducedMotion": false },
+    { "id": "reduced-915x412", "label": "Wide + reduced motion (915x412)", "width": 915, "height": 412, "dpr": 2.625, "reducedMotion": true }
   ]
 }

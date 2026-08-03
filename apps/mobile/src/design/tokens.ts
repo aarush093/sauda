@@ -111,6 +111,10 @@ export const LAYERS = {
   // At its old 45 those badges punched through the card (the owner's "pips overlapping the advice"
   // break). It sits just under the dev HUD so nothing in-play can overlap it.
   advice: 80, // the Munshi advice card — above the board, its sheets AND its pinned badges
+  // R0 (owner landscape directive, 2 Aug): the rotate-to-play interstitial. SAUDA is landscape-only;
+  // in portrait this full-screen shell hides the (unmounted, paused) game, so it must sit above every
+  // in-play surface. It stays UNDER the dev HUD so a dev can still read the orientation line on top.
+  rotate: 85, // the portrait "rotate your phone" gate
   hud: 90, // the dev HUD debug instrument — top of everything
 } as const;
 

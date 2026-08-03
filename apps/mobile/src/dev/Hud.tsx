@@ -10,6 +10,7 @@
  * includes the URL bar showing/hiding, the exact event that used to scroll the page.
  */
 import { useEffect, useState } from 'react';
+import { orientationOf } from '../game/orientation';
 import { FONT, LAYERS, DEV_HUD } from '../design/tokens';
 
 // True when the URL carries ?hud=1 (and we're in a dev build). Read live so it works on any route.
@@ -57,6 +58,12 @@ export function Hud() {
       <div style={{ fontWeight: 700 }}>
         {reading.vw}×{reading.vh} · dpr {reading.dpr}
       </div>
+      {/* R0: orientation is the state the landscape rebuild pivots on — the gate raises in portrait.
+          Landscape (the game's native, correct state) reads quiet; portrait is flagged, since a portrait
+          reading means the game is behind the rotate gate, not laid out. */}
+      <div style={reading.orientation === 'portrait' ? reducedOnStyle : reducedOffStyle}>
+        orientation: {reading.orientation}
+      </div>
       {/* PHONE-2 Q3: reduced-motion is the one HUD line a session most needs to NOT miss — the owner's
           first phone game may have run with it forced on (battery saver) and nothing told him. So when
           it is ON this line is a filled red banner, unmissable; when off it stays quiet. */}
@@ -85,10 +92,13 @@ function snapshot() {
   // window.innerHeight is the LAYOUT viewport; visualViewport.height tracks the URL-bar-adjusted
   // visible height — the gap between them is exactly the dvh problem the shell fixes (P1).
   const visualVh = typeof window !== 'undefined' && window.visualViewport ? Math.round(window.visualViewport.height) : 0;
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 0;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 0;
   return {
-    vw: typeof window !== 'undefined' ? window.innerWidth : 0,
-    vh: typeof window !== 'undefined' ? window.innerHeight : 0,
+    vw,
+    vh,
     dpr: typeof window !== 'undefined' ? Math.round(window.devicePixelRatio * 100) / 100 : 0,
+    orientation: orientationOf(vw, vh),
     reduced,
     visualVh,
     zones: measureZones(),
