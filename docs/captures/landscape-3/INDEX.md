@@ -13,4 +13,6 @@ Rerun: `pnpm dev:lan` in one shell, then `pnpm capture:landscape3` (or `--stage=
 |-------|--------|
 | `m1_advice_portrait_740x360.png` | M1 Munshi advice card with the real lithograph medallion @ 740x360 |
 | `m1_advice_portrait_915x412.png` | M1 Munshi advice card with the real lithograph medallion @ 915x412 |
+| `m2_targeting_740x360_after.png` | M2 targeting split (many-target chips vs dimmed hand) @ 740x360 — after |
+| `m2_targeting_740x360_before.png` | M2 targeting split (many-target chips vs dimmed hand) @ 740x360 — before |
 

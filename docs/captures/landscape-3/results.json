@@ -8,5 +8,15 @@
     "ok": true,
     "what": "M1 Munshi advice card with the real lithograph medallion @ 740x360",
     "note": ""
+  },
+  "m2_targeting_740x360_before.png": {
+    "ok": true,
+    "what": "M2 targeting split (many-target chips vs dimmed hand) @ 740x360 — before",
+    "note": ""
+  },
+  "m2_targeting_740x360_after.png": {
+    "ok": true,
+    "what": "M2 targeting split (many-target chips vs dimmed hand) @ 740x360 — after",
+    "note": ""
   }
 }

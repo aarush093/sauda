@@ -583,3 +583,10 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   litho's vertical centre is the hands/ledger) and `transform: scale(1.32)` pushes the litho's own cameo
   ring past the slot edge so the bust fills the circle. Reduced-motion still parks the float; the mask is
   independent of the animation (float is on the slot div, the mask on the child `<img>`).
+- **The targeting overlay parks the hand fully, rather than reserving a band above it (M2 close-out).**
+  On the shortest 740×360 profile the many-target chip cluster grazed the dimmed hand fan bleeding
+  through the 35% scrim (LANDSCAPE-2 flag 3). A reserved band can't fit the tall content — the hand band
+  is ~166 px of a 360 px height, leaving too little for the 88 px card + wrapped chips. So the hand (a
+  sleeping, already-non-interactive modal background during targeting) is parked fully: `handAsleep`
+  drops the wheel band to opacity 0 + pointer-events none, keeping its height (no reflow). Targetability
+  is untouched (still purely `legalActions`); the My-Sets reference panel is unchanged.

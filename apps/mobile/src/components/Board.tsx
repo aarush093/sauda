@@ -350,6 +350,7 @@ export function Board({
           onExpandMine={onExpandMine}
           onOpenBot={onOpenBot}
           onOpenBank={() => setBankView(true)}
+          handAsleep={targeting !== null}
         />
       ) : (
         <SpectateLayout

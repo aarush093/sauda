@@ -77,6 +77,9 @@ export interface MyTurnLayoutProps {
   onExpandMine: () => void;
   onOpenBot: (id: number) => void;
   onOpenBank: () => void; // R3: tap my bank tray → open the bank inspect
+  // LANDSCAPE-3 M2: while the targeting overlay is up, the hand is a sleeping modal background — park
+  // it fully so the (already non-interactive) card fan can't graze the glowing target chips.
+  handAsleep?: boolean;
 }
 
 export function MyTurnLayout(props: MyTurnLayoutProps) {
@@ -176,8 +179,20 @@ export function MyTurnLayout(props: MyTurnLayoutProps) {
         </div>
 
         {/* BOTTOM: the hand WHEEL, spanning the full content width — hub at bottom-centre. Its own row,
-            so the bank tray and turn token (top row) never collide with it at any hand count. */}
-        <div data-zone="wheel" style={{ height: zones.wheelBand, minHeight: 0, display: 'flex', alignItems: 'flex-end' }}>
+            so the bank tray and turn token (top row) never collide with it at any hand count. While the
+            targeting overlay is up (handAsleep) the band keeps its height — no reflow — but the fan is
+            fully parked (invisible + inert) so it can never graze the target chips (LANDSCAPE-3 M2). */}
+        <div
+          data-zone="wheel"
+          style={{
+            height: zones.wheelBand,
+            minHeight: 0,
+            display: 'flex',
+            alignItems: 'flex-end',
+            opacity: props.handAsleep ? 0 : 1,
+            pointerEvents: props.handAsleep ? 'none' : undefined,
+          }}
+        >
           <HandWheel
             cards={props.wheel.cards}
             interactiveIds={props.wheel.interactiveIds}
