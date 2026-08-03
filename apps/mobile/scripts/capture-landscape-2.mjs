@@ -239,19 +239,36 @@ const CLIPS = [
     what: 'I owe Rs2 (a bot plays SHAGUN) and pay with a BANKED Rs3 action card — the meter reads "no change given" (the R4 overpay).',
     run: async (page) => {
       await bootReplay(page, 'S9_adla_badli');
-      // Setup (fast, synchronous): bank an action card worth Rs3, then let bot p1 charge me Rs2 with Shagun.
+      // Setup (fast, synchronous): bank an action card worth Rs3, then have bot p1 draw and play SHAGUN
+      // so every opponent (me included) is charged Rs2. Shagun opens a NAHI window per target, so the
+      // charge lands as `awaitingResponse` first; unpausing lets the bots auto-respond and — since I
+      // hold no NAHI CHALEGA — auto-allows my charge (D2), leaving the payment sheet open on me.
       const set = await page.evaluate(() => {
         const g = () => window.__sauda.getState();
         g().dispatch({ type: 'BANK_CARD', cardId: 'action_adlaBadli_1' }); // a banked Rs3 action card
         g().dispatch({ type: 'END_TURN' });
+        g().dispatch({ type: 'DRAW' }); // bot p1 draws so it may play
         const shagun = g().state.players[1].hand.find((c) => c.includes('shagun'));
         if (!shagun) return { ok: false };
-        g().dispatch({ type: 'PLAY_ACTION', cardId: shagun, params: { action: 'shagun' } }); // every opponent owes Rs2
-        return { ok: g().state.pendingInterrupts.some((i) => i.responder === 0 && i.status === 'awaitingPayment') };
+        g().dispatch({ type: 'PLAY_ACTION', cardId: shagun, params: { action: 'shagun' } });
+        // Shagun charges every opponent; the stack resolves LIFO, so the two BOT charges land on top of
+        // mine. Resolve them synchronously (each bot allows + pays via its own brain) until my charge is
+        // the active one, then allow it myself so the payment sheet opens on ME — no waiting on the
+        // paced bot-beat timers (which would blow the clip's wait budget).
+        for (let guard = 0; guard < 30; guard++) {
+          const stack = g().state.pendingInterrupts;
+          if (stack.length === 0) break;
+          const active = stack[stack.length - 1];
+          if (active.responder === 0 && active.status === 'awaitingPayment') break; // my payment is up
+          if (active.responder === 0) g().dispatch({ type: 'RESPOND_ALLOW' }); // I hold no NAHI — allow
+          else g().stepBot(); // a bot responder allows/pays itself
+        }
+        const mine = g().state.pendingInterrupts.find((i) => i.responder === 0 && i.status === 'awaitingPayment');
+        return { ok: Boolean(mine) };
       });
       if (!set.ok) throw new Error('could not stage the owe-Rs2 charge (no bot shagun)');
       await page.evaluate(() => { window.__saudaCapturePaused = false; });
-      await page.waitForSelector('[data-pay-card="action_adlaBadli_1"]', { timeout: 4000 });
+      await page.waitForSelector('[data-pay-card="action_adlaBadli_1"]', { timeout: 6000 });
       await frames(page, 700); // hold on the opened payment sheet (its money-first default)
       // Select ONLY the banked action card: turn off any other currently-selected pay card, turn it on.
       const others = await page.locator('[data-pay-card]').all();
@@ -262,7 +279,9 @@ const CLIPS = [
         if (selected) { await el.click(); await frames(page, 200); }
       }
       await page.locator('[data-pay-card="action_adlaBadli_1"]').click();
-      await frames(page, 1000); // the meter now reads "Rs3 / 2 Cr · no change given"
+      // Self-verify the OVERPAY actually rendered — the meter must now disclose "no change given".
+      await page.waitForSelector('text=no change given', { timeout: 3000 });
+      await frames(page, 1000); // hold on the "Rs3 / 2 Cr · no change given" meter
       await page.locator('button:has-text("Pay")').first().click();
       await frames(page, 900); // the overpay commits
     },
