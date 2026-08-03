@@ -499,3 +499,32 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   a contents page and a chapter, so the reader always sees where they are. First-run ribbon and every
   dismiss pattern (✕ / backdrop tap) are unchanged. The pause sheet is a small centred card that
   already reads correctly in landscape (its reduced-motion disclosure line is kept).
+
+## LANDSCAPE-2 — verify, prove, clean (3 Aug)
+
+### L1 — the green gate is now a wall, not a convention
+
+- **`pnpm gate` is the canonical pre-commit gate.** It runs, in order: `gate:ip` (the ip-guard test
+  alone, ~1s) → `pnpm -r typecheck` → `pnpm lint` → `pnpm -r test` (the full 418-test suite, which
+  includes the ip-guard again). The ip-guard runs FIRST and fast so the exact failure class that caused
+  the R slip is caught in ~1s, before the slower checks even start. `pnpm run verify` is kept as an
+  alias-of-habit; `gate` is the name the hook and DECISIONS refer to.
+- **A versioned pre-commit hook makes a red commit impossible.** `.githooks/pre-commit` runs `pnpm gate`
+  and blocks the commit on any failure; `git config core.hooksPath .githooks` activates it (so the hook
+  is tracked in-repo and travels with the branch, unlike `.git/hooks/*`). Chosen over husky because it
+  needs no dependency and no `prepare` script — lightest thing that is also version-controlled. Escape
+  hatch is the standard `git commit --no-verify`, to be used only deliberately.
+- **History note — R2–R5 were committed engine-red; not rewritten.** The whole-repo ip-guard (§2) fails
+  on ANY file, and a code comment in `apps/mobile/src/game/labels.ts` used a two-word phrase (a common
+  English way of saying "a brief bit of copy") that happens to collide with one of the banned railroad
+  names. (This DECISIONS entry deliberately does NOT quote that phrase — doing so is exactly what tripped
+  the guard on EXPLAIN.md at `315d26f`, and would trip it here too.) It was introduced at R2 and present
+  through R5, so the ip-guard test was RED on commits `50f5465` (R2), `103ca2e` (R3), `8039421` (R4),
+  `f81cfc7` (R5); it was reworded at R6 (`79d94da`) and the tree has scanned clean since.
+  **These four commits are NOT rewritten** — the R branch is shared (the owner pulls it onto a phone
+  over the tunnel) and rebasing a published line is riskier than the original slip. They are instead
+  **retroactively confirmed green at HEAD** (full gate output pasted in the LANDSCAPE-2 report), and the
+  hook above prevents any recurrence. One residual banned literal survives in **git history only**:
+  R6's commit message (`79d94da`) quotes the phrase while describing the fix. The ip-guard scans the
+  working tree, not commit messages, so this does not fail the gate; it is left in place for the same
+  do-not-rewrite-shared-history reason. Working tree at HEAD is fully clean.

@@ -1,0 +1,22 @@
+#!/bin/sh
+# SAUDA canonical pre-commit gate (see DECISIONS.md).
+#
+# WHY THIS EXISTS: during the LANDSCAPE R pass, a banned two-word phrase slipped
+# into a comment and four commits were recorded while the engine ip-guard was red.
+# The green gate was a convention, not a wall. This hook makes it a wall: no commit
+# lands unless `pnpm gate` (ip-guard + typecheck + lint + full test suite) is green.
+#
+# The ip-guard runs FIRST and fast (~1s), so the exact failure mode that caused the
+# slip is caught before the slower checks even start.
+#
+# Escape hatch (use only when you know why): `git commit --no-verify`.
+
+echo "[pre-commit] running pnpm gate (ip-guard -> typecheck -> lint -> test)..."
+pnpm gate
+status=$?
+if [ "$status" -ne 0 ]; then
+  echo "[pre-commit] BLOCKED: pnpm gate failed. Fix the code, do not weaken the gate."
+  exit "$status"
+fi
+echo "[pre-commit] gate green — commit allowed."
+exit 0

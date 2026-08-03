@@ -14,6 +14,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verify": "pnpm lint && pnpm -r typecheck && pnpm -r test",
+    "gate:ip": "pnpm --filter @sauda/engine test ip-guard",
+    "gate": "pnpm gate:ip && pnpm -r typecheck && pnpm lint && pnpm -r test",
     "play": "pnpm --filter @sauda/tools play",
     "simulate": "pnpm --filter @sauda/tools simulate",
     "capture": "pnpm --filter @sauda/mobile capture",
