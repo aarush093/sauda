@@ -566,3 +566,20 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   helps no one, so LANDSCAPE-2 restarted it (`cloudflared tunnel --url http://localhost:5174`), yielding a
   fresh URL that was confirmed live in a real browser (Home 200 + the /#/autostart game). Quick-tunnel
   URLs rotate on restart; the current one is printed in the pass report, not hard-coded anywhere.
+
+## LANDSCAPE-3 — Munshi portrait + final polish
+
+- **The Munshi portrait is a normal plate, composed to the 100:145 card canvas (not a raw square).**
+  The owner's lithograph is a square (2048×2048) circular bust; every plate — and the always-on
+  `plates.test.ts` net — requires the 600×870 card ratio ≤150 KB. So the derived `munshi.webp` scales the
+  square to the 600 width and CENTRES it on a white 600×870 canvas (the litho's own outer margin is pure
+  white, so the pad is seamless) — the whole drawing is preserved, nothing cropped or repainted (§ "the
+  lithograph stays as the owner made it"). `munshi` is never drawn as a full card (only the round
+  medallion in `MunshiChip` references it), so the pad is never visible in-game. Source stays in
+  Downloads; only the derived webp entered the repo. Conversion followed the repo's only plate setting
+  (`webp quality 82`, resize-by-width) from `build-plate-variants.mjs`.
+- **The circular framing is a CSS-only mask on the medallion slot, not an image edit.** The 46 px round
+  medallion frames just the face: `object-position: 50% 20%` biases the crop up to the turban/face (the
+  litho's vertical centre is the hands/ledger) and `transform: scale(1.32)` pushes the litho's own cameo
+  ring past the slot edge so the bust fills the circle. Reduced-motion still parks the float; the mask is
+  independent of the animation (float is on the slot div, the mask on the child `<img>`).

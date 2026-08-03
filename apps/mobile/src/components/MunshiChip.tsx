@@ -244,7 +244,21 @@ const medallionStyle: CSSProperties = {
   overflow: 'hidden',
   boxShadow: STAGE.glowGold,
 };
-const medallionImgStyle: CSSProperties = { width: '100%', height: '100%', objectFit: 'cover', display: 'block' };
+// LANDSCAPE-3 M1: the owner's lithograph is a bust inside its own round cameo ring, and its plate is
+// the card-shaped 600×870 canvas every plate uses (the square litho centred on white). To sit it in
+// our small round slot we frame just the FACE: object-position biases the crop UP to the turban/face
+// (the litho's vertical centre is the hands/book), and a gentle zoom pushes the litho's own ring past
+// the slot edge so the bust fills the medallion. This is a CSS-only mask on the slot — the image
+// content is untouched (the lithograph stays exactly as the owner made it).
+const medallionImgStyle: CSSProperties = {
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  objectPosition: '50% 20%',
+  display: 'block',
+  transform: 'scale(1.32)',
+  transformOrigin: 'center',
+};
 
 const dismissStyle: CSSProperties = {
   alignSelf: 'flex-end',
