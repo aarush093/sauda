@@ -15,6 +15,7 @@
     "capture:phone": "node scripts/capture-phone.mjs",
     "capture:phone2": "node scripts/capture-phone-2.mjs",
     "capture:shell": "node scripts/capture-shell.mjs",
+    "capture:landscape": "node scripts/capture-landscape.mjs",
     "capture:fixes": "node scripts/capture-fixes.mjs",
     "capture:fixes2": "node scripts/capture-fixes-2.mjs",
     "capture:excellence": "node scripts/capture-excellence.mjs",

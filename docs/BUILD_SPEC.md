@@ -265,3 +265,49 @@ Read this as the design brief; make deliberate choices, not template defaults.
 
 ## 13. Explicitly out of scope for v1
 Online multiplayer, accounts/auth, any backend or database, ads/IAP, analytics SDKs, iOS build, localization beyond English-with-Hinglish. Do not add these even if convenient.
+
+## 14. Landscape rebuild (R) — spec amendment (owner landscape directive, 2 Aug)
+
+SAUDA is a **landscape-only** game with a **focus-follows-turn** screen model. This amendment supersedes
+the portrait play-screen layout (§10) for the play surface; the engine, bots, card art, palette and rules
+(§1–§9) are unchanged.
+
+**Orientation.** The play screen only ever lays out with the long edge horizontal. A browser cannot force
+orientation outside fullscreen, so in portrait the app renders a full-screen rotate interstitial over an
+**unmounted, paused** game (state persists in the store; no bot steps behind it) — the game never lays out
+in portrait. A "Go fullscreen" control best-effort enters fullscreen and `screen.orientation.lock('landscape')`.
+The M5 Capacitor build pins landscape in the native manifest, so the gate is a web-only fallback. The device
+testbed is the four PHONE-1 Android sizes rotated: 740×360, 800×360, 832×384, 915×412, plus a reduced-motion
+variant; the binding constraint is now the **short edge (360px tall)**.
+
+**The three screen states.**
+
+- **A — MY TURN (my world only).** A far-edge bot **rail** (chips: seat · bank · set count · FULL badge ·
+  gold ring on the active player; tap opens that bot's zoom), then a top row of three columns — my **sets**
+  (left), the play **stage** (centre, the action drop target + the just-played spotlight), and my **controls**
+  (right: bank tray · Munshi · turn token) — with the hand **wheel** spanning the full bottom width, hub at
+  bottom-centre. The wheel is its own bottom row, so the bank tray and turn token never collide with it at any
+  hand count. Zone maths: `resolveMyTurn(w, h)` — rail 46; two side columns clamp to [128, 200] at ~20% of the
+  content width; the centre stage takes the rest (always the widest); the wheel band is clamp(0.46·h, [150, 178])
+  and the top row is the remainder; the wheel container is the full width minus the rail. Bot boards do NOT
+  render here.
+- **B — SPECTATE (any bot's turn).** A split so I always see what is being done TO me: the acting bot's panel
+  (the larger share) carries their name, their board, and the stage where each played card is held LARGE with
+  its **caption** (§R2 below); my panel (the smaller share) keeps a read-only view of my sets, bank total and
+  hand (as card backs — the wheel collapses; I can only act via interrupt overlays). Non-acting bots stay on
+  the rail. Zone maths: `resolveSpectate(w, h)` — rail 46; the acting panel is max(300, 58% of content); my
+  panel takes the rest (never wider than the acting panel).
+- **C — OVERLAYS.** Payment, targeting, bank inspect, board zoom, the Book, the pause sheet and the rotate gate
+  are each laid out for landscape (side-split or centred-wide), all on the LAYERS scale, all backdrop-tap + ✕
+  dismissable, nothing clipped or scrolling the page (internal modal scroll stays legal).
+
+**Transitions.** MY TURN ↔ SPECTATE is a single ~250ms slide + fade, transform-only, instant under reduced
+motion, with no dead frame (the incoming layout dissolves in over the same felt).
+
+**Amendment addenda (R2–R7).** R2: a bot's play reads as a **caption beside** the spotlit card ("B2 · Chennai
+Central"), never behind it. R3: the bank is public — tapping my bank tray opens a real-face grid; an opponent's
+bank shows the same way in their zoom. R4: payment offers every payable card (bank money, **banked actions**,
+properties) with strategic overpay as easy as the suggestion. R5: targeting is a split with a read-only "My
+Sets" reference (default open). R6: Munshi advice is composed from the recommendation + concrete public facts;
+the portrait loads from `apps/mobile/src/assets/plates/munshi.webp` when present (silhouette fallback). R7: Home
+and the Book are two-pane.

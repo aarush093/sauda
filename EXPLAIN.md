@@ -258,3 +258,36 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   scripts removed, and a lone `eslint-disable` pointing at an uninstalled `react-hooks` rule replaced
   with a plain note (installing the plugin would have added a dependency and unbounded new lint surface
   under a freeze). `pnpm verify` now runs lint first, so zero can't silently become seven again.
+
+## LANDSCAPE REBUILD (R) — the interview crib
+
+- **Landscape-only via a rotate gate, not a forced orientation.** Browsers can't force orientation
+  outside fullscreen, so `orientationOf(w,h)` (`h > w` = portrait; a square is landscape so a
+  mid-rotation tie can't flicker) decides, and in portrait the App renders `RotateGate` INSTEAD of the
+  game. The game is *unmounted* — its state lives in the zustand store, so no bot steps behind the gate
+  and rotating back resumes exactly. Fullscreen + `screen.orientation.lock` is best-effort; the M5
+  Capacitor manifest pins landscape natively.
+- **Focus follows turn is two pure zone-maths functions, one Board that keeps all the glue.**
+  `landscapeLayout.ts` (`resolveMyTurn` / `resolveSpectate`) is DOM-free and unit-tested, so the layout
+  is provable without a browser. Board keeps every drag/tap/targeting/inspect handler and just delegates
+  the *composition* to `MyTurnLayout` (my world only) or `SpectateLayout` (the split) — a `FocusTransition`
+  wrapper keyed on whose turn it is plays one 250ms slide/fade between them (instant under reduced motion).
+- **The wheel got wider, and it's proven.** The wheel spans the full content width (≈694–869px vs the old
+  ~344px my-area), so a clearer arc. The no-clip invariant suite now runs at those landscape widths too —
+  containment holds by construction (the radius is derived so the extreme card fits), so more width just
+  means a wider, cleaner spread.
+- **The hidden-text bug is fixed by moving the label off the card.** `shortLabel(card, play)` builds a
+  one-line "B2 · Chennai Central" caption pinned ABOVE the spotlit card on `LAYERS.badge`, so it can never
+  sit behind it again. It's unit-tested across every card family + the length cap; `stagePlayFromEvents`
+  derives the play kind from the acting bot's last event.
+- **Two audits that touched no engine code.** R3: opponent bank is already public (`OpponentView.bank`),
+  so the zoom just renders it. R4: the payment roster already included banked actions — the bug was that
+  `isMoney` mis-bucketed a banked action as a "property" and hid it; `fromBank` (money OR banked action)
+  fixes it, so a banked AAGE BADHO sits with the money and strategic overpay is one tap.
+- **Munshi advice is composed in the UI layer from public facts.** `composeMunshiAdvice(advice, obs)`
+  keeps the frozen bot's decision but writes the sentence from set progress / a visible rival threat / the
+  threat / a card value / plays-left — every line names the move and cites ≥1 concrete PUBLIC fact, never
+  hidden info. `packages/bots` stays byte-identical.
+- **The ip-guard caught a real slip.** A stray "short line" (a Monopoly railroad) in a code comment
+  tripped the repo-wide IP guard — a reminder that §2 is enforced mechanically, not by vigilance. Run the
+  FULL suite before a commit, not just the app tests, or the engine's guards can be missed.
