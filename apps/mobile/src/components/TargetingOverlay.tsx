@@ -8,37 +8,69 @@
  */
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { Action, CardId, PlayerId, SetId } from '@sauda/engine';
+import type { Action, CardId, PlayerId, PropertyGroup, SetId } from '@sauda/engine';
 import { actionTargeting, kirayaPlan } from '../game/interaction';
 import type { KirayaPlan, TargetStep } from '../game/interaction';
 import { ScaledCard } from './CardFace';
+import { GroupRow } from './BoardParts';
 import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
+
+const REFERENCE_CARD_PX = 44; // my-sets reference cascade width — readable, non-interactive
 
 export function TargetingOverlay({
   cardId,
   actions,
   me,
+  myProperties,
+  myKiraya,
   onCommit,
   onCancel,
 }: {
   cardId: CardId;
   actions: Action[];
   me: PlayerId;
+  // R5: my own boards, shown read-only in the reference panel so a target can be chosen strategically
+  // ("I hold 2 Jaipur; take their Jaipur"). Reference only — it never changes what is targetable.
+  myProperties: Record<SetId, PropertyGroup[]>;
+  myKiraya?: Record<SetId, number[]> | undefined;
   onCommit: (action: Action) => void;
   onCancel: () => void;
 }) {
   const plan = kirayaPlan(actions, cardId);
   const step = actionTargeting(actions, cardId, me);
+  // R5: the MY SETS reference panel is default OPEN in landscape; it can be toggled shut for room.
+  const [showReference, setShowReference] = useState(true);
   return (
     <div style={overlayStyle} onClick={onCancel}>
-      <div style={cardWrapStyle} onClick={(event) => event.stopPropagation()}>
-        <ScaledCard cardId={cardId} width={88} />
-        {plan ? (
-          <KirayaPicker plan={plan} onCommit={onCommit} onCancel={onCancel} />
-        ) : step ? (
-          <StepPicker firstStep={step} onCommit={onCommit} onCancel={onCancel} />
-        ) : (
-          <CancelRow onCancel={onCancel} />
+      {/* the split: targets (~60%) + my-sets reference (~40%). Stops propagation so a tap inside the
+          split never hits the backdrop's cancel; only the felt around it cancels. */}
+      <div style={splitStyle} onClick={(event) => event.stopPropagation()}>
+        <div style={targetsPaneStyle}>
+          <ScaledCard cardId={cardId} width={88} />
+          {plan ? (
+            <KirayaPicker plan={plan} onCommit={onCommit} onCancel={onCancel} />
+          ) : step ? (
+            <StepPicker firstStep={step} onCommit={onCommit} onCancel={onCancel} />
+          ) : (
+            <CancelRow onCancel={onCancel} />
+          )}
+        </div>
+
+        {showReference && (
+          <div style={referencePaneStyle}>
+            <div style={referenceHeaderStyle}>
+              <span>Your sets — reference</span>
+              <button style={referenceToggleStyle} onClick={() => setShowReference(false)} aria-label="Hide my sets">Hide</button>
+            </div>
+            {/* read-only: no dropSets, no rearrange, no onExpand → nothing glows, nothing taps. It
+                cannot change what is targetable; it is a strategic read of my own board only. */}
+            <div style={referenceBoardStyle}>
+              <GroupRow properties={myProperties} kiraya={myKiraya} width={REFERENCE_CARD_PX} mine />
+            </div>
+          </div>
+        )}
+        {!showReference && (
+          <button style={referenceReopenStyle} onClick={() => setShowReference(true)} aria-label="Show my sets">My sets</button>
         )}
       </div>
     </div>
@@ -152,8 +184,71 @@ const overlayStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  padding: 12,
 };
-const cardWrapStyle: CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, maxWidth: '88vw' };
+// R5: the landscape split — targets ~60%, my-sets reference ~40%. Fills the overlay so both panes
+// get real room on the short landscape height.
+const splitStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'stretch',
+  gap: 12,
+  width: '100%',
+  height: '100%',
+};
+const targetsPaneStyle: CSSProperties = {
+  flex: 6, // ~60%
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 12,
+};
+const referencePaneStyle: CSSProperties = {
+  flex: 4, // ~40%
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 6,
+  padding: 8,
+  borderRadius: 12,
+  border: `1px solid ${STAGE.scrimSheet}`,
+  background: STAGE.scrimDrag,
+};
+const referenceHeaderStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  fontFamily: FONT.serif,
+  fontSize: 12,
+  color: STAGE.textOnFelt,
+};
+const referenceToggleStyle: CSSProperties = {
+  padding: '2px 10px',
+  borderRadius: 999,
+  background: 'transparent',
+  color: STAGE.textOnFelt,
+  border: `1px solid ${INK.agedLine}`,
+  fontFamily: FONT.display,
+  fontWeight: 700,
+  fontSize: 11,
+  cursor: 'pointer',
+};
+// the reopen tab when the reference is hidden — a slim gold chip on the right edge.
+const referenceReopenStyle: CSSProperties = {
+  alignSelf: 'center',
+  padding: '8px 6px',
+  borderRadius: 8,
+  background: STAGE.scrimSheet,
+  color: STAGE.accentGold,
+  border: `1px solid ${INK.gold}`,
+  fontFamily: FONT.display,
+  fontWeight: 700,
+  fontSize: 11,
+  cursor: 'pointer',
+  writingMode: 'vertical-rl',
+};
+const referenceBoardStyle: CSSProperties = { flex: 1, minHeight: 0, overflowY: 'auto' };
 const panelStyle: CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 };
 const promptStyle: CSSProperties = { fontFamily: FONT.display, fontWeight: 700, fontSize: 15, color: STAGE.cardCream, textAlign: 'center' };
 const chipRowStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' };

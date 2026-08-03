@@ -461,3 +461,11 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   makes it obvious — "Choose differently" reveals every remaining payable card as a real face, the
   meter shows the excess with "no change given", and Pay submits the overpay. It is exactly as easy as
   the suggestion. ANY wildcards never appear (unit-tested).
+
+### R5 — Targeting reference panel (2 Aug)
+
+- **Targeting is a landscape split: targets (~60%) + a read-only MY SETS reference (~40%), default
+  open, toggleable.** The reference renders my own board (`GroupRow`, no dropSets / no rearrange / no
+  onExpand → nothing glows, nothing taps), so a target can be chosen strategically ("I hold 2 Jaipur;
+  take their Jaipur"). It is reference-only and cannot change what is targetable — the target chips
+  remain the only commit path (BAD_TARGET stays unreachable from the UI).

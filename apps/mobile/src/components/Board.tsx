@@ -403,6 +403,8 @@ export function Board({
           cardId={targeting}
           actions={actions}
           me={observation.me}
+          myProperties={observation.myProperties}
+          myKiraya={observation.myKiraya}
           onCommit={(action) => {
             onAct(action);
             setTargetingCardId(null);
