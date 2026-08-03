@@ -24,6 +24,15 @@ Rerun: `pnpm dev:lan` in one shell, then `pnpm capture:landscape2` (or `--stage=
 
 | Still | Proves |
 |-------|--------|
+| `l3_myturn_800x360.png` | L3 MY-TURN @ 800x360 |
+| `l3_myturn_832x384.png` | L3 MY-TURN @ 832x384 |
+| `l3_myturn_915x412_reduced.png` | L3 MY-TURN @ 915x412_reduced |
+| `l3_spectate_800x360.png` | L3 SPECTATE @ 800x360 |
+| `l3_spectate_832x384.png` | L3 SPECTATE @ 832x384 |
+| `l3_spectate_915x412_reduced.png` | L3 SPECTATE @ 915x412_reduced |
+| `l3_targeting_800x360.png` | L3 targeting split (HAATH KI SAFAI + My-Sets reference) @ 800x360 |
+| `l3_targeting_832x384.png` | L3 targeting split (HAATH KI SAFAI + My-Sets reference) @ 832x384 |
+| `l3_targeting_915x412_reduced.png` | L3 targeting split (HAATH KI SAFAI + My-Sets reference) @ 915x412_reduced |
 | `l4_band_myturn_740x360.png` | L4 table band (draw count + discard top) in MY-TURN @ 740x360 |
 | `l4_band_myturn_915x412.png` | L4 table band (draw count + discard top) in MY-TURN @ 915x412 |
 | `l4_band_spectate_740x360.png` | L4 table band in SPECTATE @ 740x360 |
