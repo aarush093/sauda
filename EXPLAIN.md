@@ -288,6 +288,7 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   keeps the frozen bot's decision but writes the sentence from set progress / a visible rival threat / the
   threat / a card value / plays-left — every line names the move and cites ≥1 concrete PUBLIC fact, never
   hidden info. `packages/bots` stays byte-identical.
-- **The ip-guard caught a real slip.** A stray "short line" (a Monopoly railroad) in a code comment
-  tripped the repo-wide IP guard — a reminder that §2 is enforced mechanically, not by vigilance. Run the
-  FULL suite before a commit, not just the app tests, or the engine's guards can be missed.
+- **The ip-guard caught a real slip.** A stray two-word phrase in a code comment (an incidental match
+  of a banned third-party property name) tripped the repo-wide IP guard — a reminder that §2 is enforced
+  mechanically, not by vigilance. Run the FULL suite before a commit, not just the app tests, or the
+  engine's guards can be missed.
