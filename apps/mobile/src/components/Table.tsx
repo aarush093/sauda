@@ -18,7 +18,7 @@ import { actorOf, useGame, viewSeat } from '../game/store';
 import type { SeatConfig } from '../game/store';
 import { paymentDetails } from '../game/paymentModel';
 import { botBeatDelayMs, zeroPayableResponse } from '../game/interaction';
-import { describeThreat } from '../game/labels';
+import { describeThreat, shortLabel, stagePlayFromEvents } from '../game/labels';
 import { Board } from './Board';
 import { Surface } from './Surface';
 import { PaymentSheet } from './PaymentSheet';
@@ -238,6 +238,22 @@ export function Table() {
   const botSpotlightCardId = isBotTurn && handoffSeat === null ? lastPlayedCard(lastEvents, actor) : null;
   const spotlightCardId = botSpotlightCardId ?? humanPlayCardId;
 
+  // R2: the spectate stage CAPTION — a short "B2 · <what they did>" beside the acting bot's spotlit
+  // card (the hidden-text-bug fix). Only on a bot's turn; targetsMe is set from the live interrupt the
+  // bot's play opened against me (origin = the actor, target = my view), so an action aimed at me reads
+  // "… → You". stagePlayFromEvents + shortLabel are UI-layer copy (the engine is untouched).
+  let spotlightCaption: string | null = null;
+  if (botSpotlightCardId !== null) {
+    const stagePlay = stagePlayFromEvents(lastEvents, actor);
+    if (stagePlay) {
+      const targetsMe =
+        observation.interrupt !== null &&
+        observation.interrupt.origin === actor &&
+        observation.interrupt.target === observation.me;
+      spotlightCaption = shortLabel(stagePlay.cardId, { ...stagePlay.play, targetsMe });
+    }
+  }
+
   // The human actor's legal moves (empty on a bot's turn / at game over). Turn plays feed
   // the board's drag/tap→stage→rail; the RESPOND_* moves each raise their own surface.
   const humanActions = !isBotTurn && !gameOver ? legalActions(state, actor) : [];
@@ -272,6 +288,7 @@ export function Table() {
         tickerLines={tickerLines}
         spotlightCardId={spotlightCardId}
         spotlightFromOpponent={botSpotlightCardId !== null}
+        spotlightCaption={spotlightCaption}
         receive={receive}
         paused={paused}
       />

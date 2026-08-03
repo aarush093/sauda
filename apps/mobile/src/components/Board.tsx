@@ -54,6 +54,7 @@ export function Board({
   tickerLines = [],
   spotlightCardId = null,
   spotlightFromOpponent = false,
+  spotlightCaption = null,
   receive = null,
   paused = false,
 }: {
@@ -64,6 +65,7 @@ export function Board({
   tickerLines?: string[];
   spotlightCardId?: string | null; // a bot's held card (I1) or the human's just-played beat (F4)
   spotlightFromOpponent?: boolean; // K2: an opponent's card travels UP to their row, mine DOWN to my area
+  spotlightCaption?: string | null; // R2: the caption beside the spectate stage card ("B2 · MAKAAN")
   paused?: boolean | undefined; // P8: the pause sheet is open → freeze the turn token's auto-end drain
   // G6: a wildcard reached me as payment and needs a group (matrix C7). It lands on stage; its
   // legal destination sets glow; I drag it home (or tap a glowing set). bySet maps each legal set
@@ -350,7 +352,7 @@ export function Board({
           zones={spectateZones}
           actingId={observation.currentPlayer}
           spotlightCardId={spotlightCardId}
-          caption={null}
+          caption={spotlightCaption}
           tickerLines={tickerLines}
           onExpandMine={onExpandMine}
           onExpandActing={() => setExpandedView({ kind: 'opponent', id: observation.currentPlayer })}

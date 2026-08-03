@@ -4,7 +4,7 @@
  * All rules live in @sauda/engine.
  */
 import { ACTIONS, KIRAYA_DESCRIPTOR, KIRAYA_NAME, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
-import type { Action, GameEvent, InterruptView, SetId } from '@sauda/engine';
+import type { Action, Card, GameEvent, InterruptView, SetId } from '@sauda/engine';
 import type { MunshiAdvice } from '@sauda/bots';
 
 const CARD_BY_ID = new Map(buildDeck().map((card) => [card.id, card]));
@@ -126,6 +126,96 @@ export function munshiAdviceLine(advice: MunshiAdvice): string {
     case 'generic':
       return 'Make this play — it is the soundest move on the board, keeping you building toward your sets.';
   }
+}
+
+// R2 (owner landscape directive, 2 Aug) — the SPECTATE stage CAPTION. The old build rendered a bot's
+// play as text BEHIND the card on centre stage (the hidden-text bug). The fix moves the label BESIDE
+// the card as a short caption; shortLabel builds that string. Format: "B2 · Chennai Central" /
+// "B2 · VASOOLI → You" / "B2 · banked ₹3" — a seat chip + a short name, capped so the caption is one
+// short line. UI COPY ONLY: it reads the theme (like describeCard) and decides no rule.
+export interface StagePlay {
+  seat: number; // the acting player's seat → the "B{seat}" chip
+  kind: 'placed' | 'banked' | 'built' | 'played' | 'received';
+  targetsMe?: boolean; // a 'played' action aimed at the viewer → append "→ You"
+}
+
+const CAPTION_NAME_CAP = 20; // keep the name portion short so "B2 · <name>" stays a single line
+
+function cap(text: string): string {
+  return text.length <= CAPTION_NAME_CAP ? text : `${text.slice(0, CAPTION_NAME_CAP - 1)}…`;
+}
+
+// A card's short name for a caption — one per family. Actions/rent read as their UPPERCASE desi proper
+// noun (matching the card banner); properties keep their title-case name; money reads as its ₹ value.
+function captionName(card: Card): string {
+  switch (card.kind) {
+    case 'property':
+      return PROPERTY_NAMES[card.set][card.index] ?? 'Property';
+    case 'wildcard':
+      return 'Wildcard';
+    case 'action':
+      return ACTIONS[card.action].name.toUpperCase();
+    case 'kiraya':
+      return KIRAYA_NAME; // already uppercase
+    case 'money':
+      return `₹${card.value}`;
+  }
+}
+
+export function shortLabel(cardId: string, play: StagePlay): string {
+  const card = CARD_BY_ID.get(cardId);
+  const seat = `B${play.seat}`;
+  if (!card) {
+    return `${seat} · ${cap(cardId)}`; // defensive — an unknown id still gets a chip
+  }
+  let rest: string;
+  switch (play.kind) {
+    case 'banked':
+      rest = `banked ₹${card.value}`; // money OR a bankable action banked at its ₹ value
+      break;
+    case 'built':
+      rest = captionName(card); // MAKAAN / HAVELI
+      break;
+    case 'received':
+      rest = `got ${captionName(card)}`;
+      break;
+    case 'played': {
+      const name = captionName(card);
+      rest = play.targetsMe ? `${name} → You` : name;
+      break;
+    }
+    case 'placed':
+    default:
+      rest = captionName(card); // the property / wildcard that landed on a set
+      break;
+  }
+  return `${seat} · ${cap(rest)}`;
+}
+
+// Derive the stage play (card + kind) from the acting player's most recent spotlight-setting event —
+// the same five event types Board spotlights (I1). Returns null when the acting player has no such
+// event yet (start of their turn, before they act). `targetsMe` is left false here; the caller sets
+// it from the live interrupt (only the caller knows the viewer's seat and the open charge).
+export function stagePlayFromEvents(events: GameEvent[], actor: number): { cardId: string; play: StagePlay } | null {
+  for (let index = events.length - 1; index >= 0; index--) {
+    const event = events[index]!;
+    if (event.type === 'CardBanked' && event.player === actor) {
+      return { cardId: event.cardId, play: { seat: actor, kind: 'banked' } };
+    }
+    if (event.type === 'PropertyPlaced' && event.player === actor) {
+      return { cardId: event.cardId, play: { seat: actor, kind: 'placed' } };
+    }
+    if (event.type === 'BuildingPlaced' && event.player === actor) {
+      return { cardId: event.cardId, play: { seat: actor, kind: 'built' } };
+    }
+    if (event.type === 'ActionPlayed' && event.player === actor) {
+      return { cardId: event.cardId, play: { seat: actor, kind: 'played' } };
+    }
+    if (event.type === 'CardReceived' && event.player === actor) {
+      return { cardId: event.cardId, play: { seat: actor, kind: 'received' } };
+    }
+  }
+  return null;
 }
 
 // The hand card an action operates on (for grouping in the UI), or null.
