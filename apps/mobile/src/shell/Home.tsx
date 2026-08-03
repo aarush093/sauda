@@ -41,47 +41,47 @@ export function Home() {
     go('#/play');
   }
 
+  // R7: landscape two-pane front door — the wordmark + tagline on one side, the doors on the other,
+  // so the whole shell fits the short landscape height (the old single vertical column would overflow
+  // a 360px-tall screen). The rotate gate (R0) guarantees we are always landscape here.
   return (
     <div style={screenStyle}>
-      <div style={{ flex: 1 }} />
-
-      {/* the rubber-stamp wordmark — code-drawn ring, no asset */}
-      <StampWordmark />
-      <div style={taglineStyle}>{GAME.tagline}</div>
-
-      <div style={{ flex: 1 }} />
-
-      {!setupOpen ? (
-        <div style={buttonsColumn}>
-          <button style={primaryButton} onClick={() => setSetupOpen(true)}>
-            KHELO
+      <div style={leftPaneStyle}>
+        {/* the rubber-stamp wordmark — code-drawn ring, no asset */}
+        <StampWordmark />
+        <div style={taglineStyle}>{GAME.tagline}</div>
+        {showRibbon && !setupOpen && (
+          <button style={ribbonStyle} onClick={() => go('#/niyam?chapter=1')}>
+            Naye ho? Niyam se shuru karo →
           </button>
-          <button style={comingSoonButton} disabled title="Online multiplayer is coming soon">
-            VS FRIENDS
-            <span style={comingSoonStamp}>COMING SOON</span>
-          </button>
-          <button style={secondaryButton} onClick={() => go('#/niyam')}>
-            NIYAM
-          </button>
-        </div>
-      ) : (
-        <SetupCard
-          bots={bots}
-          difficulty={difficulty}
-          onBots={setBots}
-          onDifficulty={setDifficulty}
-          onDeal={deal}
-          onBack={() => setSetupOpen(false)}
-        />
-      )}
+        )}
+      </div>
 
-      <div style={{ flex: 1 }} />
-
-      {showRibbon && !setupOpen && (
-        <button style={ribbonStyle} onClick={() => go('#/niyam?chapter=1')}>
-          Naye ho? Niyam se shuru karo →
-        </button>
-      )}
+      <div style={rightPaneStyle}>
+        {!setupOpen ? (
+          <div style={buttonsColumn}>
+            <button style={primaryButton} onClick={() => setSetupOpen(true)}>
+              KHELO
+            </button>
+            <button style={comingSoonButton} disabled title="Online multiplayer is coming soon">
+              VS FRIENDS
+              <span style={comingSoonStamp}>COMING SOON</span>
+            </button>
+            <button style={secondaryButton} onClick={() => go('#/niyam')}>
+              NIYAM
+            </button>
+          </div>
+        ) : (
+          <SetupCard
+            bots={bots}
+            difficulty={difficulty}
+            onBots={setBots}
+            onDifficulty={setDifficulty}
+            onDeal={deal}
+            onBack={() => setSetupOpen(false)}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -157,14 +157,35 @@ const screenStyle = {
   height: '100dvh',
   width: '100vw',
   display: 'flex',
-  flexDirection: 'column',
+  flexDirection: 'row', // R7: landscape two-pane
   alignItems: 'center',
-  padding: 'calc(env(safe-area-inset-top, 0px) + 24px) 24px calc(env(safe-area-inset-bottom, 0px) + 24px)',
+  justifyContent: 'center',
+  gap: 24,
+  padding: 'calc(env(safe-area-inset-top, 0px) + 20px) calc(env(safe-area-inset-right, 0px) + 28px) calc(env(safe-area-inset-bottom, 0px) + 20px) calc(env(safe-area-inset-left, 0px) + 28px)',
   background: `radial-gradient(120% 80% at 50% 30%, ${INK.tableIndigo}, ${INK.deepInk})`,
   color: STAGE.textOnFelt,
   overflow: 'hidden',
   overscrollBehavior: 'none',
   touchAction: 'manipulation',
+} as const;
+
+// R7: the identity side (wordmark · tagline · first-run ribbon) and the doors side.
+const leftPaneStyle = {
+  flex: 1,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 10,
+} as const;
+const rightPaneStyle = {
+  flex: 1,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
 } as const;
 
 const wordmarkText = {

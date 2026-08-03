@@ -168,34 +168,39 @@ export function Book({ onClose }: { onClose: () => void }) {
 
   return (
     <div style={backdropStyle} onClick={onClose}>
+      {/* R7: the Book is a natural TWO-PANE in landscape — a persistent contents rail on the left, the
+          selected chapter on the right. The rail replaces the old toggle between a contents page and a
+          chapter, so the reader always sees where they are. Dismiss patterns unchanged (✕ / backdrop). */}
       <div style={panelStyle} onClick={(event) => event.stopPropagation()}>
-        <div style={headerStyle}>
-          {current ? (
-            <button style={backButton} onClick={() => setChapter(0)}>← Niyam</button>
-          ) : (
-            <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 18, color: STAGE.cardCream }}>Niyam</div>
-          )}
-          <button style={closeButton} onClick={onClose} aria-label="Close the book">✕</button>
-        </div>
+        <nav style={railStyle}>
+          <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 18, color: STAGE.cardCream, padding: '0 4px 8px' }}>Niyam</div>
+          <ol style={contentsStyle}>
+            {CHAPTERS.map((ch, index) => (
+              <li key={ch.title}>
+                <button style={contentsItem(chapter === index + 1)} onClick={() => setChapter(index + 1)}>
+                  <span style={{ color: STAGE.accentGold, marginRight: 8 }}>{index + 1}</span>
+                  {ch.title}
+                </button>
+              </li>
+            ))}
+          </ol>
+        </nav>
 
-        <div style={scrollStyle}>
-          {current ? (
-            <>
-              <div style={chapterTitleStyle}>{chapter}. {current.title}</div>
-              {current.body()}
-            </>
-          ) : (
-            <ol style={contentsStyle}>
-              {CHAPTERS.map((ch, index) => (
-                <li key={ch.title}>
-                  <button style={contentsItem} onClick={() => setChapter(index + 1)}>
-                    <span style={{ color: STAGE.accentGold, marginRight: 8 }}>{index + 1}</span>
-                    {ch.title}
-                  </button>
-                </li>
-              ))}
-            </ol>
-          )}
+        <div style={contentPaneStyle}>
+          <div style={headerStyle}>
+            <div style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 15, color: STAGE.accentGold }}>
+              {current ? `${chapter}. ${current.title}` : 'The rules of the game'}
+            </div>
+            <button style={closeButton} onClick={onClose} aria-label="Close the book">✕</button>
+          </div>
+          <div style={scrollStyle}>
+            {current ? (
+              current.body()
+            ) : (
+              <P>Pick a chapter on the left to read the rules. New here? Start with{' '}
+                <B>1. Goal &amp; Winning</B>.</P>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -275,10 +280,27 @@ const backdropStyle: CSSProperties = {
   overscrollBehavior: 'none',
   touchAction: 'manipulation',
 };
+// R7: the two-pane book fills the landscape width — a fixed contents rail + a flexible chapter pane.
 const panelStyle: CSSProperties = {
   width: '100%',
-  maxWidth: 460,
+  maxWidth: 900,
   height: '100dvh',
+  display: 'flex',
+  flexDirection: 'row',
+  padding: '0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px)',
+};
+const railStyle: CSSProperties = {
+  width: 260,
+  flexShrink: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  padding: '14px 10px',
+  borderRight: `1px solid ${STAGE.scrimSheet}`,
+  overflowY: 'auto',
+};
+const contentPaneStyle: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
   display: 'flex',
   flexDirection: 'column',
 };
@@ -296,13 +318,6 @@ const scrollStyle: CSSProperties = {
   padding: '12px 18px 40px',
   WebkitOverflowScrolling: 'touch',
 };
-const chapterTitleStyle: CSSProperties = {
-  fontFamily: FONT.display,
-  fontWeight: 700,
-  fontSize: 20,
-  color: STAGE.accentGold,
-  margin: '4px 0 12px',
-};
 const paraStyle: CSSProperties = {
   fontFamily: FONT.serif,
   fontSize: 14,
@@ -311,20 +326,23 @@ const paraStyle: CSSProperties = {
   margin: '0 0 12px',
 };
 const contentsStyle: CSSProperties = { listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 };
-const contentsItem: CSSProperties = {
-  width: '100%',
-  textAlign: 'left',
-  minHeight: 52,
-  border: `1px solid ${STAGE.scrimSheet}`,
-  borderRadius: 10,
-  background: 'transparent',
-  color: STAGE.cardCream,
-  fontFamily: FONT.display,
-  fontWeight: 700,
-  fontSize: 15,
-  padding: '0 14px',
-  cursor: 'pointer',
-};
+// R7: the rail item, with an active state so the reader sees which chapter is open (gold ring + fill).
+function contentsItem(active: boolean): CSSProperties {
+  return {
+    width: '100%',
+    textAlign: 'left',
+    minHeight: 44,
+    border: `1px solid ${active ? INK.gold : STAGE.scrimSheet}`,
+    borderRadius: 10,
+    background: active ? STAGE.scrimSheet : 'transparent',
+    color: active ? STAGE.accentGold : STAGE.cardCream,
+    fontFamily: FONT.display,
+    fontWeight: 700,
+    fontSize: 14,
+    padding: '0 12px',
+    cursor: 'pointer',
+  };
+}
 const setRowStyle: CSSProperties = {
   display: 'flex',
   gap: 12,
@@ -333,16 +351,6 @@ const setRowStyle: CSSProperties = {
   borderBottom: `1px solid ${STAGE.scrimSheet}`,
 };
 const dataLine: CSSProperties = { fontFamily: FONT.mono, fontSize: 11, color: STAGE.textOnFelt, opacity: 0.85, marginTop: 2 };
-const backButton: CSSProperties = {
-  border: 'none',
-  background: 'transparent',
-  color: STAGE.accentGold,
-  fontFamily: FONT.display,
-  fontWeight: 700,
-  fontSize: 15,
-  cursor: 'pointer',
-  minHeight: 40,
-};
 const closeButton: CSSProperties = {
   width: 36,
   height: 36,

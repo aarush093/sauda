@@ -489,3 +489,13 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   observation alongside the advice so the card can compose. Before: "Make this play — it is the
   soundest move on the board…"; after: "Play Makaan — the soundest move on the board, and you have 2
   plays left this turn."
+
+### R7 — Shell in landscape (2 Aug)
+
+- **Home and the Book are now two-pane in landscape.** Home: the SAUDA wordmark + tagline + first-run
+  ribbon on one side, the three doors (KHELO / VS FRIENDS / NIYAM) on the other — the old single
+  vertical column would overflow a 360px-tall screen. The Book: a persistent contents rail on the left
+  (with the active chapter highlighted) and the chapter on the right — replacing the old toggle between
+  a contents page and a chapter, so the reader always sees where they are. First-run ribbon and every
+  dismiss pattern (✕ / backdrop tap) are unchanged. The pause sheet is a small centred card that
+  already reads correctly in landscape (its reduced-motion disclosure line is kept).
