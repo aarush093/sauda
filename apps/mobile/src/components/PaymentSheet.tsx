@@ -75,6 +75,7 @@ export function PaymentSheet({
       <div
         key={card.id}
         onClick={() => toggle(card.id)}
+        {...(import.meta.env.DEV && { 'data-pay-card': card.id })}
         style={{
           position: 'relative',
           borderRadius: 8,
@@ -90,8 +91,10 @@ export function PaymentSheet({
     );
   };
 
-  // Money first, then the default's own property cards; the rest of the property sets wait behind
-  // the expander so a money-covered debt reads as money only (F3 · L6).
+  // R4: bank cards first (money notes AND banked actions — always shown, always tappable), then the
+  // default's own table properties; the rest of the table properties wait behind the "Choose
+  // differently" expander so a bank-covered debt reads as bank-only (F3 · L6). Expanding reveals
+  // EVERY payable card as a real face, so a deliberate overpay is exactly as easy as the suggestion.
   const shownProperties = propertyExpanded
     ? [...disclosure.shownProperties, ...disclosure.hiddenProperties]
     : disclosure.shownProperties;
@@ -109,15 +112,17 @@ export function PaymentSheet({
         </div>
 
         <div style={cardRowStyle}>
-          {disclosure.money.map(payableCard)}
+          {disclosure.bankCards.map(payableCard)}
           {shownProperties.map(payableCard)}
         </div>
 
-        {/* F3: the quiet property expander — only when money already covers the debt and there
-            are property sets to reveal. Collapsed by default so money reads as the first choice. */}
+        {/* R4: "Choose differently" reveals every remaining table property as a real face, so I can
+            pay with any combination — bank money, banked actions, properties — including a deliberate
+            overpay (the meter shows the excess + "no change given"). Collapsed by default so a
+            bank-covered debt still reads as bank-only (F3). */}
         {!details.mustPayAll && disclosure.hiddenProperties.length > 0 && (
           <button style={expanderStyle} onClick={() => setPropertyExpanded((open) => !open)}>
-            {propertyExpanded ? 'Hide property' : 'Pay with property instead'}
+            {propertyExpanded ? 'Hide property' : 'Choose differently — pay with property'}
           </button>
         )}
 

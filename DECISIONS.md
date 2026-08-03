@@ -446,3 +446,18 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
 - **The bot rail is capped by the in-game home/pause glyph.** The ⌂ glyph is fixed at the top-left,
   over the rail; the rail now pads its top so the first bot chip starts beneath it — the glyph reads as
   the rail's cap. (Caught in a landscape capture where a chip tap opened the pause sheet instead.)
+
+### R4 — Payment freedom (2 Aug)
+
+- **Roster audit: the roster was already COMPLETE; the bug was CLASSIFICATION.** `paymentDetails`
+  builds the payable list from every `myBank` card (banked actions live there) + every table property
+  + building, minus ANY wildcards (worth ₹0). Banked actions WERE in the roster — but `isMoney =
+  kind==='money'` bucketed a banked action as a "property", so it hid behind the "Pay with property
+  instead" expander and the default (money-first) rarely picked it. That is why the owner "could not
+  pick banked action cards." Fix: `PayableCard.fromBank` (a bank card = money OR banked action, always
+  shown; a table property = the only thing the expander hides). The never-break-sets default now
+  spends bank cards freely and only penalises spending TABLE properties. The engine is untouched.
+- **Strategic overpay is a first-class move.** The sheet already allowed selecting past the debt; R4
+  makes it obvious — "Choose differently" reveals every remaining payable card as a real face, the
+  meter shows the excess with "no change given", and Pay submits the overpay. It is exactly as easy as
+  the suggestion. ANY wildcards never appear (unit-tested).

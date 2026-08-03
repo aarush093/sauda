@@ -89,15 +89,15 @@ describe('paymentDetails (payment sheet model)', () => {
   });
 });
 
-// F3 (owner playtest 30 Jul): the trustworthy money-first default.
-describe('refinePaymentSelection — never overpay when exact exists; prefer money (F3)', () => {
-  const pay = (id: string, value: number, isMoney: boolean): PayableCard => ({ id, value, isMoney });
+// F3 (owner playtest 30 Jul): the trustworthy bank-first default (R4: bank cards, not just money).
+describe('refinePaymentSelection — never overpay when exact exists; prefer the bank (F3)', () => {
+  const pay = (id: string, value: number, fromBank: boolean): PayableCard => ({ id, value, fromBank });
 
   it('picks the exact subset rather than overpaying (2 owed, a 2 and a 3 available)', () => {
     expect(refinePaymentSelection([pay('m2', 2, true), pay('m3', 3, true)], 2)).toEqual(['m2']);
   });
 
-  it('prefers money over a property at the same minimal sum', () => {
+  it('prefers a bank card over a table property at the same minimal sum', () => {
     expect(refinePaymentSelection([pay('p2', 2, false), pay('m2', 2, true)], 2)).toEqual(['m2']);
   });
 
@@ -135,13 +135,52 @@ describe('refinePaymentSelection — never overpay when exact exists; prefer mon
   });
 });
 
-describe('paymentDisclosure — money-first split (F3)', () => {
-  it('hides non-selected property behind the expander; money covers ⇒ moneyOnly', () => {
+describe('paymentDisclosure — bank-first split (F3 · R4)', () => {
+  it('hides non-selected property behind the expander; bank covers ⇒ bankOnly', () => {
     const details = paymentDetails(observationWith(chargeOnMe, [money5]))!; // debt 4, one ₹5 note
     const disclosure = paymentDisclosure(details);
     expect(disclosure.defaultSelection).toEqual([money5]);
-    expect(disclosure.moneyOnly).toBe(true);
-    expect(disclosure.money.map((card) => card.id)).toEqual([money5]);
+    expect(disclosure.bankOnly).toBe(true);
+    expect(disclosure.bankCards.map((card) => card.id)).toEqual([money5]);
     expect(disclosure.hiddenProperties).toEqual([]); // no properties here
+  });
+});
+
+// R4 (owner: "make no mistake, add this properly") — the payable roster must carry EVERY payable
+// card, banked actions included, and NEVER an ANY wildcard; a deliberate overpay must be selectable.
+const deckAll = buildDeck();
+const bankedAction = deckAll.find((card) => card.kind === 'action' && card.action === 'aageBadho')!.id;
+const anyWild = deckAll.find((card) => card.kind === 'wildcard' && card.colors === 'ANY')!.id;
+const colourProp = deckAll.find((card) => card.kind === 'property')!.id;
+
+describe('payment roster (R4 payment freedom)', () => {
+  it('includes a banked ACTION card, marked as a bank card at its ₹ value', () => {
+    const details = paymentDetails(observationWith(chargeOnMe, [bankedAction]))!;
+    const entry = details.payable.find((card) => card.id === bankedAction);
+    expect(entry).toBeDefined();
+    expect(entry!.fromBank).toBe(true); // it belongs with the money, not behind the property expander
+    expect(entry!.value).toBeGreaterThan(0);
+  });
+
+  it('shows a banked action in the always-visible bank row (not hidden as a property)', () => {
+    const details = paymentDetails(observationWith(chargeOnMe, [bankedAction, money5]))!;
+    const disclosure = paymentDisclosure(details);
+    expect(disclosure.bankCards.map((card) => card.id)).toContain(bankedAction);
+    expect(disclosure.hiddenProperties.map((card) => card.id)).not.toContain(bankedAction);
+  });
+
+  it('NEVER lists an ANY wildcard, even when one sits in a property group', () => {
+    const observation = observationWith(chargeOnMe, [money5]);
+    observation.myProperties.mumbai = [{ set: 'mumbai', cards: [anyWild, colourProp], buildings: [] }];
+    const details = paymentDetails(observation)!;
+    expect(details.payable.map((card) => card.id)).not.toContain(anyWild);
+    expect(details.payable.map((card) => card.id)).toContain(colourProp); // the real property still pays
+  });
+
+  it('lets a deliberate overpay stand — a bank subset summing OVER the debt is a valid selection', () => {
+    const details = paymentDetails(observationWith(chargeOnMe, [money5]))!; // debt 4, a ₹5 note
+    // selecting the ₹5 overpays the ₹4 debt: legal (no change given), and the meter reflects it.
+    expect(selectedTotal(details.payable, new Set([money5]))).toBe(5);
+    expect(5).toBeGreaterThan(details.amount);
   });
 });

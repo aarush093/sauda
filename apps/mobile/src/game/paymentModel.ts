@@ -18,7 +18,12 @@ const CARD_BY_ID = new Map<string, Card>(buildDeck().map((card) => [card.id, car
 export interface PayableCard {
   id: CardId;
   value: number; // its ₹ pay value (an ANY wildcard would be 0, but those are excluded)
-  isMoney: boolean; // a bank money note vs a property / building / colour wildcard (F3 disclosure)
+  // R4 (owner landscape directive, 2 Aug): a card is either a BANK card — a money note OR a banked
+  // action (a banked AAGE BADHO / HAVELI is simply a bank card at its rupee value) — or a TABLE
+  // property (a property card / building, whose spending BREAKS a set). This is what F3 protects, so
+  // it drives both the never-break-sets default and the disclosure. It replaces the old `isMoney`,
+  // which mis-bucketed a banked action as a property and hid it from the owner behind the expander.
+  fromBank: boolean;
 }
 
 export interface PaymentDetails {
@@ -42,8 +47,11 @@ export function paymentDetails(observation: Observation): PaymentDetails | null 
     return null;
   }
 
-  // Everything on my table that could pay: bank cards, property cards, and buildings —
-  // minus ANY wildcards (§4.5 edge #4). Mirrors the engine's payableCards.
+  // Everything on my table that could pay, split by SOURCE so the roster is honest (R4): every bank
+  // card — money notes AND banked action cards alike — then every table property + building. ANY
+  // wildcards are excluded (§4.5 edge #4, worth ₹0). Mirrors the engine's payableCards; reduce
+  // re-validates whatever the sheet finally submits.
+  const bankIds = new Set<CardId>(observation.myBank);
   const tableIds: CardId[] = [...observation.myBank];
   for (const set of ALL_SETS) {
     for (const group of observation.myProperties[set]) {
@@ -59,7 +67,7 @@ export function paymentDetails(observation: Observation): PaymentDetails | null 
       continue;
     }
     const value = cardPayValue(card);
-    payable.push({ id, value, isMoney: card.kind === 'money' });
+    payable.push({ id, value, fromBank: bankIds.has(id) });
     tableTotal += value;
   }
 
@@ -86,9 +94,10 @@ export function selectedTotal(payable: PayableCard[], selected: ReadonlySet<Card
 // F3 (owner playtest 30 Jul): the trustworthy DEFAULT selection. The engine's suggestPayment is
 // already minimal-overpay (audit: 0 of 2638 charges overpaid while a smaller subset existed), but
 // it is the engine's and we must not edit it. This UI-side pick makes the same two guarantees
-// explicit AND prefers money: over all subsets it takes the SMALLEST sum >= the debt (so it never
-// overpays when an exact selection exists), and within that sum it prefers fewer properties (money
-// first) then fewer cards. A tiny subset-sum — values are <= 10 and the table total is small.
+// explicit AND never breaks a set: over all subsets it takes the SMALLEST sum >= the debt (so it
+// never overpays when an exact selection exists), and within that sum it spends the FEWEST table
+// PROPERTIES (bank cards — money and banked actions — go first, since spending them costs no set)
+// then the fewest cards. A tiny subset-sum — values are <= 10 and the table total is small.
 export function refinePaymentSelection(payable: PayableCard[], amount: number): CardId[] {
   const tableTotal = payable.reduce((sum, card) => sum + card.value, 0);
   if (tableTotal <= amount) {
@@ -97,14 +106,14 @@ export function refinePaymentSelection(payable: PayableCard[], amount: number): 
 
   interface Combo {
     ids: CardId[];
-    propertyCount: number; // how many non-money cards it spends (fewer = better)
+    propertyCount: number; // how many TABLE properties it spends (fewer = better; bank cards are free)
   }
   const bestForSum = new Map<number, Combo>();
   bestForSum.set(0, { ids: [], propertyCount: 0 });
   for (const card of payable) {
     for (const [sum, combo] of [...bestForSum]) {
       const nextSum = sum + card.value;
-      const next: Combo = { ids: [...combo.ids, card.id], propertyCount: combo.propertyCount + (card.isMoney ? 0 : 1) };
+      const next: Combo = { ids: [...combo.ids, card.id], propertyCount: combo.propertyCount + (card.fromBank ? 0 : 1) };
       const existing = bestForSum.get(nextSum);
       if (!existing || isBetterCombo(next, existing)) {
         bestForSum.set(nextSum, next);
@@ -121,7 +130,8 @@ export function refinePaymentSelection(payable: PayableCard[], amount: number): 
   return bestForSum.get(bestSum)?.ids ?? payable.map((card) => card.id);
 }
 
-// Prefer the combination that spends fewer properties (money first), then fewer cards.
+// Prefer the combination that spends fewer TABLE properties (bank cards first, so no set breaks),
+// then fewer cards overall.
 function isBetterCombo(a: { propertyCount: number; ids: CardId[] }, b: { propertyCount: number; ids: CardId[] }): boolean {
   if (a.propertyCount !== b.propertyCount) {
     return a.propertyCount < b.propertyCount;
@@ -129,16 +139,18 @@ function isBetterCombo(a: { propertyCount: number; ids: CardId[] }, b: { propert
   return a.ids.length < b.ids.length;
 }
 
-// F3 progressive disclosure (L6): what the sheet shows by default. Money notes are always
-// visible; the default selection's own property cards stay visible; every OTHER property hides
-// behind the "Pay with property instead" expander so a money-covered debt reads as money only.
-// When the table is short (mustPayAll) nothing hides — everything is shown and locked.
+// F3 progressive disclosure (L6) — R4 corrected. BANK cards (money notes AND banked actions) are
+// always visible and directly tappable, since spending them costs no set; the default's own table
+// properties stay visible; every OTHER table property hides behind the "Choose differently" expander
+// so a bank-covered debt reads as bank-only. When the table is short (mustPayAll) nothing hides —
+// everything is shown and locked. This is the fix for "I could not pick banked action cards": a
+// banked action now sits with the money, not buried under a "property" expander.
 export interface PaymentDisclosure {
   defaultSelection: CardId[]; // pre-selected cards (the trustworthy default)
-  money: PayableCard[]; // always shown
-  shownProperties: PayableCard[]; // properties that are part of the default (shown)
-  hiddenProperties: PayableCard[]; // properties behind the expander (collapsed by default)
-  moneyOnly: boolean; // the default spends no property — the debt is covered by money alone
+  bankCards: PayableCard[]; // money notes + banked actions — always shown, always tappable
+  shownProperties: PayableCard[]; // table properties that are part of the default (shown)
+  hiddenProperties: PayableCard[]; // table properties behind the expander (collapsed by default)
+  bankOnly: boolean; // the default spends no table property — the debt is covered from the bank alone
 }
 
 export function paymentDisclosure(details: PaymentDetails): PaymentDisclosure {
@@ -146,10 +158,10 @@ export function paymentDisclosure(details: PaymentDetails): PaymentDisclosure {
     ? details.payable.map((card) => card.id)
     : refinePaymentSelection(details.payable, details.amount);
   const selected = new Set(defaultSelection);
-  const money = details.payable.filter((card) => card.isMoney);
-  const properties = details.payable.filter((card) => !card.isMoney);
+  const bankCards = details.payable.filter((card) => card.fromBank);
+  const properties = details.payable.filter((card) => !card.fromBank);
   // When the table is short every card must go, so nothing hides behind the expander.
   const shownProperties = details.mustPayAll ? properties : properties.filter((card) => selected.has(card.id));
   const hiddenProperties = details.mustPayAll ? [] : properties.filter((card) => !selected.has(card.id));
-  return { defaultSelection, money, shownProperties, hiddenProperties, moneyOnly: shownProperties.length === 0 };
+  return { defaultSelection, bankCards, shownProperties, hiddenProperties, bankOnly: shownProperties.length === 0 };
 }
