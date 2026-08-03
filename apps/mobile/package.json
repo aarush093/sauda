@@ -7,6 +7,7 @@
     "dev": "vite",
     "dev:lan": "vite --host --port 5174 --strictPort",
     "phone:connect": "node scripts/phone-connect.mjs",
+    "phone:tunnel": "node scripts/phone-tunnel.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

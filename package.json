@@ -24,8 +24,10 @@
     "capture:shell": "pnpm --filter @sauda/mobile capture:shell",
     "capture:landscape": "pnpm --filter @sauda/mobile capture:landscape",
     "capture:landscape2": "pnpm --filter @sauda/mobile capture:landscape2",
+    "capture:landscape3": "pnpm --filter @sauda/mobile capture:landscape3",
     "dev:lan": "pnpm --filter @sauda/mobile dev:lan",
-    "phone": "pnpm --filter @sauda/mobile phone:connect",
+    "phone": "pnpm --filter @sauda/mobile phone:tunnel",
+    "phone:lan": "pnpm --filter @sauda/mobile phone:connect",
     "plates:variants": "pnpm --filter @sauda/mobile plates:variants"
   },
   "devDependencies": {

@@ -10,6 +10,33 @@ dev routes, and all plate paths are relative/in-page, so they work identically o
 
 ---
 
+## Path 0 — one command, works anywhere: `pnpm phone` (Cloudflare quick tunnel)
+
+The fastest path, and the one to use when the phone is **not** on the same Wi-Fi (mobile data, a different
+network, or a Wi-Fi that isolates clients):
+
+```
+pnpm phone
+```
+
+It ensures the dev server is up (reusing one you already started, or launching `dev:lan` itself), opens a
+fresh Cloudflare quick tunnel, waits for the public `https://…trycloudflare.com` URL, and prints it
+prominently with the `/#/autostart` deep-link and a **scannable terminal QR**. Scan the QR (or type the
+deep-link) in the phone browser and you drop straight into a game. Leave the terminal open — the tunnel
+lives as long as it runs; **Ctrl-C** ends it (and stops the dev server too, if `pnpm phone` started it).
+
+Quick-tunnel URLs are **ephemeral** — a new one is minted every run, and a previous one goes dead. That is
+exactly why this is one command: don't hunt for the old URL, just run `pnpm phone` again and use the fresh
+one it prints. Needs `cloudflared` on `PATH` (already installed on the owner's PC).
+
+**Permanent-URL upgrade path (out of scope here).** A *stable*, non-rotating hostname needs a Cloudflare
+**named tunnel**, which requires a (free) Cloudflare account, a domain on Cloudflare, and a tunnel token —
+you'd run `cloudflared tunnel create sauda` + `cloudflared tunnel route dns …` once, store the token, and
+`pnpm phone` would point at that named tunnel instead of a quick one. That's an account/DNS setup task, so
+it's deliberately left for later; the quick tunnel above needs zero account and covers playtesting today.
+
+---
+
 ## Path A — Wi-Fi (LAN), the normal case
 
 **Phone and PC must be on the same Wi-Fi.**
@@ -23,10 +50,10 @@ dev routes, and all plate paths are relative/in-page, so they work identically o
 
 2. **Get the connect line + QR** (second terminal):
    ```
-   pnpm --filter @sauda/mobile phone:connect
+   pnpm phone:lan        # alias for: pnpm --filter @sauda/mobile phone:connect
    ```
    It prints the URL and a scannable QR, e.g. `http://192.168.x.x:5174/`. Scan it (or type the URL) in
-   the phone's browser. Chrome on Android is best.
+   the phone's browser. Chrome on Android is best. (`pnpm phone` now opens the Cloudflare tunnel — Path 0.)
 
 3. Play. Edits hot-reload on the phone just like the desktop.
 

@@ -329,3 +329,29 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   and served an error page; a dead tunnel is useless, so it was restarted and the new URL confirmed live
   in a real browser (Home 200 + the /#/autostart game render). Quick-tunnel URLs rotate on restart, so
   the live one lives in the pass report, never hard-coded.
+
+## LANDSCAPE-3 — Munshi portrait + final polish
+
+- **The Munshi portrait rides the SAME plate pipeline as the other 45, not a bespoke asset path.** The
+  owner's square lithograph is scaled to the 600 width and centred on a white 600×870 card canvas (its
+  own outer margin is white, so the pad is invisible), then webp q82 — so `plates.test.ts` (100:145,
+  ≤150 KB) passes with zero special-casing and the glob picks it up. `munshi` is never a full card face,
+  so the pad never shows in-game; only the round advice-card medallion references it.
+- **The circular framing is a CSS mask, never an image edit.** The 46 px medallion frames the face with
+  `object-position: 50% 20%` (biasing up off the litho's hands-and-ledger centre) and `transform:
+  scale(1.32)` (pushing the litho's own cameo ring past the slot edge). The lithograph file stays exactly
+  as the owner drew it; the mask lives on the `<img>`, independent of the slot's reduced-motion float.
+- **The targeting graze is fixed by parking the hand, not by fragile band geometry.** On 740×360 the
+  hand band is ~166 px of 360, leaving too little to reserve a clear band above it for the 88 px card +
+  wrapped chips. Since the hand is a sleeping, already-non-interactive modal background while targeting,
+  `handAsleep` drops the wheel band to opacity 0 + pointer-events none (height kept, so no reflow) — the
+  chips can't graze a hand that isn't drawn. Targetability stays purely `legalActions`.
+- **`pnpm phone` is one command that always prints the current URL.** Quick-tunnel URLs rotate every
+  restart and kept stranding the owner on a dead URL. The helper ensures the dev server is up, opens a
+  fresh `cloudflared` quick tunnel, waits for the public URL, and prints it with the `/#/autostart`
+  deep-link and a terminal QR. A stable non-rotating URL needs a Cloudflare **named** tunnel (account +
+  token) — documented as the upgrade path in `docs/PHONE_PLAYTEST.md`, out of scope here.
+- **L2's motion clips already covered M3.** The eight webm clips (both MY-TURN↔SPECTATE transitions,
+  captioned bot turn, HAATH KI SAFAI + My-Sets reference, Rs3-banked overpay, wheel scrub) landed in
+  `docs/captures/landscape-2/` and are real non-empty webm — so LANDSCAPE-3 re-verified them rather than
+  re-rendering.
