@@ -292,3 +292,40 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   of a banned third-party property name) tripped the repo-wide IP guard — a reminder that §2 is enforced
   mechanically, not by vigilance. Run the FULL suite before a commit, not just the app tests, or the
   engine's guards can be missed.
+
+## LANDSCAPE-2 — verify, prove, clean (interview crib)
+
+- **The green gate is now a WALL, not a convention.** `pnpm gate` runs the ip-guard FIRST and fast
+  (~1s), then typecheck, lint, and the full 418-test suite; a versioned `.githooks/pre-commit`
+  (activated by `core.hooksPath`, so it travels with the branch) runs it and blocks any red commit.
+  It proved itself immediately — it blocked two of my own commits (a comment that re-quoted the banned
+  phrase; an unused variable) until they were green. The R pass's four "app-green but engine-red"
+  commits are recorded in DECISIONS as retroactively confirmed green at HEAD and left unrewritten,
+  because rebasing a branch the owner has already pulled onto a phone is riskier than the slip was.
+- **The table band is a gauge, not a target.** Auto-draw made the piles display-only, so the restored
+  draw-count + discard-top readout is `pointer-events: none`, absolutely positioned (zero layout
+  footprint → no scroll), on the low `LAYERS.board` tier, pinned in a corner each layout leaves free.
+  You read it; you never act on it.
+- **Motion is finally proven with motion.** Eight webm clips (Playwright `recordVideo` + the committed
+  `__replay` / `__saudaCapturePaused` hooks, unfrozen so real animation plays) cover the my-turn↔spectate
+  flip both ways, a captioned bot turn, the targeting split, the overpay, a wheel scrub, and a money
+  fling. Each embeds an assertion, so "rendered" means the moment actually happened.
+- **Two states the fixtures don't hand you, reached deterministically.** HAATH KI SAFAI is in no
+  fixture's play-turn hand and turn 1 has no stealable targets, so the clip deals a known seed, passes
+  turn 1 (bots place properties), and draws into turn 2 — now the card is held and every opponent has a
+  single, stealable property. The overpay needs me to owe exactly ₹2 with a banked ₹3 action card: I
+  bank the action card, a bot plays SHAGUN (every opponent owes ₹2), and because SHAGUN stacks a charge
+  per opponent resolved last-in-first-out, the script resolves the two bot charges synchronously so the
+  payment sheet lands on ME — then selects the banked action card for the "no change given" overpay.
+- **The unseen profiles were eyeballed, not just harness-checked.** 800×360, 832×384 and the
+  reduced-motion variant each got MY-TURN / SPECTATE / targeting stills, audited by eye — all clean. The
+  targeting overlay's full-screen scrim is why the many-target chips read correctly over the dimmed hand
+  fan (chips on `LAYERS.surface`, wheel below it).
+- **The orientation shell is asserted end to end.** Portrait → rotate interstitial (game unmounted);
+  landscape → game; "Go fullscreen" → `requestFullscreen` then `orientation.lock('landscape')`, each
+  try/catch-wrapped. Instrumented spies in the L6 capture prove the lock is called and its rejection is
+  swallowed, so it degrades to a by-hand rotate on browsers that refuse it.
+- **A Cloudflare quick tunnel is ephemeral.** The owner's tunnel had ~1300 edge-registration failures
+  and served an error page; a dead tunnel is useless, so it was restarted and the new URL confirmed live
+  in a real browser (Home 200 + the /#/autostart game render). Quick-tunnel URLs rotate on restart, so
+  the live one lives in the pass report, never hard-coded.

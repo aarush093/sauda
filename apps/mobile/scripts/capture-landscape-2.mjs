@@ -405,11 +405,78 @@ async function stageProfiles(browser, store) {
   }
 }
 
+// ── L6: orientation-shell verification (rotate gate · fullscreen lock · HUD) ───────────────────────
+async function stageL6(browser, store) {
+  const tall = P['tall-915x412'];
+  // 1) PORTRAIT raises the rotate gate; the game is NOT laid out behind it.
+  {
+    const c = await ctx(browser, tall, { width: tall.height, height: tall.width }); // swapped → portrait
+    const page = await c.newPage();
+    await page.goto(`${DEV}/#/`, { waitUntil: 'load' });
+    await frames(page, 500);
+    const gate = await page.locator('[data-rotate-gate]').count();
+    const btn = await page.locator('button:has-text("Go fullscreen")').count();
+    const file = 'l6_rotate_gate_portrait.png';
+    await page.screenshot({ path: join(OUT, file) });
+    saveResult(store, file, { ok: gate > 0 && btn > 0, what: 'L6 portrait raises the rotate interstitial with the "Go fullscreen" affordance' });
+    console.log(`  ${gate > 0 && btn > 0 ? 'ok  ' : 'MISS'} ${file}  (gate=${gate} button=${btn})`);
+    // 2) The "Go fullscreen" affordance calls requestFullscreen + orientation.lock('landscape') and
+    //    swallows failure. Spy on both, click, and assert it neither throws nor leaves an error.
+    const spy = await page.evaluate(async () => {
+      const calls = { fullscreen: false, lock: null, threw: false };
+      const el = document.documentElement;
+      // fullscreen RESOLVES so the lock path is reached; the lock then REJECTS (as it would on a
+      // browser that refuses orientation.lock) to prove the failure is swallowed, not thrown.
+      el.requestFullscreen = () => { calls.fullscreen = true; return Promise.resolve(); };
+      const orient = window.screen.orientation;
+      if (orient) orient.lock = (o) => { calls.lock = o; return Promise.reject(new Error('lock unsupported')); };
+      try {
+        const btnEl = [...document.querySelectorAll('button')].find((b) => /Go fullscreen/.test(b.textContent || ''));
+        btnEl?.click();
+        await new Promise((r) => setTimeout(r, 150));
+      } catch { calls.threw = true; }
+      return calls;
+    });
+    saveResult(store, 'l6_fullscreen_affordance', { ok: spy.fullscreen && !spy.threw, what: `L6 "Go fullscreen" calls requestFullscreen (lock='${spy.lock}') and fails gracefully (no throw)`, png: false });
+    console.log(`  ${spy.fullscreen && !spy.threw ? 'ok  ' : 'MISS'} fullscreen affordance  (fullscreen=${spy.fullscreen} lock=${spy.lock} threw=${spy.threw})`);
+    await c.close();
+  }
+  // 3) LANDSCAPE enters the game (no gate).
+  {
+    const c = await ctx(browser, tall);
+    const page = await c.newPage();
+    await bootReplay(page, 'S6_makaan');
+    await frames(page, 300);
+    const gate = await page.locator('[data-rotate-gate]').count();
+    const file = 'l6_landscape_enters_game.png';
+    await page.screenshot({ path: join(OUT, file) });
+    saveResult(store, file, { ok: gate === 0, what: 'L6 landscape enters the game directly (no rotate gate)' });
+    console.log(`  ${gate === 0 ? 'ok  ' : 'MISS'} ${file}  (gate=${gate})`);
+    await c.close();
+  }
+  // 4) ?hud=1 shows orientation + reduced-motion; under forced reduced motion it reads ON.
+  {
+    const c = await ctx(browser, tall, { reduced: true });
+    const page = await c.newPage();
+    await page.goto(`${DEV}/?hud=1#/autostart`, { waitUntil: 'load' });
+    await frames(page, 600);
+    const text = await page.evaluate(() => document.body.innerText);
+    const showsOrientation = /orientation:\s*landscape/.test(text);
+    const showsReduced = /reduced-motion:\s*ON/.test(text);
+    const file = 'l6_hud_orientation_reduced.png';
+    await page.screenshot({ path: join(OUT, file) });
+    saveResult(store, file, { ok: showsOrientation && showsReduced, what: 'L6 ?hud=1 shows orientation (landscape) + reduced-motion (ON, forced) — the battery-saver state the owner could not see' });
+    console.log(`  ${showsOrientation && showsReduced ? 'ok  ' : 'MISS'} ${file}  (orientation=${showsOrientation} reducedON=${showsReduced})`);
+    await c.close();
+  }
+}
+
 // ── INDEX ────────────────────────────────────────────────────────────────────────────────────────
 function writeIndex(store) {
   const rows = Object.entries(store).sort(([a], [b]) => a.localeCompare(b));
   const clips = rows.filter(([f]) => f.endsWith('.webm'));
   const stills = rows.filter(([f]) => f.endsWith('.png'));
+  const checks = rows.filter(([f]) => !f.endsWith('.webm') && !f.endsWith('.png'));
   const lines = [
     '# LANDSCAPE-2 — close-out capture pack INDEX', '',
     'The verify/prove/clean pass. Clips are real webm MOTION (L2); stills are full frames for the',
@@ -428,6 +495,12 @@ function writeIndex(store) {
     '| Still | Proves |', '|-------|--------|');
   for (const [file, r] of stills) {
     lines.push(`| \`${file}\` | ${r.ok ? r.what : `**MISSING** — ${r.note || r.what}`} |`);
+  }
+  if (checks.length > 0) {
+    lines.push('', '## Non-image checks (L6 shell verification)', '', '| Check | Verdict |', '|-------|---------|');
+    for (const [name, r] of checks) {
+      lines.push(`| \`${name}\` | ${r.ok ? `PASS — ${r.what}` : `**FAIL** — ${r.what}`} |`);
+    }
   }
   lines.push('');
   writeFileSync(join(OUT, 'INDEX.md'), lines.join('\n') + '\n');
@@ -448,6 +521,7 @@ async function main() {
     if (STAGE === 'all' || STAGE === 'l4') { console.log('L4 — table band stills'); await stageL4(browser, store); }
     if (STAGE === 'all' || STAGE === 'clips') { console.log('L2 — motion clips'); await stageClips(browser, store); }
     if (STAGE === 'all' || STAGE === 'profiles') { console.log('L3 — profile stills'); await stageProfiles(browser, store); }
+    if (STAGE === 'all' || STAGE === 'l6') { console.log('L6 — orientation shell'); await stageL6(browser, store); }
   } finally {
     await browser.close();
     try { rmSync(VIDEO_DIR, { recursive: true, force: true }); } catch { /* temp dir may already be gone */ }

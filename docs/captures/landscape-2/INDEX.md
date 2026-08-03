@@ -37,4 +37,13 @@ Rerun: `pnpm dev:lan` in one shell, then `pnpm capture:landscape2` (or `--stage=
 | `l4_band_myturn_915x412.png` | L4 table band (draw count + discard top) in MY-TURN @ 915x412 |
 | `l4_band_spectate_740x360.png` | L4 table band in SPECTATE @ 740x360 |
 | `l4_band_spectate_915x412.png` | L4 table band in SPECTATE @ 915x412 |
+| `l6_hud_orientation_reduced.png` | L6 ?hud=1 shows orientation (landscape) + reduced-motion (ON, forced) — the battery-saver state the owner could not see |
+| `l6_landscape_enters_game.png` | L6 landscape enters the game directly (no rotate gate) |
+| `l6_rotate_gate_portrait.png` | L6 portrait raises the rotate interstitial with the "Go fullscreen" affordance |
+
+## Non-image checks (L6 shell verification)
+
+| Check | Verdict |
+|-------|---------|
+| `l6_fullscreen_affordance` | PASS — L6 "Go fullscreen" calls requestFullscreen (lock='landscape') and fails gracefully (no throw) |
 

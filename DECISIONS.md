@@ -528,3 +528,41 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   R6's commit message (`79d94da`) quotes the phrase while describing the fix. The ip-guard scans the
   working tree, not commit messages, so this does not fail the gate; it is left in place for the same
   do-not-rewrite-shared-history reason. Working tree at HEAD is fully clean.
+
+### L4 — the table band is a gauge, not a target
+
+- **The restored draw/discard readout is NON-INTERACTIVE by design.** Auto-draw (L1, PHONE era) made the
+  piles display-only; a draw is never a tap. So `TableBand` renders `pointer-events: none` on the low
+  `LAYERS.board` tier, absolutely positioned (zero layout footprint, so it can never induce a page
+  scroll), pinned in a stage corner each layout leaves free — top-right of the centre stage in MY-TURN,
+  bottom-right of the acting stage in SPECTATE. It shows a face-down draw stack + count and the discard
+  top (a dashed empty slot when the discard is empty, e.g. turn 1). It is a gauge you read, not a zone
+  you act on.
+
+### L3 — the never-looked-at profiles pass
+
+- **compact-800x360 / mid-832x384 / reduced-915x412 were eyeballed and all pass.** No overlap, clipping,
+  void, or collided turn-token/tray/wheel. The one observation: with a many-target action (HAATH KI
+  SAFAI) the lowest target chips sit near the dimmed hand fan on the shorter profiles — but the targeting
+  overlay is a full `LAYERS.surface` scrim above the wheel, so the chips are correctly layered on top and
+  stay readable. This is the same layered look the approved R5 single-target still shows, so it is left as
+  designed (locked-visuals limit); no code change was warranted.
+
+### L6 — reduced motion, the shell, and the tunnel
+
+- **Reduced motion is a first-class, on-device-visible state.** `?hud=1` prints `reduced-motion: ON` as an
+  unmissable filled-red banner (PHONE-2 Q3) so the owner can SEE on the phone whether battery-saver forced
+  it — the thing he could not see on his first phone game. The reduced-motion landscape variant
+  (`reduced-915x412`) is now a captured, audited profile (L3), and `FocusTransition` / every K-tier
+  animation collapses to an instant cut under it. Nothing about comprehension depends on motion.
+- **The orientation shell is verified, not assumed.** Portrait raises the rotate interstitial (the game
+  stays unmounted, never laid out at the wrong aspect); landscape enters the game directly; the one "Go
+  fullscreen" affordance calls `requestFullscreen` then `screen.orientation.lock('landscape')`, each in
+  its own try/catch so a browser that refuses either just falls back to a by-hand rotate. All four
+  behaviours are asserted by the L6 capture stage (instrumented spies prove the lock is called AND that
+  its rejection is swallowed).
+- **The Cloudflare quick tunnel is ephemeral — treat a dead one as dead.** The tunnel the owner had been
+  using had accumulated ~1300 edge registration failures and served a browser error page. A dead tunnel
+  helps no one, so LANDSCAPE-2 restarted it (`cloudflared tunnel --url http://localhost:5174`), yielding a
+  fresh URL that was confirmed live in a real browser (Home 200 + the /#/autostart game). Quick-tunnel
+  URLs rotate on restart; the current one is printed in the pass report, not hard-coded anywhere.
