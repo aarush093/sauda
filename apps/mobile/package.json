@@ -19,6 +19,7 @@
     "capture:landscape": "node scripts/capture-landscape.mjs",
     "capture:landscape2": "node scripts/capture-landscape-2.mjs",
     "capture:landscape3": "node scripts/capture-landscape-3.mjs",
+    "capture:landscape4": "node scripts/capture-landscape-4.mjs",
     "capture:fixes": "node scripts/capture-fixes.mjs",
     "capture:fixes2": "node scripts/capture-fixes-2.mjs",
     "capture:excellence": "node scripts/capture-excellence.mjs",
