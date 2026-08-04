@@ -1,0 +1,1171 @@
+{
+  "seed": 7,
+  "profile": "915x412",
+  "turns": 37,
+  "statesSeen": {
+    "targeting": true,
+    "payment": true,
+    "discard": true
+  },
+  "shots": [
+    {
+      "file": "01_myturn_t1.png",
+      "label": "myturn",
+      "turn": 1
+    },
+    {
+      "file": "02_spectate_t2.png",
+      "label": "spectate",
+      "turn": 2
+    },
+    {
+      "file": "03_spectate_t3.png",
+      "label": "spectate",
+      "turn": 3
+    },
+    {
+      "file": "04_spectate_t4.png",
+      "label": "spectate",
+      "turn": 4
+    },
+    {
+      "file": "05_myturn_t5.png",
+      "label": "myturn",
+      "turn": 5
+    },
+    {
+      "file": "06_discard_t5.png",
+      "label": "discard",
+      "turn": 5
+    },
+    {
+      "file": "07_spectate_t6.png",
+      "label": "spectate",
+      "turn": 6
+    },
+    {
+      "file": "08_spectate_t6.png",
+      "label": "spectate",
+      "turn": 6
+    },
+    {
+      "file": "09_spectate_t6.png",
+      "label": "spectate",
+      "turn": 6
+    },
+    {
+      "file": "10_payment_t6.png",
+      "label": "payment",
+      "turn": 6
+    },
+    {
+      "file": "11_spectate_t7.png",
+      "label": "spectate",
+      "turn": 7
+    },
+    {
+      "file": "12_spectate_t8.png",
+      "label": "spectate",
+      "turn": 8
+    },
+    {
+      "file": "13_spectate_t8.png",
+      "label": "spectate",
+      "turn": 8
+    },
+    {
+      "file": "14_myturn_t9.png",
+      "label": "myturn",
+      "turn": 9
+    },
+    {
+      "file": "15_myturn_t9.png",
+      "label": "myturn",
+      "turn": 9
+    },
+    {
+      "file": "16_myturn_t9.png",
+      "label": "myturn",
+      "turn": 9
+    },
+    {
+      "file": "17_myturn_t9.png",
+      "label": "myturn",
+      "turn": 9
+    },
+    {
+      "file": "18_spectate_t10.png",
+      "label": "spectate",
+      "turn": 10
+    },
+    {
+      "file": "19_spectate_t10.png",
+      "label": "spectate",
+      "turn": 10
+    },
+    {
+      "file": "20_spectate_t10.png",
+      "label": "spectate",
+      "turn": 10
+    },
+    {
+      "file": "21_spectate_t11.png",
+      "label": "spectate",
+      "turn": 11
+    },
+    {
+      "file": "22_spectate_t11.png",
+      "label": "spectate",
+      "turn": 11
+    },
+    {
+      "file": "23_spectate_t11.png",
+      "label": "spectate",
+      "turn": 11
+    },
+    {
+      "file": "24_spectate_t12.png",
+      "label": "spectate",
+      "turn": 12
+    },
+    {
+      "file": "25_myturn_t13.png",
+      "label": "myturn",
+      "turn": 13
+    },
+    {
+      "file": "26_myturn_t13.png",
+      "label": "myturn",
+      "turn": 13
+    },
+    {
+      "file": "27_targeting_t13.png",
+      "label": "targeting",
+      "turn": 13
+    },
+    {
+      "file": "28_spectate_t13.png",
+      "label": "spectate",
+      "turn": 13
+    },
+    {
+      "file": "29_myturn_t13.png",
+      "label": "myturn",
+      "turn": 13
+    },
+    {
+      "file": "30_spectate_t14.png",
+      "label": "spectate",
+      "turn": 14
+    },
+    {
+      "file": "31_spectate_t15.png",
+      "label": "spectate",
+      "turn": 15
+    },
+    {
+      "file": "32_spectate_t16.png",
+      "label": "spectate",
+      "turn": 16
+    },
+    {
+      "file": "33_spectate_t16.png",
+      "label": "spectate",
+      "turn": 16
+    },
+    {
+      "file": "34_myturn_t17.png",
+      "label": "myturn",
+      "turn": 17
+    },
+    {
+      "file": "35_myturn_t17.png",
+      "label": "myturn",
+      "turn": 17
+    },
+    {
+      "file": "36_spectate_t17.png",
+      "label": "spectate",
+      "turn": 17
+    },
+    {
+      "file": "37_spectate_t17.png",
+      "label": "spectate",
+      "turn": 17
+    },
+    {
+      "file": "38_spectate_t17.png",
+      "label": "spectate",
+      "turn": 17
+    },
+    {
+      "file": "39_myturn_t17.png",
+      "label": "myturn",
+      "turn": 17
+    },
+    {
+      "file": "40_myturn_t17.png",
+      "label": "myturn",
+      "turn": 17
+    },
+    {
+      "file": "41_spectate_t18.png",
+      "label": "spectate",
+      "turn": 18
+    },
+    {
+      "file": "42_spectate_t18.png",
+      "label": "spectate",
+      "turn": 18
+    },
+    {
+      "file": "43_spectate_t19.png",
+      "label": "spectate",
+      "turn": 19
+    },
+    {
+      "file": "44_spectate_t20.png",
+      "label": "spectate",
+      "turn": 20
+    },
+    {
+      "file": "45_spectate_t20.png",
+      "label": "spectate",
+      "turn": 20
+    },
+    {
+      "file": "46_spectate_t20.png",
+      "label": "spectate",
+      "turn": 20
+    },
+    {
+      "file": "47_myturn_t21.png",
+      "label": "myturn",
+      "turn": 21
+    },
+    {
+      "file": "48_myturn_t21.png",
+      "label": "myturn",
+      "turn": 21
+    },
+    {
+      "file": "49_myturn_t21.png",
+      "label": "myturn",
+      "turn": 21
+    },
+    {
+      "file": "50_myturn_t21.png",
+      "label": "myturn",
+      "turn": 21
+    },
+    {
+      "file": "51_spectate_t22.png",
+      "label": "spectate",
+      "turn": 22
+    },
+    {
+      "file": "52_spectate_t22.png",
+      "label": "spectate",
+      "turn": 22
+    },
+    {
+      "file": "53_spectate_t22.png",
+      "label": "spectate",
+      "turn": 22
+    },
+    {
+      "file": "54_spectate_t23.png",
+      "label": "spectate",
+      "turn": 23
+    },
+    {
+      "file": "55_spectate_t24.png",
+      "label": "spectate",
+      "turn": 24
+    },
+    {
+      "file": "56_myturn_t25.png",
+      "label": "myturn",
+      "turn": 25
+    },
+    {
+      "file": "57_myturn_t25.png",
+      "label": "myturn",
+      "turn": 25
+    },
+    {
+      "file": "58_myturn_t25.png",
+      "label": "myturn",
+      "turn": 25
+    },
+    {
+      "file": "59_myturn_t25.png",
+      "label": "myturn",
+      "turn": 25
+    },
+    {
+      "file": "60_spectate_t26.png",
+      "label": "spectate",
+      "turn": 26
+    },
+    {
+      "file": "61_spectate_t27.png",
+      "label": "spectate",
+      "turn": 27
+    },
+    {
+      "file": "62_spectate_t28.png",
+      "label": "spectate",
+      "turn": 28
+    },
+    {
+      "file": "63_spectate_t28.png",
+      "label": "spectate",
+      "turn": 28
+    },
+    {
+      "file": "64_spectate_t28.png",
+      "label": "spectate",
+      "turn": 28
+    },
+    {
+      "file": "65_myturn_t29.png",
+      "label": "myturn",
+      "turn": 29
+    },
+    {
+      "file": "66_myturn_t29.png",
+      "label": "myturn",
+      "turn": 29
+    },
+    {
+      "file": "67_myturn_t29.png",
+      "label": "myturn",
+      "turn": 29
+    },
+    {
+      "file": "68_myturn_t29.png",
+      "label": "myturn",
+      "turn": 29
+    },
+    {
+      "file": "69_spectate_t30.png",
+      "label": "spectate",
+      "turn": 30
+    },
+    {
+      "file": "70_spectate_t30.png",
+      "label": "spectate",
+      "turn": 30
+    },
+    {
+      "file": "71_spectate_t30.png",
+      "label": "spectate",
+      "turn": 30
+    },
+    {
+      "file": "72_spectate_t31.png",
+      "label": "spectate",
+      "turn": 31
+    },
+    {
+      "file": "73_spectate_t32.png",
+      "label": "spectate",
+      "turn": 32
+    },
+    {
+      "file": "74_myturn_t33.png",
+      "label": "myturn",
+      "turn": 33
+    },
+    {
+      "file": "75_myturn_t33.png",
+      "label": "myturn",
+      "turn": 33
+    },
+    {
+      "file": "76_myturn_t33.png",
+      "label": "myturn",
+      "turn": 33
+    },
+    {
+      "file": "77_spectate_t33.png",
+      "label": "spectate",
+      "turn": 33
+    },
+    {
+      "file": "78_spectate_t33.png",
+      "label": "spectate",
+      "turn": 33
+    },
+    {
+      "file": "79_spectate_t33.png",
+      "label": "spectate",
+      "turn": 33
+    },
+    {
+      "file": "80_myturn_t33.png",
+      "label": "myturn",
+      "turn": 33
+    },
+    {
+      "file": "81_spectate_t34.png",
+      "label": "spectate",
+      "turn": 34
+    },
+    {
+      "file": "82_spectate_t35.png",
+      "label": "spectate",
+      "turn": 35
+    },
+    {
+      "file": "83_spectate_t36.png",
+      "label": "spectate",
+      "turn": 36
+    },
+    {
+      "file": "84_spectate_t36.png",
+      "label": "spectate",
+      "turn": 36
+    },
+    {
+      "file": "85_spectate_t36.png",
+      "label": "spectate",
+      "turn": 36
+    },
+    {
+      "file": "86_myturn_t37.png",
+      "label": "myturn",
+      "turn": 37
+    },
+    {
+      "file": "87_myturn_t37.png",
+      "label": "myturn",
+      "turn": 37
+    },
+    {
+      "file": "88_spectate_t37.png",
+      "label": "spectate",
+      "turn": 37
+    },
+    {
+      "file": "89_myturn_t37.png",
+      "label": "myturn",
+      "turn": 37
+    },
+    {
+      "file": "90_win_t37.png",
+      "label": "win",
+      "turn": 37
+    }
+  ],
+  "steps": [
+    {
+      "turn": 1,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "drew for turn (my play-turn #1)",
+      "file": "01_myturn_t1.png"
+    },
+    {
+      "turn": 1,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "deliberately passed (no plays) to build the hand for the discard demo",
+      "file": ""
+    },
+    {
+      "turn": 2,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — — Turn 2: Player 1",
+      "file": "02_spectate_t2.png"
+    },
+    {
+      "turn": 3,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — — Turn 3: Player 2",
+      "file": "03_spectate_t3.png"
+    },
+    {
+      "turn": 4,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — — Turn 4: Player 3",
+      "file": "04_spectate_t4.png"
+    },
+    {
+      "turn": 5,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "drew for turn (my play-turn #2)",
+      "file": "05_myturn_t5.png"
+    },
+    {
+      "turn": 5,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "deliberately passed (no plays) to build the hand for the discard demo",
+      "file": ""
+    },
+    {
+      "turn": 5,
+      "actor": 0,
+      "state": "discard",
+      "did": "over the hand limit (9) — discard overlay open",
+      "file": "06_discard_t5.png"
+    },
+    {
+      "turn": 6,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — — Turn 6: Player 1",
+      "file": "07_spectate_t6.png"
+    },
+    {
+      "turn": 6,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — P1 played Shagun",
+      "file": "08_spectate_t6.png"
+    },
+    {
+      "turn": 6,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — P3 paid P1: Bijli Ghar",
+      "file": "09_spectate_t6.png"
+    },
+    {
+      "turn": 6,
+      "actor": 0,
+      "state": "payment",
+      "did": "charge stood; payment sheet open — P2 paid P1: Anna Salai",
+      "file": "10_payment_t6.png"
+    },
+    {
+      "turn": 7,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — — Turn 7: Player 2",
+      "file": "11_spectate_t7.png"
+    },
+    {
+      "turn": 8,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — — Turn 8: Player 3",
+      "file": "12_spectate_t8.png"
+    },
+    {
+      "turn": 8,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — P3 played Haath Ki Safai",
+      "file": "13_spectate_t8.png"
+    },
+    {
+      "turn": 9,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "drew for turn (my play-turn #3)",
+      "file": "14_myturn_t9.png"
+    },
+    {
+      "turn": 9,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed prop_puraniDilli_1",
+      "file": "15_myturn_t9.png"
+    },
+    {
+      "turn": 9,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed prop_mumbai_1",
+      "file": "16_myturn_t9.png"
+    },
+    {
+      "turn": 9,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed prop_jaipur_1",
+      "file": "17_myturn_t9.png"
+    },
+    {
+      "turn": 9,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "ended turn",
+      "file": ""
+    },
+    {
+      "turn": 10,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — — Turn 10: Player 1",
+      "file": "18_spectate_t10.png"
+    },
+    {
+      "turn": 10,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — P1 played LAGAAN (Chennai/Bangalore)",
+      "file": "19_spectate_t10.png"
+    },
+    {
+      "turn": 10,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — P3 paid P1: ₹1 Cr, Hawa Mahal Road",
+      "file": "20_spectate_t10.png"
+    },
+    {
+      "turn": 11,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — — Turn 11: Player 2",
+      "file": "21_spectate_t11.png"
+    },
+    {
+      "turn": 11,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — P2 played Shagun",
+      "file": "22_spectate_t11.png"
+    },
+    {
+      "turn": 11,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — P3 paid P2: Assi Ghat",
+      "file": "23_spectate_t11.png"
+    },
+    {
+      "turn": 12,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — — Turn 12: Player 3",
+      "file": "24_spectate_t12.png"
+    },
+    {
+      "turn": 13,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "drew for turn (my play-turn #4)",
+      "file": "25_myturn_t13.png"
+    },
+    {
+      "turn": 13,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed wild_jaipur_kolkata_0",
+      "file": "26_myturn_t13.png"
+    },
+    {
+      "turn": 13,
+      "actor": 0,
+      "state": "targeting",
+      "did": "played action_haathKiSafai_1 via the real lift→drag→chip; overlay confirmed",
+      "file": "27_targeting_t13.png"
+    },
+    {
+      "turn": 13,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — P0 played Haath Ki Safai",
+      "file": "28_spectate_t13.png"
+    },
+    {
+      "turn": 13,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed prop_newDelhi_2",
+      "file": "29_myturn_t13.png"
+    },
+    {
+      "turn": 13,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "ended turn",
+      "file": ""
+    },
+    {
+      "turn": 14,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — — Turn 14: Player 1",
+      "file": "30_spectate_t14.png"
+    },
+    {
+      "turn": 15,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — — Turn 15: Player 2",
+      "file": "31_spectate_t15.png"
+    },
+    {
+      "turn": 16,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — — Turn 16: Player 3",
+      "file": "32_spectate_t16.png"
+    },
+    {
+      "turn": 16,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — P3 played Kabza",
+      "file": "33_spectate_t16.png"
+    },
+    {
+      "turn": 17,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "drew for turn (my play-turn #5)",
+      "file": "34_myturn_t17.png"
+    },
+    {
+      "turn": 17,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "PLAY_KIRAYA kiraya_puraniDilli_kashi_1",
+      "file": "35_myturn_t17.png"
+    },
+    {
+      "turn": 17,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — P0 played LAGAAN (Purani Dilli/Kashi Ghats)",
+      "file": "36_spectate_t17.png"
+    },
+    {
+      "turn": 17,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — P3 paid P0: ₹2 Cr",
+      "file": "37_spectate_t17.png"
+    },
+    {
+      "turn": 17,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — P2 paid P0: ₹1 Cr",
+      "file": "38_spectate_t17.png"
+    },
+    {
+      "turn": 17,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "PLAY_KIRAYA kiraya_puraniDilli_kashi_0",
+      "file": "39_myturn_t17.png"
+    },
+    {
+      "turn": 17,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "banked money_1_5",
+      "file": "40_myturn_t17.png"
+    },
+    {
+      "turn": 17,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "ended turn",
+      "file": ""
+    },
+    {
+      "turn": 18,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — — Turn 18: Player 1",
+      "file": "41_spectate_t18.png"
+    },
+    {
+      "turn": 18,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — P1 played Kabza",
+      "file": "42_spectate_t18.png"
+    },
+    {
+      "turn": 19,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — — Turn 19: Player 2",
+      "file": "43_spectate_t19.png"
+    },
+    {
+      "turn": 20,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — — Turn 20: Player 3",
+      "file": "44_spectate_t20.png"
+    },
+    {
+      "turn": 20,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — P3 played LAGAAN (Junctions/Utilities)",
+      "file": "45_spectate_t20.png"
+    },
+    {
+      "turn": 20,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — P2 paid P3: ₹2 Cr",
+      "file": "46_spectate_t20.png"
+    },
+    {
+      "turn": 21,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "drew for turn (my play-turn #6)",
+      "file": "47_myturn_t21.png"
+    },
+    {
+      "turn": 21,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed prop_mumbai_0",
+      "file": "48_myturn_t21.png"
+    },
+    {
+      "turn": 21,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed prop_kashi_2",
+      "file": "49_myturn_t21.png"
+    },
+    {
+      "turn": 21,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "banked money_3_2",
+      "file": "50_myturn_t21.png"
+    },
+    {
+      "turn": 21,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "ended turn",
+      "file": ""
+    },
+    {
+      "turn": 22,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — — Turn 22: Player 1",
+      "file": "51_spectate_t22.png"
+    },
+    {
+      "turn": 22,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — P1 played LAGAAN (New Delhi/Mumbai)",
+      "file": "52_spectate_t22.png"
+    },
+    {
+      "turn": 22,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — P3 paid P1: ₹4 Cr",
+      "file": "53_spectate_t22.png"
+    },
+    {
+      "turn": 23,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — — Turn 23: Player 2",
+      "file": "54_spectate_t23.png"
+    },
+    {
+      "turn": 24,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — — Turn 24: Player 3",
+      "file": "55_spectate_t24.png"
+    },
+    {
+      "turn": 25,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "drew for turn (my play-turn #7)",
+      "file": "56_myturn_t25.png"
+    },
+    {
+      "turn": 25,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed prop_newDelhi_0",
+      "file": "57_myturn_t25.png"
+    },
+    {
+      "turn": 25,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "PLAY_ACTION action_aageBadho_6",
+      "file": "58_myturn_t25.png"
+    },
+    {
+      "turn": 25,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed prop_puraniDilli_0",
+      "file": "59_myturn_t25.png"
+    },
+    {
+      "turn": 25,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "ended turn",
+      "file": ""
+    },
+    {
+      "turn": 26,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — — Turn 26: Player 1",
+      "file": "60_spectate_t26.png"
+    },
+    {
+      "turn": 27,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — — Turn 27: Player 2",
+      "file": "61_spectate_t27.png"
+    },
+    {
+      "turn": 28,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — — Turn 28: Player 3",
+      "file": "62_spectate_t28.png"
+    },
+    {
+      "turn": 28,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — P3 played LAGAAN (Junctions/Utilities)",
+      "file": "63_spectate_t28.png"
+    },
+    {
+      "turn": 28,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — P3 received Wildcard (Jaipur/Kolkata) → Jaipur",
+      "file": "64_spectate_t28.png"
+    },
+    {
+      "turn": 29,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "drew for turn (my play-turn #8)",
+      "file": "65_myturn_t29.png"
+    },
+    {
+      "turn": 29,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "PLAY_ACTION action_makaan_2",
+      "file": "66_myturn_t29.png"
+    },
+    {
+      "turn": 29,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "PLAY_ACTION action_haveli_0",
+      "file": "67_myturn_t29.png"
+    },
+    {
+      "turn": 29,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "banked money_1_0",
+      "file": "68_myturn_t29.png"
+    },
+    {
+      "turn": 29,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "ended turn",
+      "file": ""
+    },
+    {
+      "turn": 30,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — — Turn 30: Player 1",
+      "file": "69_spectate_t30.png"
+    },
+    {
+      "turn": 30,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — P1 played LAGAAN (Jaipur/Kolkata)",
+      "file": "70_spectate_t30.png"
+    },
+    {
+      "turn": 30,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — P3 paid P1: ₹1 Cr",
+      "file": "71_spectate_t30.png"
+    },
+    {
+      "turn": 31,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — — Turn 31: Player 2",
+      "file": "72_spectate_t31.png"
+    },
+    {
+      "turn": 32,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — — Turn 32: Player 3",
+      "file": "73_spectate_t32.png"
+    },
+    {
+      "turn": 33,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "drew for turn (my play-turn #9)",
+      "file": "74_myturn_t33.png"
+    },
+    {
+      "turn": 33,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed prop_bangalore_1",
+      "file": "75_myturn_t33.png"
+    },
+    {
+      "turn": 33,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "PLAY_KIRAYA kiraya_chennai_bangalore_1",
+      "file": "76_myturn_t33.png"
+    },
+    {
+      "turn": 33,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — P0 played LAGAAN (Chennai/Bangalore)",
+      "file": "77_spectate_t33.png"
+    },
+    {
+      "turn": 33,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — P3 paid P0: ₹2 Cr",
+      "file": "78_spectate_t33.png"
+    },
+    {
+      "turn": 33,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — P2 paid P0: Chennai Central",
+      "file": "79_spectate_t33.png"
+    },
+    {
+      "turn": 33,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "PLAY_ACTION action_vasooli_2",
+      "file": "80_myturn_t33.png"
+    },
+    {
+      "turn": 33,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "ended turn",
+      "file": ""
+    },
+    {
+      "turn": 34,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — — Turn 34: Player 1",
+      "file": "81_spectate_t34.png"
+    },
+    {
+      "turn": 35,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — — Turn 35: Player 2",
+      "file": "82_spectate_t35.png"
+    },
+    {
+      "turn": 36,
+      "actor": 3,
+      "state": "SPECTATE",
+      "did": "bot 3 acting — — Turn 36: Player 3",
+      "file": "83_spectate_t36.png"
+    },
+    {
+      "turn": 36,
+      "actor": 2,
+      "state": "SPECTATE",
+      "did": "bot 2 acting — P3 played LAGAAN (Purani Dilli/Kashi Ghats)",
+      "file": "84_spectate_t36.png"
+    },
+    {
+      "turn": 36,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — P2 paid P3: Tulsi Ghat",
+      "file": "85_spectate_t36.png"
+    },
+    {
+      "turn": 37,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "drew for turn (my play-turn #10)",
+      "file": "86_myturn_t37.png"
+    },
+    {
+      "turn": 37,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "PLAY_ACTION action_haathKiSafai_1",
+      "file": "87_myturn_t37.png"
+    },
+    {
+      "turn": 37,
+      "actor": 1,
+      "state": "SPECTATE",
+      "did": "bot 1 acting — P0 played Haath Ki Safai",
+      "file": "88_spectate_t37.png"
+    },
+    {
+      "turn": 37,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "placed a received wildcard",
+      "file": ""
+    },
+    {
+      "turn": 37,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "PLAY_ACTION action_haathKiSafai_2",
+      "file": "89_myturn_t37.png"
+    },
+    {
+      "turn": 37,
+      "actor": 0,
+      "state": "MY-TURN",
+      "did": "DECLARE SAUDA! (three sets complete)",
+      "file": ""
+    },
+    {
+      "turn": 37,
+      "actor": 0,
+      "state": "win",
+      "did": "I declared SAUDA! (human win)",
+      "file": "90_win_t37.png"
+    }
+  ]
+}
