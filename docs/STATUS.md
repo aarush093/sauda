@@ -1,8 +1,20 @@
 # SAUDA — STATUS
 
-**One honest snapshot of where the build actually is.** Written 2026-08-04 at commit after LANDSCAPE-4.
-Four polish passes made the true state hard to read; this is the map the owner and any future session
-can trust. It records state only — **no new work is proposed or done here.**
+**One honest snapshot of where the build actually is.** Written 2026-08-04 at commit after LANDSCAPE-4;
+**AUDIT-Z note appended 2026-08-06.** Four polish passes made the true state hard to read; this is the
+map the owner and any future session can trust. It records state only — **no new work is proposed here.**
+
+## AUDIT-Z (2026-08-06) — the demanding-user pass, post-audit
+
+A full quality audit drove the real build through both landscape profiles: **5 full solo games across 5
+seeds finished with zero page-scroll / console-error / soft-lock / unhandled-phase / stuck-bot events.**
+Property placement by drag (incl. the first property of a new colour) and overlay dismissal were driven
+live and pass. **No BROKEN behaviour, soft-lock, occluded caption, page scroll, or input-trap was found
+in the app.** The one code change was removing dead code (Z1: orphaned `DropBand` + `suppressDrop`). The
+launch-blocker ranking below is **confirmed unchanged** by the audit — the blockers are the deferred-by-
+decision items, not defects. Two additions to the flag list: **value-badge legibility floor ships OFF**
+(`badgeFloor`, owner A/B call) and **pass-and-play exists but is unexposed** (owner: expose or remove).
+Full report + evidence: `docs/AUDIT_Z.md`; driven log `docs/captures/audit-z/audit-z-results.json`.
 
 ## Headline
 

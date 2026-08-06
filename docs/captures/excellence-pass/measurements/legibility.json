@@ -9,80 +9,15 @@
     "handLen": 11
   },
   "dpr": 2,
-  "measuredContainerWidth": 329.59375,
+  "measuredContainerWidth": 330,
   "faceScale": 0.523,
   "restCardWidthPx": 69,
   "restCardHeightPx": 100,
   "wheelBandHeightPx": 142,
-  "myAreaZoneHeight": 279.7,
-  "spaceAboveWheel": 129.7,
-  "maxBandBudgetPx": 142,
-  "sampleCards": [
-    {
-      "bannerText": "Jaipur",
-      "bannerUnscaled": 9,
-      "bannerDevicePx": 9.4,
-      "badgeText": "₹2Cr",
-      "badgeUnscaled": 7,
-      "badgeDevicePx": 7.3
-    },
-    {
-      "bannerText": "New Delhi",
-      "bannerUnscaled": 9,
-      "bannerDevicePx": 9.4,
-      "badgeText": "₹4Cr",
-      "badgeUnscaled": 7,
-      "badgeDevicePx": 7.3
-    },
-    {
-      "bannerText": "Dugna Lagaan",
-      "bannerUnscaled": 12,
-      "bannerDevicePx": 12.5,
-      "badgeText": "₹1Cr",
-      "badgeUnscaled": 7,
-      "badgeDevicePx": 7.3
-    },
-    {
-      "bannerText": "Vasooli",
-      "bannerUnscaled": 12,
-      "bannerDevicePx": 12.5,
-      "badgeText": "₹3Cr",
-      "badgeUnscaled": 7,
-      "badgeDevicePx": 7.3
-    },
-    {
-      "bannerText": "Bangalore",
-      "bannerUnscaled": 9,
-      "bannerDevicePx": 9.4,
-      "badgeText": "₹3Cr",
-      "badgeUnscaled": 7,
-      "badgeDevicePx": 7.3
-    },
-    {
-      "bannerText": "Vasooli",
-      "bannerUnscaled": 12,
-      "bannerDevicePx": 12.5,
-      "badgeText": "₹3Cr",
-      "badgeUnscaled": 7,
-      "badgeDevicePx": 7.3
-    },
-    {
-      "bannerText": "New Delhi",
-      "bannerUnscaled": 9,
-      "bannerDevicePx": 9.4,
-      "badgeText": "₹4Cr",
-      "badgeUnscaled": 7,
-      "badgeDevicePx": 7.3
-    },
-    {
-      "bannerText": "Adla-Badli",
-      "bannerUnscaled": 12,
-      "bannerDevicePx": 12.5,
-      "badgeText": "₹3Cr",
-      "badgeUnscaled": 7,
-      "badgeDevicePx": 7.3
-    }
-  ],
+  "myAreaZoneHeight": null,
+  "spaceAboveWheel": null,
+  "maxBandBudgetPx": null,
+  "sampleCards": [],
   "visibleStripPctByN": {
     "2": 100,
     "5": 100,
@@ -98,58 +33,67 @@
   },
   "tuningCandidates": [
     {
+      "HUB_RATIO": 0.42,
+      "MAXW": 84,
+      "WIDTH_FRAC": 0.254,
+      "restCardWidth": 84,
+      "band": 181,
+      "bannerDevicePx": 11.5,
+      "badgeDevicePx": 8.9
+    },
+    {
       "HUB_RATIO": 0.4,
-      "MAXW": 78,
-      "WIDTH_FRAC": 0.2,
-      "restCardWidth": 66,
-      "band": 142,
-      "bannerDevicePx": 9,
-      "badgeDevicePx": 7
+      "MAXW": 86,
+      "WIDTH_FRAC": 0.26,
+      "restCardWidth": 86,
+      "band": 183,
+      "bannerDevicePx": 11.7,
+      "badgeDevicePx": 9.1
     },
     {
       "HUB_RATIO": 0.38,
-      "MAXW": 78,
-      "WIDTH_FRAC": 0.202,
-      "restCardWidth": 67,
-      "band": 142,
-      "bannerDevicePx": 9.1,
-      "badgeDevicePx": 7.1
+      "MAXW": 86,
+      "WIDTH_FRAC": 0.26,
+      "restCardWidth": 86,
+      "band": 181,
+      "bannerDevicePx": 11.7,
+      "badgeDevicePx": 9.1
     },
     {
       "HUB_RATIO": 0.36,
-      "MAXW": 78,
-      "WIDTH_FRAC": 0.202,
-      "restCardWidth": 67,
-      "band": 140,
-      "bannerDevicePx": 9.1,
-      "badgeDevicePx": 7.1
+      "MAXW": 88,
+      "WIDTH_FRAC": 0.266,
+      "restCardWidth": 88,
+      "band": 182,
+      "bannerDevicePx": 12,
+      "badgeDevicePx": 9.3
     },
     {
       "HUB_RATIO": 0.34,
-      "MAXW": 78,
-      "WIDTH_FRAC": 0.208,
-      "restCardWidth": 69,
-      "band": 142,
-      "bannerDevicePx": 9.4,
-      "badgeDevicePx": 7.3
+      "MAXW": 88,
+      "WIDTH_FRAC": 0.266,
+      "restCardWidth": 88,
+      "band": 180,
+      "bannerDevicePx": 12,
+      "badgeDevicePx": 9.3
     },
     {
       "HUB_RATIO": 0.32,
-      "MAXW": 78,
-      "WIDTH_FRAC": 0.208,
-      "restCardWidth": 69,
-      "band": 140,
-      "bannerDevicePx": 9.4,
-      "badgeDevicePx": 7.3
+      "MAXW": 90,
+      "WIDTH_FRAC": 0.272,
+      "restCardWidth": 90,
+      "band": 181,
+      "bannerDevicePx": 12.3,
+      "badgeDevicePx": 9.5
     },
     {
       "HUB_RATIO": 0.3,
-      "MAXW": 78,
-      "WIDTH_FRAC": 0.214,
-      "restCardWidth": 71,
-      "band": 142,
-      "bannerDevicePx": 9.7,
-      "badgeDevicePx": 7.5
+      "MAXW": 92,
+      "WIDTH_FRAC": 0.278,
+      "restCardWidth": 92,
+      "band": 181,
+      "bannerDevicePx": 12.5,
+      "badgeDevicePx": 9.8
     }
   ]
 }

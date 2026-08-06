@@ -1,0 +1,274 @@
+{
+  "issues": [],
+  "wins": [
+    {
+      "tag": "tall-915x412/seed7",
+      "winner": 1,
+      "turns": 38
+    },
+    {
+      "tag": "tall-915x412/seed13",
+      "winner": 1,
+      "turns": 22
+    },
+    {
+      "tag": "tall-915x412/seed99",
+      "winner": 1,
+      "turns": 30
+    },
+    {
+      "tag": "legacy-740x360/seed7",
+      "winner": 1,
+      "turns": 38
+    },
+    {
+      "tag": "legacy-740x360/seed21",
+      "winner": 0,
+      "turns": 29
+    }
+  ],
+  "placements": [
+    {
+      "tag": "tall-915x412/seed7",
+      "cardId": "prop_puraniDilli_1",
+      "setId": "puraniDilli",
+      "committed": false,
+      "ambiguous": false,
+      "method": "direct",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "tall-915x412/seed7",
+      "cardId": "prop_mumbai_1",
+      "setId": "mumbai",
+      "committed": false,
+      "ambiguous": false,
+      "method": "near-miss",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "set:jaipur",
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "tall-915x412/seed7",
+      "cardId": "prop_jaipur_1",
+      "setId": "jaipur",
+      "committed": true,
+      "ambiguous": false,
+      "method": "direct"
+    },
+    {
+      "tag": "tall-915x412/seed13",
+      "cardId": "wild_any_0",
+      "setId": "puraniDilli",
+      "committed": false,
+      "ambiguous": true,
+      "method": "direct",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "tall-915x412/seed13",
+      "cardId": "prop_kashi_1",
+      "setId": "kashi",
+      "committed": false,
+      "ambiguous": false,
+      "method": "near-miss",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "set:jaipur",
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "tall-915x412/seed13",
+      "cardId": "prop_kashi_2",
+      "setId": "kashi",
+      "committed": false,
+      "ambiguous": false,
+      "method": "direct",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "set:jaipur",
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "tall-915x412/seed99",
+      "cardId": "prop_puraniDilli_0",
+      "setId": "puraniDilli",
+      "committed": false,
+      "ambiguous": false,
+      "method": "direct",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "tall-915x412/seed99",
+      "cardId": "prop_utility_1",
+      "setId": "utility",
+      "committed": false,
+      "ambiguous": false,
+      "method": "near-miss",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "tall-915x412/seed99",
+      "cardId": "wild_jaipur_kolkata_1",
+      "setId": "jaipur",
+      "committed": false,
+      "ambiguous": true,
+      "method": "direct",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "legacy-740x360/seed7",
+      "cardId": "prop_puraniDilli_1",
+      "setId": "puraniDilli",
+      "committed": false,
+      "ambiguous": false,
+      "method": "direct",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "legacy-740x360/seed7",
+      "cardId": "prop_mumbai_1",
+      "setId": "mumbai",
+      "committed": false,
+      "ambiguous": false,
+      "method": "near-miss",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "legacy-740x360/seed7",
+      "cardId": "prop_jaipur_1",
+      "setId": "jaipur",
+      "committed": true,
+      "ambiguous": false,
+      "method": "direct"
+    },
+    {
+      "tag": "legacy-740x360/seed21",
+      "cardId": "wild_jaipur_kolkata_1",
+      "setId": "jaipur",
+      "committed": false,
+      "ambiguous": true,
+      "method": "direct",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "legacy-740x360/seed21",
+      "cardId": "prop_newDelhi_2",
+      "setId": "newDelhi",
+      "committed": false,
+      "ambiguous": false,
+      "method": "near-miss",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    },
+    {
+      "tag": "legacy-740x360/seed21",
+      "cardId": "prop_chennai_2",
+      "setId": "chennai",
+      "committed": false,
+      "ambiguous": false,
+      "method": "direct",
+      "reason": "no set zone rendered mid-drag",
+      "dropsPresent": [
+        "play",
+        "bank"
+      ],
+      "glow": "state-ok",
+      "note": "grab-miss (overlapping wheel; harness artifact, not app)"
+    }
+  ],
+  "runs": [
+    {
+      "id": "tall-915x412",
+      "seed": 7,
+      "ok": true
+    },
+    {
+      "id": "tall-915x412",
+      "seed": 13,
+      "ok": true
+    },
+    {
+      "id": "tall-915x412",
+      "seed": 99,
+      "ok": true
+    },
+    {
+      "id": "legacy-740x360",
+      "seed": 7,
+      "ok": true
+    },
+    {
+      "id": "legacy-740x360",
+      "seed": 21,
+      "ok": true
+    }
+  ],
+  "grabMisses": 13
+}
