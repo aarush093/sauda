@@ -148,8 +148,8 @@ const expandHintStyle: CSSProperties = {
 };
 
 // A dashed placeholder where dragging a property/wildcard would START A NEW group of a
-// colour I don't yet hold (§3). It is a drop zone in its own right — unless `dropId` is undefined
-// (P3: while the inflated drop band is up, the band owns the data-drop so there is only one target).
+// colour I don't yet hold (§3). It reveals only while a card is in the air (glow-on-drag) and is a
+// drop zone in its own right — its `data-drop` id is what the drag hit-test commits to.
 function GhostSlot({ set, width, hot, onClick, dropId }: { set: SetId; width: number; hot: boolean; onClick?: (() => void) | undefined; dropId?: string | undefined }) {
   const theme = SETS[set];
   const height = Math.round(width * 1.4);
@@ -178,7 +178,6 @@ export function GroupRow({
   hotZoneId,
   onExpand,
   onSetPlace,
-  suppressDrop,
   rearrange,
 }: {
   properties: Record<SetId, PropertyGroup[]>;
@@ -191,9 +190,6 @@ export function GroupRow({
   // G6: while placing a received card, tapping a glowing set (or ghost slot) places it there
   // instead of opening the expand view.
   onSetPlace?: ((set: SetId) => void) | undefined;
-  // P3: while the inflated thumb drop band is up, drop the in-place data-drop ids so the band is the
-  // one target per set (the cascades still render, just no longer as tiny drop zones).
-  suppressDrop?: boolean | undefined;
   // P7: the ◈ rearrange handles for my movable wildcards, rendered ON their group (not a chip row).
   rearrange?: GroupRearrange | undefined;
 }) {
@@ -224,9 +220,9 @@ export function GroupRow({
             group={group}
             width={width}
             rent={mine ? kiraya?.[set]?.[index] : undefined}
-            dropId={droppable && !suppressDrop ? `set:${set}` : undefined}
-            soft={droppable && !hot && !suppressDrop}
-            hot={hot && !suppressDrop}
+            dropId={droppable ? `set:${set}` : undefined}
+            soft={droppable && !hot}
+            hot={hot}
             onExpand={onSetPlace ? () => onSetPlace(set) : onExpand}
             // show the ⤢ only when the tap actually EXPANDS (not during receive-placement, where the
             // glowing sets are the affordance and a tap places the card instead).
@@ -244,9 +240,9 @@ export function GroupRow({
           key={`ghost-${set}`}
           set={set}
           width={width}
-          hot={hotZoneId === `set:${set}` && !suppressDrop}
+          hot={hotZoneId === `set:${set}`}
           onClick={onSetPlace ? () => onSetPlace(set) : undefined}
-          dropId={suppressDrop ? undefined : `set:${set}`}
+          dropId={`set:${set}`}
         />
       ))}
     </div>

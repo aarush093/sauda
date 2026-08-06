@@ -79,7 +79,6 @@ describe('LAYERS: the one stacking scale, low → high', () => {
       LAYERS.stage,
       LAYERS.nav,
       LAYERS.inspect,
-      LAYERS.dropBand,
       LAYERS.dragGhost,
       LAYERS.surface,
       LAYERS.sheet,

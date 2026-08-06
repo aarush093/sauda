@@ -99,7 +99,6 @@ export const LAYERS = {
   stage: 5, // the centre-stage spotlight card — brightest thing during a play (must beat ticker)
   nav: 8, // P8: the in-game home glyph — over the board, under the drag ghost + all overlays
   inspect: 10, // the tap-to-inspect card (drag-through: the ghost rides above it)
-  dropBand: 12, // P3: the inflated thumb-sized drop band, over the board, under the ghost
   dragGhost: 20, // the floating dragged card — above the board + inspect, below modal surfaces
   surface: 30, // modal surfaces the game waits on: discard, targeting, rearrange, table view, beat
   sheet: 40, // response windows: the payment sheet, the NAHI CHALEGA prompt
