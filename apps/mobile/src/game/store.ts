@@ -8,7 +8,7 @@
  * asks the engine (legalActions / observe / reduce), never this file.
  */
 import { create } from 'zustand';
-import { createGame, legalActions, mulberry32, observe, reduce } from '@sauda/engine';
+import { createGame, legalActions, makeState, mulberry32, observe, reduce } from '@sauda/engine';
 import type { Action, GameEvent, GameState, Observation, Rng } from '@sauda/engine';
 import { Munshi, MUNSHI_USES_PER_GAME } from '@sauda/bots';
 import type { Bot, Difficulty, MunshiAdvice } from '@sauda/bots';
@@ -243,9 +243,27 @@ if (import.meta.env.DEV) {
   const globals = globalThis as unknown as {
     __sauda?: typeof useGame;
     __replay?: (seed: number, actions: Action[]) => ReplaySummary;
+    __craft?: (spec: Parameters<typeof makeState>[0]) => void;
     __saudaCapturePaused?: boolean;
   };
   globals.__sauda = useGame;
+
+  // __craft(spec): inject an arbitrary crafted board via the engine testkit's makeState, so the
+  // capture harness can stage a scenario the seeded deals don't naturally produce (e.g. the S4
+  // wildcard-assistant's pink-pink-dual). Pauses the auto-beats and renders through the normal store.
+  globals.__craft = (spec) => {
+    globals.__saudaCapturePaused = true;
+    useGame.setState({
+      state: makeState(spec),
+      seats: CAPTURE_SEATS,
+      revealedSeat: 0,
+      handoffSeat: null,
+      log: [],
+      lastEvents: [],
+      munshiUsesRemaining: MUNSHI_USES_PER_GAME,
+      activeSeed: 0,
+    });
+  };
 
   // __replay(seed, actions): land the real UI deterministically on a recorded scenario state.
   // The committed fixture log already contains EVERY seat's actions (bots included), so we just

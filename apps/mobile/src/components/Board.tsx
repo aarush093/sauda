@@ -19,6 +19,8 @@ import type { Action, CardId, Observation, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
 import { dropZonesForCard, rearrangeDestinations, assistHintKey } from '../game/interaction';
 import type { DropZone } from '../game/interaction';
+import { evaluateArrangements } from '../game/arrangeAssistant';
+import { ArrangeAssistant } from './ArrangeAssistant';
 import { useReducedMotion } from '../design/motion';
 import { useHandDrag } from '../game/useHandDrag';
 import { useMeasuredSize } from '../game/useMeasuredWidth';
@@ -128,6 +130,16 @@ export function Board({
   // Cleared automatically once the card leaves the hand (committed) or the turn passes.
   const [targetingCardId, setTargetingCardId] = useState<string | null>(null);
   const targeting = targetingCardId !== null && observation.myHand.includes(targetingCardId) ? targetingCardId : null;
+
+  // S4: a strictly-better FREE rearrangement of my placed wildcards, if one exists. Re-derived every
+  // render, so it re-evaluates after every state change. Gated to my own play turn with NO other
+  // overlay open and no drain in progress (a suggestion requires legal REARRANGE moves, which cannot
+  // co-exist with the auto-end-turn condition of END_TURN being the sole legal move — so no race).
+  const arrangeSuggestion =
+    myTurn && observation.phase === 'playing' && onAct != null && !paused &&
+    targeting === null && inspecting === null && !inDiscardMode && !bankView && expandedView === null && receive == null
+      ? evaluateArrangements(observation.myProperties, observation.myHand, actions)
+      : null;
 
   // Placed wildcards I may move this turn (free, matrix B8). Each rearrange token can be
   // dragged onto a legal group or tapped to open the destination chooser.
@@ -419,6 +431,17 @@ export function Board({
             setTargetingCardId(null);
           }}
           onCancel={() => setTargetingCardId(null)}
+        />
+      )}
+
+      {/* S4: the wildcard combination assistant nudge. Keyed by the suggested moves so a new board
+          resets it. NEVER auto-executes — Confirm fires the free REARRANGE sequence via onAct. */}
+      {arrangeSuggestion && onAct && (
+        <ArrangeAssistant
+          key={arrangeSuggestion.moves.map((move) => `${move.cardId}->${move.toSet}`).join('|')}
+          suggestion={arrangeSuggestion}
+          onConfirm={(moves) => moves.forEach((move) => onAct(move))}
+          onDismiss={() => {}}
         />
       )}
 

@@ -1,0 +1,14 @@
+{
+  "results": [
+    {
+      "file": "s4_nudge_915x412.png",
+      "ok": true,
+      "note": "arrange nudge count 1"
+    },
+    {
+      "file": "s4_preview_915x412.png",
+      "ok": true,
+      "note": "jaipur complete before=false after=true"
+    }
+  ]
+}
