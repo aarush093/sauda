@@ -17,8 +17,9 @@ import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Action, CardId, Observation, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
-import { dropZonesForCard, rearrangeDestinations } from '../game/interaction';
+import { dropZonesForCard, rearrangeDestinations, assistHintKey } from '../game/interaction';
 import type { DropZone } from '../game/interaction';
+import { useReducedMotion } from '../design/motion';
 import { useHandDrag } from '../game/useHandDrag';
 import { useMeasuredSize } from '../game/useMeasuredWidth';
 import { resolveMyTurn, resolveSpectate } from '../game/landscapeLayout';
@@ -74,7 +75,11 @@ export function Board({
   receive?: { cardId: CardId; bySet: Map<SetId, Action>; onPlace: (action: Action) => void } | null;
 }) {
   if (import.meta.env.DEV) tallyRender('Board');
+  const reducedMotion = useReducedMotion();
   const myTurn = observation.currentPlayer === observation.me;
+  // S3 assist: the table's bot difficulty gates the targeting hint (easy/medium show it, hard hides
+  // it). Solo tables set one tier for every bot; take the first bot seat's (no bots → hard → no hint).
+  const tableDifficulty = seats.find((seat) => seat.kind === 'bot')?.difficulty ?? 'hard';
 
   // Turn-flow actions the engine offers directly (not tied to a staged hand card). DRAW is
   // NOT among them: it is auto-played at turn start (L4), never a tap.
@@ -407,6 +412,8 @@ export function Board({
           myProperties={observation.myProperties}
           myKiraya={observation.myKiraya}
           opponents={observation.opponents}
+          hintedKey={assistHintKey(observation, actions, targeting, observation.me, tableDifficulty)}
+          reducedMotion={reducedMotion}
           onCommit={(action) => {
             onAct(action);
             setTargetingCardId(null);

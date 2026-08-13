@@ -9,6 +9,16 @@
       "file": "s3_haath_targeting_740x360.png",
       "ok": true,
       "note": "HAATH KI SAFAI targets as REAL property cards (was text pills)"
+    },
+    {
+      "file": "s3_hint_medium_915x412.png",
+      "ok": true,
+      "note": "medium hint tiles: 1"
+    },
+    {
+      "file": "s3_no_hint_hard_915x412.png",
+      "ok": true,
+      "note": "hard hint tiles: 0 (must be 0)"
     }
   ]
 }

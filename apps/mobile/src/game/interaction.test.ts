@@ -10,6 +10,7 @@ import { SETS } from '@sauda/engine';
 import type { Action, CardId, SetId } from '@sauda/engine';
 import { actionCardId, cardVerbHint } from './labels';
 import {
+  assistHintKey,
   autoDrawAction,
   BOT_PACING,
   botBeatDelayMs,
@@ -332,5 +333,56 @@ describe('cross-kind drops produce no engine action (F7 verify)', () => {
     const zones = dropZonesForCard(actions, prop);
     expect(zones.some((zone) => zone.kind === 'bank')).toBe(false); // dropping it on the bank matches nothing
     expect(zones.some((zone) => zone.kind === 'set')).toBe(true);
+  });
+});
+
+describe('assistHintKey — the difficulty-gated best-target hint (S3)', () => {
+  const kabza = 'action_kabza_0';
+  // Two legal KABZA targets; a stub recommend picks the SECOND (key "p2-mumbai").
+  const kabzaActions: Action[] = [
+    { type: 'PLAY_ACTION', cardId: kabza, params: { action: 'kabza', target: 1, set: 'jaipur' } },
+    { type: 'PLAY_ACTION', cardId: kabza, params: { action: 'kabza', target: 2, set: 'mumbai' } },
+  ];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const obs = {} as any;
+  const pickSecond = ((_o: unknown, subset: Action[]) => ({ action: subset[1]!, reason: 'deniesSet' })) as never;
+
+  it('hard shows NO hint; easy and medium DO', () => {
+    expect(assistHintKey(obs, kabzaActions, kabza, 0, 'hard', pickSecond)).toBeNull();
+    expect(assistHintKey(obs, kabzaActions, kabza, 0, 'easy', pickSecond)).toBe('p2-mumbai');
+    expect(assistHintKey(obs, kabzaActions, kabza, 0, 'medium', pickSecond)).toBe('p2-mumbai');
+  });
+
+  it('the hint is exactly the choice recommend() picked (its target key)', () => {
+    const pickFirst = ((_o: unknown, subset: Action[]) => ({ action: subset[0]!, reason: 'deniesSet' })) as never;
+    expect(assistHintKey(obs, kabzaActions, kabza, 0, 'easy', pickFirst)).toBe('p1-jaipur');
+    expect(assistHintKey(obs, kabzaActions, kabza, 0, 'easy', pickSecond)).toBe('p2-mumbai');
+  });
+
+  it('never alters what is targetable — it only READS actions, and returns null when nothing to pick', () => {
+    const before = JSON.parse(JSON.stringify(kabzaActions));
+    assistHintKey(obs, kabzaActions, kabza, 0, 'easy', pickSecond);
+    expect(kabzaActions).toEqual(before); // the actions list is untouched (read-only)
+    // one target fires on drop (no overlay) → no hint
+    const single: Action[] = [{ type: 'PLAY_ACTION', cardId: kabza, params: { action: 'kabza', target: 1, set: 'jaipur' } }];
+    expect(assistHintKey(obs, single, kabza, 0, 'easy', pickSecond)).toBeNull();
+  });
+
+  it('with the REAL recommend, KABZA hints the highest-value set (bestKabza) on easy, nothing on hard', () => {
+    // recommendTurn → bestKabza ranks by SETS[set].value only, so a bare observation suffices here.
+    const richer = SETS.jaipur.value >= SETS.mumbai.value ? 'p1-jaipur' : 'p2-mumbai';
+    expect(assistHintKey(obs, kabzaActions, kabza, 0, 'easy')).toBe(richer);
+    expect(assistHintKey(obs, kabzaActions, kabza, 0, 'hard')).toBeNull();
+  });
+
+  it('LAGAAN hints the colour recommend() charges (keyed by set id)', () => {
+    const lagaan = 'kiraya_0';
+    const kirayaActions: Action[] = [
+      { type: 'PLAY_KIRAYA', cardId: lagaan, color: 'jaipur', dugnaCardIds: [], target: 1 },
+      { type: 'PLAY_KIRAYA', cardId: lagaan, color: 'mumbai', dugnaCardIds: [], target: 1 },
+    ];
+    const pickMumbai = ((_o: unknown, subset: Action[]) => ({ action: subset[1]!, reason: 'bestValue' })) as never;
+    expect(assistHintKey(obs, kirayaActions, lagaan, 0, 'easy', pickMumbai)).toBe('mumbai');
+    expect(assistHintKey(obs, kirayaActions, lagaan, 0, 'hard', pickMumbai)).toBeNull();
   });
 });

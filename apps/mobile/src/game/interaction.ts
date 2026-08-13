@@ -11,7 +11,9 @@
  * makes that guarantee mechanical instead of eyeballed across two components.
  */
 import { SETS } from '@sauda/engine';
-import type { Action, CardId, PlayerId, SetId } from '@sauda/engine';
+import type { Action, CardId, Observation, PlayerId, SetId } from '@sauda/engine';
+import { recommend } from '@sauda/bots';
+import type { Difficulty } from '@sauda/bots';
 import { actionCardId, cardValue, describeCard } from './labels';
 
 // A concrete PLAY_ACTION / PLAY_KIRAYA, narrowed for the target builders below.
@@ -189,6 +191,60 @@ function adlaBadliStep(play: PlayActionMove[], me: PlayerId): TargetStep {
       },
     })),
   };
+}
+
+// ---------------------------------------------------------------------------
+// S3 ASSIST — the difficulty-gated best-target hint (owner-directed).
+// ---------------------------------------------------------------------------
+
+// The KEY of the target choice the frozen full-strength recommend() favours for THIS card — the UI
+// bounces / brightens it as a gentle hint on easy/medium tables. READ-ONLY: it never changes what is
+// targetable (legalActions is untouched), so BAD_TARGET stays unreachable. Returns null on the HARD
+// tier (no hint), and when there is nothing to single out (one target, or no clear best). recommendFn
+// is injectable for the unit test. Determinism/strength: recommend is called at full strength ('hard')
+// so the hint is the BEST target; the tier gates only whether the hint is SHOWN.
+export function assistHintKey(
+  observation: Observation,
+  actions: Action[],
+  cardId: CardId,
+  me: PlayerId,
+  difficulty: Difficulty,
+  recommendFn: typeof recommend = recommend,
+): string | null {
+  if (difficulty === 'hard') {
+    return null; // hard: no hint — the player reads the board unaided (already-locked decision)
+  }
+  // Only THIS card's targeted plays — recommend ranks among them to find its preferred target.
+  const subset = actions.filter(
+    (action) =>
+      (action.type === 'PLAY_ACTION' &&
+        actionCardId(action) === cardId &&
+        action.params.action !== 'makaan' &&
+        action.params.action !== 'haveli') ||
+      (action.type === 'PLAY_KIRAYA' && action.cardId === cardId),
+  );
+  if (subset.length <= 1) {
+    return null; // a single target fires without a pick → nothing to hint
+  }
+  const best = recommendFn(observation, subset, 'hard').action; // full-strength BEST target
+  if (best.type === 'PLAY_KIRAYA') {
+    return best.color; // the LAGAAN colour choice is keyed by its SetId
+  }
+  const step = actionTargeting(actions, cardId, me);
+  if (!step) {
+    return null;
+  }
+  // The choice whose action IS `best` (same object, both filtered from `actions`), or — for the
+  // two-step ADLA-BADLI — the first-step choice whose sub-step contains it.
+  for (const choice of step.choices) {
+    if (choice.action === best) {
+      return choice.key;
+    }
+    if (choice.next && choice.next.choices.some((c) => c.action === best)) {
+      return choice.key;
+    }
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
