@@ -28,7 +28,7 @@ import type { Bot, Difficulty } from '@sauda/bots';
 // hard never slips (0). Tuned in S6c against the >=1000-game simulation harness — see DECISIONS
 // "S6c" for the win-rate tables these values produce; tune HERE if the bands drift.
 export const SLIP_PROBABILITY: Record<Difficulty, number> = {
-  easy: 0.7,
+  easy: 0.5,
   medium: 0.35,
   hard: 0,
 };

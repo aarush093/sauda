@@ -150,6 +150,9 @@ importers:
       '@sauda/bots':
         specifier: workspace:*
         version: link:../packages/bots
+      '@sauda/difficulty':
+        specifier: workspace:*
+        version: link:../packages/difficulty
       '@sauda/engine':
         specifier: workspace:*
         version: link:../packages/engine

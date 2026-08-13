@@ -626,3 +626,32 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
 - **Structural odds (S6c).** With 3 bot opponents the human's fair share is ~25%, so losing most games is
   expected even when everything is correct. Target strong-proxy win bands at the 3-bot table:
   easy ~60–75%, medium ~40–50%, hard ~25–30% (near fair share). Measured tables land in the S6c commit.
+
+### S6c — measured win-rate tables, and the tuned slip constants
+
+- **Harness.** `tools/src/win-rates.ts` (`pnpm --filter @sauda/tools winrates --games 1000`) plays
+  seat 0 (the "player") against k tier-opponents over N seeded games, for bot counts 1/2/3 and each
+  tier, under two proxies — strong = `HeuristicBot('hard')`, beginner = `RandomBot` — in two worlds:
+  BEFORE (opponents = `HeuristicBot(tier)`, the old world) and AFTER (opponents = `DifficultyBot(tier)`).
+  Full 1000-game output: `docs/captures/hand-info-1/S6c-winrates.txt`.
+- **BEFORE proves the diagnosis in numbers.** The medium and hard rows are IDENTICAL
+  (strong: 57.3% / 31.6% / 22.7% for both), and easy barely differs — every tier was ~the same bot.
+  Note the strong player already sat at ~22.7% at the 3-bot table BEFORE, i.e. ≈ fair share: the
+  owner's "lose every game" was dominated by S6a (one fixed deal replayed), not by unbeatable bots.
+- **AFTER (tuned) — strong proxy at the 3-bot table:** easy **73.5%**, medium **46.1%**, hard **22.7%**.
+  Targets were easy ~60-75 (✓ upper half — easy should feel easy), medium ~40-50 (✓), hard ~25-30
+  "near fair share". The beginner (RandomBot) proxy still wins **4.1%** on easy at 3 bots (and 24.4% at
+  1 bot) — weak, not broken. Determinism holds: every game is seeded.
+- **hard lands at ~22.7%, not 25-30 — and that is correct, not a miss.** hard = `recommend()` verbatim
+  (the untouched full-strength bot), so its share is whatever the real bot yields: ~23% at a 3-bot
+  table, essentially the ~25% fair share minus the edge three coordinated-strength opponents hold over
+  one player. Pushing it to 30% would mean WEAKENING the hard bot, which the hard-limit forbids. Per
+  the S6c escape clause we report where it landed rather than force the band.
+- **Final constants (tune here):** `SLIP_PROBABILITY` in `packages/difficulty/src/index.ts` —
+  **easy = 0.50, medium = 0.35, hard = 0**. Raising a tier's slip probability lowers that tier's
+  strength (raises the player's win rate). Easy saturates near ~74% at the 3-bot table (weak opponents
+  rarely complete sets regardless), so it is not pushed lower.
+- **S6d — no rigged dealing.** The deal is NOT biased toward the human; fairness comes from honest
+  fresh seeds (S6a) + genuinely weaker opponents (S6b). Easy at ~74% is already generous, so no
+  dealing-assist is implemented. If the owner still finds easy punishing, a `?dealAssist` flag (bias
+  the human's opening hand toward a workable colour) is PROPOSED for his decision — not built.

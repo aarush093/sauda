@@ -1,0 +1,27 @@
+$ tsx src/win-rates.ts "--games" "1000"
+SAUDA fairness harness (S6c) — 1000 games/config, base seed 1
+
+=== BEFORE — seat-0 win rate over 1000 seeded games/config ===
+proxy     tier     1 bot   2 bots  3 bots   (fair share: 50.0% / 33.3% / 25.0%)
+-------------------------------------------------------------------------------
+strong    easy     56.8%   34.4%   23.9%
+strong    medium   57.3%   31.6%   22.7%
+strong    hard     57.3%   31.6%   22.7%
+beginner  easy      7.4%    0.4%    0.1%
+beginner  medium    6.4%    0.5%    0.0%
+beginner  hard      6.4%    0.5%    0.0%
+-------------------------------------------------------------------------------
+fair share (1 opp / 2 / 3):   50.0%   33.3%   25.0%
+
+=== AFTER — seat-0 win rate over 1000 seeded games/config ===
+proxy     tier     1 bot   2 bots  3 bots   (fair share: 50.0% / 33.3% / 25.0%)
+-------------------------------------------------------------------------------
+strong    easy     85.6%   76.5%   73.5%
+strong    medium   66.0%   52.0%   46.1%
+strong    hard     57.3%   31.6%   22.7%
+beginner  easy     24.4%   11.2%    4.1%
+beginner  medium   11.3%    2.5%    0.5%
+beginner  hard      6.4%    0.5%    0.0%
+-------------------------------------------------------------------------------
+fair share (1 opp / 2 / 3):   50.0%   33.3%   25.0%
+
