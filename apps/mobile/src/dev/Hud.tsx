@@ -62,6 +62,9 @@ export function Hud() {
       {/* S6a: the seed this game was dealt from. The owner can reproduce any game — one he loved or
           hated — by re-opening the route with `?seed=<this>`; it's the flip side of fresh-per-game. */}
       {reading.seed !== null && <div style={{ opacity: 0.85 }}>seed: {reading.seed}</div>}
+      {/* T1: the live bot table — the tier the game is actually running and how many bots, so the owner
+          can SEE from the tunnel that `?difficulty=` took effect (the setting was once wired to nothing). */}
+      {reading.table !== null && <div style={{ opacity: 0.85 }}>bots: {reading.table.bots} · {reading.table.difficulty}</div>}
       {/* R0: orientation is the state the landscape rebuild pivots on — the gate raises in portrait.
           Landscape (the game's native, correct state) reads quiet; portrait is flagged, since a portrait
           reading means the game is behind the rotate gate, not laid out. */}
@@ -88,6 +91,18 @@ export function Hud() {
   );
 }
 
+// T1: the live bot table from the store's seats — the count and the (uniform) tier the game is
+// actually running, so the HUD proves what `?difficulty=` / the setup card actually dealt.
+function readTable(): { bots: number; difficulty: string } | null {
+  const seats = useGame.getState().seats;
+  const bots = seats.filter((seat) => seat.kind === 'bot');
+  if (bots.length === 0) {
+    return null;
+  }
+  const tiers = new Set(bots.map((seat) => (seat.kind === 'bot' ? seat.difficulty : '')));
+  return { bots: bots.length, difficulty: tiers.size === 1 ? [...tiers][0]! : 'mixed' };
+}
+
 function snapshot() {
   const reduced =
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -106,6 +121,7 @@ function snapshot() {
     reduced,
     visualVh,
     seed: useGame.getState().activeSeed,
+    table: readTable(),
     zones: measureZones(),
   };
 }

@@ -1,0 +1,45 @@
+{
+  "seed": 777,
+  "botLineCounts": {
+    "easy": 15,
+    "medium": 13,
+    "hard": 15
+  },
+  "easyDivergesFromHard": {
+    "index": 2,
+    "tier": "P1 banked a note",
+    "hard": "P1 placed Wildcard (Chennai/Bangalore)"
+  },
+  "mediumDivergesFromHard": {
+    "index": 2,
+    "tier": "P1 played Aage Badho",
+    "hard": "P1 placed Wildcard (Chennai/Bangalore)"
+  },
+  "easyEqualsMedium": false,
+  "sample": {
+    "hard": [
+      "P1 drew 2",
+      "P1 placed Wildcard (any)",
+      "P1 placed Wildcard (Chennai/Bangalore)",
+      "P1 placed Chennai Central",
+      "P2 drew 2",
+      "P2 played Aage Badho"
+    ],
+    "medium": [
+      "P1 drew 2",
+      "P1 placed Wildcard (any)",
+      "P1 played Aage Badho",
+      "P1 drew 2",
+      "P1 placed Wildcard (Chennai/Bangalore)",
+      "P2 drew 2"
+    ],
+    "easy": [
+      "P1 drew 2",
+      "P1 placed Wildcard (any)",
+      "P1 banked a note",
+      "P1 placed Wildcard (Chennai/Bangalore)",
+      "P2 drew 2",
+      "P2 played Aage Badho"
+    ]
+  }
+}

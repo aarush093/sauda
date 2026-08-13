@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseSeedOverride, freshSeed } from './seed';
+import { parseSeedOverride, freshSeed, parseAutostartConfig } from './seed';
 
 describe('seed (S6a — fresh seed per game, explicit override for tooling)', () => {
   it('reads ?seed from the pre-hash query on any route', () => {
@@ -41,5 +41,22 @@ describe('seed (S6a — fresh seed per game, explicit override for tooling)', ()
     }
     // Fresh means fresh: 200 crypto draws must not collapse to a single value (the old bug).
     expect(seeds.size).toBeGreaterThan(190);
+  });
+});
+
+describe('parseAutostartConfig (T1 — ?difficulty / ?bots on the autostart dev route)', () => {
+  it('defaults to 3 medium bots when nothing is given', () => {
+    expect(parseAutostartConfig('http://x/#/autostart')).toEqual({ difficulty: 'medium', bots: 3 });
+  });
+
+  it('reads difficulty + bots from either the pre-hash or the hash query', () => {
+    expect(parseAutostartConfig('http://x/?difficulty=easy&bots=1#/autostart')).toEqual({ difficulty: 'easy', bots: 1 });
+    expect(parseAutostartConfig('http://x/#/autostart?difficulty=hard&bots=2')).toEqual({ difficulty: 'hard', bots: 2 });
+    expect(parseAutostartConfig('http://x/?seed=7&difficulty=easy#/autostart')).toEqual({ difficulty: 'easy', bots: 3 });
+  });
+
+  it('falls back to the defaults on an invalid tier or bot count', () => {
+    expect(parseAutostartConfig('http://x/?difficulty=wizard&bots=9#/autostart')).toEqual({ difficulty: 'medium', bots: 3 });
+    expect(parseAutostartConfig('http://x/?bots=0#/autostart')).toEqual({ difficulty: 'medium', bots: 3 });
   });
 });

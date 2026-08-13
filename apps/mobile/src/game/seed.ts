@@ -17,24 +17,28 @@
 // hash's own query (hash routing puts route params after `#`), so the override works on any route.
 // Returns a uint32 seed, or null when absent/invalid (the caller then falls back to a fresh seed).
 export function parseSeedOverride(href: string): number | null {
+  const raw = paramFrom(href, 'seed');
+  if (raw !== null && raw.trim() !== '') {
+    const n = Number(raw);
+    if (Number.isInteger(n) && n >= 0) {
+      return n >>> 0; // clamp to mulberry32's uint32 domain
+    }
+  }
+  return null;
+}
+
+// A query param read from EITHER the pre-hash query (`/?x=1#/play`) or the hash's own query
+// (`#/play?x=1`), so every override works on any route. Returns the first match, or null.
+function paramFrom(href: string, key: string): string | null {
   const hashIdx = href.indexOf('#');
   const beforeHash = hashIdx === -1 ? href : href.slice(0, hashIdx);
   const afterHash = hashIdx === -1 ? '' : href.slice(hashIdx + 1);
-  const queries: string[] = [];
-  const q1 = beforeHash.indexOf('?');
-  if (q1 !== -1) {
-    queries.push(beforeHash.slice(q1 + 1));
-  }
-  const q2 = afterHash.indexOf('?');
-  if (q2 !== -1) {
-    queries.push(afterHash.slice(q2 + 1));
-  }
-  for (const query of queries) {
-    const raw = new URLSearchParams(query).get('seed');
-    if (raw !== null && raw.trim() !== '') {
-      const n = Number(raw);
-      if (Number.isInteger(n) && n >= 0) {
-        return n >>> 0; // clamp to mulberry32's uint32 domain
+  for (const part of [beforeHash, afterHash]) {
+    const q = part.indexOf('?');
+    if (q !== -1) {
+      const value = new URLSearchParams(part.slice(q + 1)).get(key);
+      if (value !== null) {
+        return value;
       }
     }
   }
@@ -58,4 +62,25 @@ export function freshSeed(): number {
 export function resolveSeed(): number {
   const href = typeof window !== 'undefined' ? window.location.href : '';
   return parseSeedOverride(href) ?? freshSeed();
+}
+
+// T1 (owner tunnel testing): the #/autostart dev route's bot table config. `?difficulty=easy|medium|
+// hard` (default medium) and `?bots=1|2|3` (default 3), so the owner can test any tier from the
+// tunnel link. Any invalid/absent value falls back to the default. Pure — the caller reads the URL.
+export type AutostartDifficulty = 'easy' | 'medium' | 'hard';
+export interface AutostartConfig {
+  difficulty: AutostartDifficulty;
+  bots: number;
+}
+export function parseAutostartConfig(href: string): AutostartConfig {
+  const rawDifficulty = paramFrom(href, 'difficulty');
+  const difficulty: AutostartDifficulty = rawDifficulty === 'easy' || rawDifficulty === 'hard' ? rawDifficulty : 'medium';
+  const rawBots = Number(paramFrom(href, 'bots'));
+  const bots = Number.isInteger(rawBots) && rawBots >= 1 && rawBots <= 3 ? rawBots : 3;
+  return { difficulty, bots };
+}
+
+export function resolveAutostartConfig(): AutostartConfig {
+  const href = typeof window !== 'undefined' ? window.location.href : '';
+  return parseAutostartConfig(href);
 }

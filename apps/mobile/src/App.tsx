@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGame } from './game/store';
 import type { SeatConfig } from './game/store';
-import { resolveSeed } from './game/seed';
+import { resolveSeed, resolveAutostartConfig } from './game/seed';
 import { Home } from './shell/Home';
 import { Book } from './shell/Book';
 import { RotateGate } from './shell/RotateGate';
@@ -33,23 +33,27 @@ function useHash(): string {
 }
 
 // Dev-only: a solo game that starts itself, both for the capture frame and as the tunnel entry the
-// owner plays. S6a: it now draws a FRESH seed each mount (resolveSeed) instead of a fixed 424242, so
-// the owner stops replaying one identical deal; determinism for captures is preserved because every
+// owner plays. S6a: it draws a FRESH seed each mount (resolveSeed) instead of a fixed 424242, so the
+// owner stops replaying one identical deal; determinism for captures is preserved because every
 // capture harness re-deals through `window.__replay(seed, …)` right after load (and `?seed=<n>` pins
-// a deal on demand). A scroll guard warns if the play screen ever exceeds one screen (A2).
-const FRAME_SEATS: SeatConfig[] = [
-  { kind: 'human' },
-  { kind: 'bot', difficulty: 'medium' },
-  { kind: 'bot', difficulty: 'medium' },
-  { kind: 'bot', difficulty: 'medium' },
-];
+// a deal on demand). T1: the bot table is `?difficulty=easy|medium|hard` (default medium) + `?bots=1..3`
+// (default 3), so the owner can test any tier from the tunnel link. A scroll guard warns if the play
+// screen ever exceeds one screen (A2).
+function autostartSeats(): SeatConfig[] {
+  const { difficulty, bots } = resolveAutostartConfig();
+  const seats: SeatConfig[] = [{ kind: 'human' }];
+  for (let i = 0; i < bots; i++) {
+    seats.push({ kind: 'bot', difficulty });
+  }
+  return seats;
+}
 
 function AutoStartTable() {
   const state = useGame((store) => store.state);
   const newGame = useGame((store) => store.newGame);
   useEffect(() => {
     if (!state) {
-      newGame({ seats: FRAME_SEATS, seed: resolveSeed() });
+      newGame({ seats: autostartSeats(), seed: resolveSeed() });
     }
   }, [state, newGame]);
   // P1 scroll guard — now against the REAL viewport (the play screen is a fixed 100dvh shell, so a
