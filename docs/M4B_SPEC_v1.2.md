@@ -372,14 +372,21 @@ and captured (`docs/captures/playtest-fixes-2/`). Where A13 conflicts with A1/A1
   tap-driven (targeting, received placement, payment sheet, interrupt, discard, expanders). The tap
   rail UI is retired; the legal-verb grouping (`staging.ts`) survives to feed the inspect why-line.
 
-- **G2 — the WHEEL (replaces the fan).** The hand is a half roulette wheel: `wheelLayout(n, width)`
-  places each card as a spoke on an arc around a hub at the bottom-centre, rotated radially, evenly
-  spaced (`SPAN = min(120°, (n-1)·12°)`), ONE card size at every count. Invariant (unit-proven, n
-  1..12 @ {346,436}): the outer readable strip (top ~28%) of EVERY card stays fully inside the frame;
-  lower portions may run beneath the bottom edge by design; left/right/top never clip. **Seamless
-  re-spacing:** on any hand-size change the remaining cards GLIDE to their new even spacing via ONE
-  transform-only ~175ms ease-out — the single M4b motion carve-out. The scrub is unchanged (peek,
-  slide re-targets, lift → drag, release in band → inspect).
+- **G2 — the SPREAD (S1, owner playtest 13 Aug — supersedes the WHEEL, which supersedes the fan).**
+  The hand is a FLAT row of UPRIGHT cards (rotation 0 always): `spreadLayout(n, containerWidth,
+  cardWidth)` places each card bottom-anchored, evenly overlapping, later cards on top, ONE card size
+  at every count. `step = min(0.8·cardWidth, (container−cardWidth)/(n−1))` — low n sits nearly
+  side-by-side, high n overlaps more. **Size-up:** `cardWidth = clamp(round(container·0.115), 68, 100)`
+  → ~96 px at the 915 profile (was ~69 on the wheel), lifting the value badge to ~10.2 device px @DPR2
+  (clears the H3 floor with the badge-floor OFF). Invariant (unit-proven, n 1..12 @ the landscape
+  containers 694/869 + legacy 346/436): every card is upright, no left/right/top clip, the exposed left
+  strip (banner + value badge) stays ≥ 0.32·cardWidth, spacing is even, output deterministic.
+  **PRESS:** the scrubbed card slides STRAIGHT UP 40% of its height and grows 1.12×, clear above its
+  neighbours. **Seamless re-spacing:** on any hand-size change the remaining cards GLIDE to their new
+  even spacing via ONE transform-only ~175 ms ease-out — carried over from the wheel unchanged. The
+  scrub is unchanged (press, slide re-targets, lift → drag, release in band → inspect). The retired
+  wheel (`wheelLayout`, half-roulette arc, `SPAN = min(120°, (n-1)·12°)`) is removed; this section
+  supersedes it.
 
 - **G3 — DISCARD is a full-screen L2 overlay.** Over the hand limit, the wheel vanishes and the table
   dims + blurs (static); ALL hand cards spread as REAL full CardFaces (grid, two rows if needed)

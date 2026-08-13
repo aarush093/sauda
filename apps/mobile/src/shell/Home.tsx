@@ -88,6 +88,31 @@ export function Home() {
   );
 }
 
+// S6e (owner playtest, 13 Aug): a one-sentence explainer per difficulty, so the owner knows what he
+// is picking before he deals.
+const DIFFICULTY_BLURB: Record<Difficulty, string> = {
+  easy: 'Bots often misplay — a forgiving game to learn on.',
+  medium: 'Bots play a solid game, with the odd slip.',
+  hard: 'Full-strength bots — as sharp as the advisor.',
+};
+
+// The human's rough expected win share, by difficulty × bot count (1/2/3), from the S6c 1000-game
+// measurement (strong-player proxy; see DECISIONS "S6c"). Shown so the owner's expectation matches
+// reality — at a 3-bot table a fair share is only ~25%, so even Hard is meant to be a near-fair fight.
+const WIN_SHARE: Record<Difficulty, [number, number, number]> = {
+  easy: [86, 77, 74],
+  medium: [66, 52, 46],
+  hard: [57, 32, 23],
+};
+
+function expectedShare(difficulty: Difficulty, bots: number): number {
+  return WIN_SHARE[difficulty][Math.min(bots, 3) - 1]!;
+}
+
+function fairShare(bots: number): number {
+  return Math.round(100 / (bots + 1)); // 1 human + `bots` opponents
+}
+
 // The inline setup card (KHELO) — a vintage ledger slip: opponents 1–3, difficulty, then DEAL.
 function SetupCard({
   bots,
@@ -124,6 +149,14 @@ function SetupCard({
             {d[0]!.toUpperCase() + d.slice(1)}
           </button>
         ))}
+      </div>
+
+      {/* S6e: what the chosen difficulty means, and the human's rough expected win share at this bot
+          count — so the owner's expectation matches reality (a 3-bot table is a ~25% fair share). */}
+      <div style={setupBlurb}>{DIFFICULTY_BLURB[difficulty]}</div>
+      <div style={setupShare}>
+        Vs {bots} bot{bots > 1 ? 's' : ''}: you win about{' '}
+        <strong>{expectedShare(difficulty, bots)}%</strong> of games (a fair share is {fairShare(bots)}%).
       </div>
 
       <button style={primaryButton} onClick={onDeal}>
@@ -276,6 +309,9 @@ const setupCardStyle = {
 
 const setupHeading = { fontFamily: FONT.display, fontWeight: 700, fontSize: 18, color: INK.deepInk } as const;
 const setupRowLabel = { fontFamily: FONT.serif, fontSize: 13, color: INK.mutedBrown, marginTop: 4 } as const;
+// S6e: the difficulty explainer + expected-win-share lines — quiet ledger ink, not a shouty callout.
+const setupBlurb = { fontFamily: FONT.serif, fontStyle: 'italic', fontSize: 12, color: INK.mutedBrown, marginTop: 2 } as const;
+const setupShare = { fontFamily: FONT.serif, fontSize: 12, color: INK.deepInk, lineHeight: 1.25 } as const;
 const segmentRow = { display: 'flex', gap: 8 } as const;
 
 function segmentButton(active: boolean) {
