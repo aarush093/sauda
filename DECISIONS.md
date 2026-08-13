@@ -716,3 +716,29 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   faces: the payment sheet (`PaymentSheet`, "Pay ₹N Cr"), the `Paid` ticker line, and the received-card
   flow are untouched. Only STANDING totals are hidden. A unit test (`redaction.test.ts`) asserts the
   formatter never emits a ₹ amount for a bank, and that a Paid line still names what changed hands.
+
+### S3 — targeting is real cards; the assist hint is a read-only difficulty gate (owner, 13 Aug)
+
+- **Every targeted pick renders as its real board element**, driven off `TargetChoice.ref` the
+  interaction model already carried: property targets (HAATH KI SAFAI / ADLA-BADLI) → real ScaledCards,
+  a KABZA set → the opponent's real cascade, a VASOOLI / wild-LAGAAN PLAYER → a vintage seat medallion
+  (a person is not a card, so a chip is right — but the vintage chip, never a text pill), a LAGAAN
+  colour → my own set's cascade. `legalActions` stays the sole oracle, so BAD_TARGET is unreachable;
+  the target row scrolls INTERNALLY so a rich list never grazes the hand at 740×360.
+- **The assist hint is gated on the TABLE difficulty, computed at full strength.** `assistHintKey`
+  reads the frozen `recommend()` (at 'hard', so it always points at the BEST target) and returns that
+  choice's key; the UI brightens + bounces it. It is SHOWN only when the table tier is easy or medium
+  (hard → no hint), and NEVER alters `legalActions` (read-only). Under reduced-motion the bounce drops
+  to a static brighter ring (a `[data-hint]` CSS belt + the reducedMotion prop). Asserted in tests.
+
+### S4 — the wildcard assistant only SEQUENCES already-legal free moves (owner, 13 Aug)
+
+- **The assistant never rearranges anything itself.** A pure evaluator finds a depth-≤2 sequence of the
+  engine's own free `REARRANGE_WILDCARD` moves that strictly improves the board (more completed colours,
+  or freeing a colour a hand card fills); the UI surfaces a quiet nudge → preview → Confirm, and Confirm
+  fires those exact engine actions in order. It never auto-executes, never robs a complete set for a
+  net-zero swap, and is suppressed off my play turn / inside any overlay / during the auto-end drain (a
+  suggestion needs legal REARRANGE moves, which can't co-exist with END_TURN being the sole legal move —
+  so the "no race" holds by construction). `packages/engine` stays byte-identical.
+- **Dev tooling:** a dev-only `window.__craft(spec)` (engine testkit `makeState`, tree-shaken from prod)
+  lets the capture harness stage boards the seeded deals don't produce — e.g. the owner's pink-pink-dual.
