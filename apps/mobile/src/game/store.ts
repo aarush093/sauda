@@ -10,8 +10,9 @@
 import { create } from 'zustand';
 import { createGame, legalActions, mulberry32, observe, reduce } from '@sauda/engine';
 import type { Action, GameEvent, GameState, Observation, Rng } from '@sauda/engine';
-import { HeuristicBot, Munshi, MUNSHI_USES_PER_GAME } from '@sauda/bots';
+import { Munshi, MUNSHI_USES_PER_GAME } from '@sauda/bots';
 import type { Bot, Difficulty, MunshiAdvice } from '@sauda/bots';
+import { DifficultyBot } from '@sauda/difficulty';
 import { describeEvent } from './labels';
 
 export type SeatConfig = { kind: 'human' } | { kind: 'bot'; difficulty: Difficulty };
@@ -56,12 +57,15 @@ export function actorOf(state: GameState): number {
 // Bot machinery lives outside the reactive store (it must not trigger re-renders).
 let botRng: Rng = mulberry32(1);
 const botCache = new Map<Difficulty, Bot>();
+// S6b: seats now play through the DifficultyBot wrapper (not the raw HeuristicBot), so the tier the
+// owner picks genuinely changes how a bot plays — hard is the old full-strength brain verbatim, and
+// medium/easy slip off it (seeded by botRng, so still fully reproducible). packages/bots is untouched.
 function botFor(difficulty: Difficulty): Bot {
   const existing = botCache.get(difficulty);
   if (existing) {
     return existing;
   }
-  const bot = new HeuristicBot(difficulty);
+  const bot = new DifficultyBot(difficulty);
   botCache.set(difficulty, bot);
   return bot;
 }

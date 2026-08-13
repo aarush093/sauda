@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { legalActions, mulberry32, observe } from '@sauda/engine';
-import { HeuristicBot } from '@sauda/bots';
+import { HeuristicBot, recommend } from '@sauda/bots';
 import { actorOf, useGame } from './store';
 import type { SeatConfig } from './store';
 
@@ -117,6 +117,20 @@ describe('game store — Munshi advisor (read-only · 3 uses · no carry-over)',
     // the player must still perform the move themselves.
     expect(useGame.getState().state).toBe(before);
     expect(useGame.getState().state!.phase).toBe('playing');
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('MUNSHI IS EXEMPT — full-strength advice even when the table is EASY (S6b)', () => {
+    // Seat 0 human, the bot seat set to easy. The advisor must still counsel at full (hard) strength.
+    useGame.getState().newGame({ seats: [{ kind: 'human' }, { kind: 'bot', difficulty: 'easy' }], seed: 7 });
+    useGame.getState().dispatch({ type: 'DRAW' });
+    const result = useGame.getState().consultMunshi();
+    expect(result).not.toBeNull();
+    const { observation } = result!;
+    const state = useGame.getState().state!;
+    const legal = legalActions(state, actorOf(state));
+    // The advice matches the FULL-strength recommendation, not the degraded easy wrapper.
+    expect(result!.advice.action).toEqual(recommend(observation, legal, 'hard').action);
     expect(errorSpy).not.toHaveBeenCalled();
   });
 
