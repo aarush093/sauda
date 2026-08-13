@@ -1,0 +1,22 @@
+{
+  "model": "device-px = faceFont × (cardWidth/132) × dpr(2)  — same as badgeFloor.ts (H3 floor = 10)",
+  "wheelBefore": {
+    "restCardPx": 69,
+    "bannerDevicePx": 9.4,
+    "badgeDevicePx": 7.3
+  },
+  "spreadAfter": [
+    {
+      "profile": "915x412",
+      "restCardPx": 98,
+      "bannerDevicePx": 13.4,
+      "badgeDevicePx": 10.4
+    },
+    {
+      "profile": "740x360",
+      "restCardPx": 78,
+      "bannerDevicePx": 10.6,
+      "badgeDevicePx": 8.3
+    }
+  ]
+}

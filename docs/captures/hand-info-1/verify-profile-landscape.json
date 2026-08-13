@@ -1,0 +1,38 @@
+{
+  "throttle": "4x CPU",
+  "board": "S6_haveli",
+  "budget": {
+    "targetMs": 16.7,
+    "ceilingMs": 33
+  },
+  "profiles": {
+    "915x412": {
+      "spreadScrubDrag": {
+        "frames": 51,
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "tableViewOpenClose": {
+        "frames": 57,
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 66.7
+      }
+    },
+    "740x360": {
+      "spreadScrubDrag": {
+        "frames": 52,
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 33.4
+      },
+      "tableViewOpenClose": {
+        "frames": 53,
+        "p50": 16.7,
+        "p95": 33.3,
+        "max": 66.6
+      }
+    }
+  }
+}

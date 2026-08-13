@@ -29,6 +29,8 @@
     "capture:handinfo3": "node scripts/capture-hand-info-3.mjs",
     "capture:handinfo4": "node scripts/capture-hand-info-4.mjs",
     "verify:difficulty": "node scripts/verify-difficulty-live.mjs",
+    "verify:profile": "node scripts/verify-profile-landscape.mjs",
+    "verify:legibility": "node scripts/verify-legibility.mjs",
     "measure": "node scripts/excellence-measure.mjs",
     "plates:variants": "node scripts/build-plate-variants.mjs"
   },

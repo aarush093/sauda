@@ -67,5 +67,40 @@ the retired arc), so the top row (turn token · bank tray · Munshi) stays clear
 | `s5_discard_915x412.png` · `s5_discard_740x360.png` | the discard overlay entry — every hand card as a real face over the dimmed spread |
 | `s5_spectate_915x412.png` · `s5_spectate_740x360.png` | the SPECTATE my-panel (a bot acting) — my sets + bank + hand-as-backs, unchanged |
 
-Profile harness (`landscapeLayout.test.ts`) green at both profiles; legibility measured above
-(no regression — the spread only grew the card, and its invariants are unit-proven in `spreadLayout.test.ts`).
+Profile harness (`landscapeLayout.test.ts`) green at both profiles; the T2 numbers below verify no
+p95 regression and the legibility RISE.
+
+## T2 — the numbers (S-pass verification)
+
+**Profile / p95 frame-time** (`verify:profile`, 4× CPU throttle, S6_haveli, same method as the wheel-era
+`excellence-measure` profile mode; `verify-profile-landscape.json`). Budget: target 16.7 ms, ceiling 33 ms.
+
+| interaction | 915×412 p95 / max | 740×360 p95 / max | last recorded (wheel, 360×740) |
+|---|---|---|---|
+| spread scrub + drag | **16.7 / 16.8** | **16.8 / 33.4** | ~16.7–16.8 p95 |
+| TableView open/close | 16.8 / 66.7 | 33.3 / 66.6 | 16.8 p95, max 83.3 |
+
+The spread scrub+drag holds the 16.7 ms floor at both profiles — **no p95 regression** from the bigger
+card. TableView (opponent zoom; spread-independent, and S2 made it card-BACKS which are cheaper than
+faces) stays within the 33 ms ceiling with the same one-frame open spike the wheel era had.
+
+**Legibility, re-measured** (`verify:legibility`; `verify-legibility.json`). device-px = faceFont ×
+(cardWidth/132) × dpr(2), the exact model `badgeFloor.ts` uses (H3 badge floor = 10 device-px). The
+S-pass report's "legibility unchanged" was WRONG — the card grew, so the numbers **ROSE**:
+
+| metric | retired wheel (~69 px) | spread 915×412 (98 px) | spread 740×360 (78 px) |
+|---|---|---|---|
+| banner title (9 px face) | 9.4 | **13.4** | 10.6 |
+| value badge (7 px face) | 7.3 | **10.4** — clears the 10-px floor, toggle OFF | 8.3 |
+
+The size-up landed where intended (98 px measured at 915). At 740 the card is 78 px / badge 8.3 (the
+tighter profile; still well above the old wheel's 7.3, and the badge-floor toggle remains available).
+
+**S6c win-rate band verdict** (constants: `SLIP_PROBABILITY` in `packages/difficulty/src/index.ts` —
+easy 0.50 · medium 0.35 · hard 0; full 1000-game tables in `S6c-winrates.txt`). Strong proxy, 3-bot table:
+
+| tier | measured | target band | verdict |
+|---|---|---|---|
+| easy | 73.5% | 60–75% | ✓ reached |
+| medium | 46.1% | 40–50% | ✓ reached |
+| hard | 22.7% | 25–30% | **missed by ~2.3%** — hard is `recommend()` verbatim (the honest ~fair share); raising it means weakening the real bot, which the hard limit forbids |
