@@ -11,6 +11,7 @@
  */
 import { useEffect, useState } from 'react';
 import { orientationOf } from '../game/orientation';
+import { useGame } from '../game/store';
 import { FONT, LAYERS, DEV_HUD } from '../design/tokens';
 
 // True when the URL carries ?hud=1 (and we're in a dev build). Read live so it works on any route.
@@ -58,6 +59,9 @@ export function Hud() {
       <div style={{ fontWeight: 700 }}>
         {reading.vw}×{reading.vh} · dpr {reading.dpr}
       </div>
+      {/* S6a: the seed this game was dealt from. The owner can reproduce any game — one he loved or
+          hated — by re-opening the route with `?seed=<this>`; it's the flip side of fresh-per-game. */}
+      {reading.seed !== null && <div style={{ opacity: 0.85 }}>seed: {reading.seed}</div>}
       {/* R0: orientation is the state the landscape rebuild pivots on — the gate raises in portrait.
           Landscape (the game's native, correct state) reads quiet; portrait is flagged, since a portrait
           reading means the game is behind the rotate gate, not laid out. */}
@@ -101,6 +105,7 @@ function snapshot() {
     orientation: orientationOf(vw, vh),
     reduced,
     visualVh,
+    seed: useGame.getState().activeSeed,
     zones: measureZones(),
   };
 }

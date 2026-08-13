@@ -14,6 +14,7 @@ import { GAME } from '@sauda/engine';
 import type { Difficulty } from '@sauda/bots';
 import { useGame } from '../game/store';
 import type { SeatConfig } from '../game/store';
+import { resolveSeed } from '../game/seed';
 import { hasCompletedGame } from './firstRun';
 import { STAGE, INK, FONT, SHADOW } from '../design/tokens';
 
@@ -35,9 +36,10 @@ export function Home() {
     for (let i = 0; i < bots; i++) {
       seats.push({ kind: 'bot', difficulty });
     }
-    // Any seed plays; the engine is deterministic given it (the app may use Math.random — the
-    // NO-Math.random law is the engine's, not the shell's).
-    newGame({ seats, seed: Math.floor(Math.random() * 1_000_000_000) });
+    // S6a: a fresh crypto-strength seed per game (resolveSeed), unless `?seed=<n>` pins one for
+    // tooling. The engine is deterministic given the seed — the NO-Math.random law is the engine's,
+    // not the shell's — but the shell must still deal a DIFFERENT game each time (owner, 13 Aug).
+    newGame({ seats, seed: resolveSeed() });
     go('#/play');
   }
 

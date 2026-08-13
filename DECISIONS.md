@@ -590,3 +590,39 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   sleeping, already-non-interactive modal background during targeting) is parked fully: `handAsleep`
   drops the wheel band to opacity 0 + pointer-events none, keeping its height (no reflow). Targetability
   is untouched (still purely `legalActions`); the My-Sets reference panel is unchanged.
+
+## HAND + INFO REDESIGN (S) — owner playtest, 13 Aug
+
+### S6a — the owner was replaying one fixed deal; every game now draws a fresh seed
+
+- **Diagnosis (seed source).** The store's `newGame` is honest — it takes `config.seed` and is fully
+  deterministic given it (`store.ts` `newGame`, no RNG of its own). The Home/KHELO path already drew a
+  fresh `Math.floor(Math.random()*1e9)` per deal. **The fault was `#/autostart`**, which hard-coded
+  `seed: 424242` (`App.tsx`, `AutoStartTable`). That is the route the owner reaches over the Cloudflare
+  tunnel (see LANDSCAPE-2 "the /#/autostart game"), so every session replayed ONE identical deal — the
+  "same pattern each time" he reported. Confirmed, hypothesis upheld.
+- **Fix.** A new pure module `apps/mobile/src/game/seed.ts`: `resolveSeed()` returns an explicit
+  `?seed=<n>` override (parsed from either the pre-hash query or the hash's own query, so it works on
+  any route) when present, else a fresh crypto-strength uint32 (`crypto.getRandomValues`, Math.random
+  fallback). Wired into BOTH Home/KHELO and `#/autostart`. The active seed is shown in the HUD
+  (`?hud=1`) as `seed: <n>` so any game the owner loves or hates can be reproduced with `?seed=<that>`.
+- **Determinism preserved for tooling.** `window.__replay(seed, actions)` (the capture bridge) is
+  untouched, and every capture/measure/scenario harness re-deals through it immediately after loading
+  `#/autostart` — they never depended on autostart's own 424242 deal — so all harnesses keep producing
+  byte-identical output. The `?seed=<n>` override is the one explicit deterministic door on any route.
+- **No rigged dealing (S6d).** The shuffle/deal is NOT biased toward the human. The fairness fix is
+  honest randomness plus (S6b) genuinely weaker opponents — never a stacked deck.
+
+### S6b — difficulty barely differed; medium ≡ hard (diagnosis, fix lands next)
+
+- **Diagnosis (difficulty wiring).** `store.ts` `botFor(difficulty)` builds `new HeuristicBot(difficulty)`
+  for every seat, but the bot's ONLY difficulty-dependent code is `NAHI_THRESHOLD = { easy: 1, medium: 4,
+  hard: 4 }` (`heuristic-bot.ts`), read solely in `worthCancelling`, reached ONLY when responding to a
+  charge/steal. So **medium and hard are byte-identical**, and `easy` differs only by cancelling tiny
+  threats (if anything MORE defensive, not weaker). The whole turn engine (`recommendTurn`) takes no
+  difficulty argument — offensive play is identical across all three tiers. This is why the owner loses
+  at every setting: all three run the ~95.8%-win HeuristicBot. Fix is a new `packages/difficulty`
+  wrapper that degrades `recommend()` by tier (S6b commit) — `packages/bots`/`engine` stay byte-identical.
+- **Structural odds (S6c).** With 3 bot opponents the human's fair share is ~25%, so losing most games is
+  expected even when everything is correct. Target strong-proxy win bands at the 3-bot table:
+  easy ~60–75%, medium ~40–50%, hard ~25–30% (near fair share). Measured tables land in the S6c commit.

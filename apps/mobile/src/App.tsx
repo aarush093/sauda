@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGame } from './game/store';
 import type { SeatConfig } from './game/store';
+import { resolveSeed } from './game/seed';
 import { Home } from './shell/Home';
 import { Book } from './shell/Book';
 import { RotateGate } from './shell/RotateGate';
@@ -31,9 +32,11 @@ function useHash(): string {
   return typeof window !== 'undefined' ? window.location.hash : '';
 }
 
-// Dev-only: a solo game that starts itself for the 360x740 capture frame. A fixed seed
-// keeps the deal reproducible across captures, and a scroll guard warns if the play screen
-// ever exceeds the one portrait screen (A2 — zero scrolling in play).
+// Dev-only: a solo game that starts itself, both for the capture frame and as the tunnel entry the
+// owner plays. S6a: it now draws a FRESH seed each mount (resolveSeed) instead of a fixed 424242, so
+// the owner stops replaying one identical deal; determinism for captures is preserved because every
+// capture harness re-deals through `window.__replay(seed, …)` right after load (and `?seed=<n>` pins
+// a deal on demand). A scroll guard warns if the play screen ever exceeds one screen (A2).
 const FRAME_SEATS: SeatConfig[] = [
   { kind: 'human' },
   { kind: 'bot', difficulty: 'medium' },
@@ -46,7 +49,7 @@ function AutoStartTable() {
   const newGame = useGame((store) => store.newGame);
   useEffect(() => {
     if (!state) {
-      newGame({ seats: FRAME_SEATS, seed: 424242 });
+      newGame({ seats: FRAME_SEATS, seed: resolveSeed() });
     }
   }, [state, newGame]);
   // P1 scroll guard — now against the REAL viewport (the play screen is a fixed 100dvh shell, so a

@@ -34,6 +34,7 @@ export interface GameStore {
   log: LogLine[];
   lastEvents: GameEvent[]; // events from the most recent applied action (drives the bot spotlight)
   munshiUsesRemaining: number; // Munshi advisor budget for THIS game (3, flat, no carry-over)
+  activeSeed: number | null; // S6a: the seed THIS game was dealt from — shown in the HUD so a game can be replayed
   newGame: (config: GameConfig) => void;
   dispatch: (action: Action) => void;
   stepBot: () => void;
@@ -128,6 +129,7 @@ export const useGame = create<GameStore>((set, get) => {
     log: [],
     lastEvents: [],
     munshiUsesRemaining: MUNSHI_USES_PER_GAME,
+    activeSeed: null,
 
     newGame: (config) => {
       botRng = mulberry32(config.seed);
@@ -144,6 +146,7 @@ export const useGame = create<GameStore>((set, get) => {
         log: extendLog([], texts),
         lastEvents: created.events,
         munshiUsesRemaining: MUNSHI_USES_PER_GAME,
+        activeSeed: config.seed,
       });
       syncHandoff();
     },
@@ -203,7 +206,7 @@ export const useGame = create<GameStore>((set, get) => {
 
     reset: () => {
       munshi = new Munshi(MUNSHI_DIFFICULTY); // no advisor state survives leaving a game
-      set({ state: null, seats: [], revealedSeat: null, handoffSeat: null, log: [], lastEvents: [], munshiUsesRemaining: MUNSHI_USES_PER_GAME });
+      set({ state: null, seats: [], revealedSeat: null, handoffSeat: null, log: [], lastEvents: [], munshiUsesRemaining: MUNSHI_USES_PER_GAME, activeSeed: null });
     },
   };
 });
