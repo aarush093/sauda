@@ -31,6 +31,9 @@ export const STAGE = {
   textOnFelt: 'rgba(242,233,210,0.88)', // cream at ~88% for labels/totals on felt (§2)
   // one glow spec — active-player ring · legal-action glow · selection · Munshi (no variants)
   glowGold: `0 0 0 2px ${INK.gold}, 0 0 10px 1px rgba(232,184,75,0.5)`,
+  // S3: the assisted-pick hint — the SAME gold, just brighter/wider, so the best target stands out
+  // from its (already glowing) peers without introducing a new colour.
+  glowGoldStrong: `0 0 0 3px ${INK.gold}, 0 0 16px 3px rgba(232,184,75,0.75)`,
   dimSleep: 'saturate(0.7) brightness(0.9)', // off-turn hand/board only
   scrimDrag: 'rgba(20,18,31,0.08)', // ~8% behind a lifted/staged card (Phase 2)
   scrimSheet: 'rgba(20,18,31,0.35)', // ~35% behind bottom sheets / handoff (Phase 3)

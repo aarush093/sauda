@@ -25,6 +25,7 @@
     "capture:excellence": "node scripts/capture-excellence.mjs",
     "capture:handinfo1": "node scripts/capture-hand-info-1.mjs",
     "capture:handinfo1clips": "node scripts/capture-hand-info-1-clips.mjs",
+    "capture:handinfo2": "node scripts/capture-hand-info-2.mjs",
     "measure": "node scripts/excellence-measure.mjs",
     "plates:variants": "node scripts/build-plate-variants.mjs"
   },

@@ -32,9 +32,22 @@
     transform: rotate(-90deg);
   }
 }
+/* S3 (owner playtest 13 Aug): the assisted-pick hint bounces the best target gently (transform-only,
+   GPU). Applied inline only when reduced motion is off; the [data-hint] guard below is the second belt
+   so the hint falls back to its static brighter ring (never a bounce) under prefers-reduced-motion. */
+@keyframes sauda-target-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .munshi-medallion,
-  .rotate-hint-glyph {
+  .rotate-hint-glyph,
+  [data-hint] {
     animation: none !important;
   }
 }
