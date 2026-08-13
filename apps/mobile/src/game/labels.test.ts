@@ -92,10 +92,11 @@ describe('shortLabel (R2 spectate caption — every card family)', () => {
     expect(shortLabel(vasooli, { seat: 2, kind: 'played', targetsMe: true })).toBe('B2 · VASOOLI → You');
   });
 
-  it('reads a banked card as its ₹ value (money OR a bankable action)', () => {
-    expect(shortLabel(money3, { seat: 3, kind: 'banked' })).toBe('B3 · banked ₹3');
-    // a bankable action banked as money reads by its bank value, not its name
-    expect(shortLabel(vasooli, { seat: 3, kind: 'banked' })).toMatch(/^B3 · banked ₹\d+$/);
+  it('redacts a banked card to "a note" — its value/identity is private (S2)', () => {
+    // S2 (owner directive, 13 Aug): a banked card is face-down to opponents, so the spectate caption
+    // reveals neither its ₹ value nor its identity — only that a note was banked.
+    expect(shortLabel(money3, { seat: 3, kind: 'banked' })).toBe('B3 · banked a note');
+    expect(shortLabel(vasooli, { seat: 3, kind: 'banked' })).toBe('B3 · banked a note');
   });
 
   it('reads a built card and a received card', () => {

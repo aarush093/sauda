@@ -439,12 +439,14 @@ export function Board({
               bankTotal={observation.myBankTotal}
               bank={observation.myBank}
               kiraya={observation.myKiraya}
+              revealBank // S2: my own bank — real faces + total, unchanged
               onClose={() => setExpandedView(null)}
             />
           );
         }
         const opponent = observation.opponents.find((candidate) => candidate.id === expandedView.id);
         return opponent ? (
+          // S2: an opponent's zoom — bank renders as card backs + count (revealBank defaults false).
           <TableView
             title={seatName(seats, opponent.id)}
             properties={opponent.properties}

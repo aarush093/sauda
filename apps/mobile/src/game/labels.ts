@@ -6,6 +6,7 @@
 import { ACTIONS, KIRAYA_DESCRIPTOR, KIRAYA_NAME, PROPERTY_NAMES, SETS, buildDeck } from '@sauda/engine';
 import type { Action, Card, GameEvent, InterruptView, SetId } from '@sauda/engine';
 import type { MunshiAdvice } from '@sauda/bots';
+import { BANKED_A_NOTE } from './redaction';
 
 const CARD_BY_ID = new Map(buildDeck().map((card) => [card.id, card]));
 
@@ -171,7 +172,9 @@ export function shortLabel(cardId: string, play: StagePlay): string {
   let rest: string;
   switch (play.kind) {
     case 'banked':
-      rest = `banked ₹${card.value}`; // money OR a bankable action banked at its ₹ value
+      // S2: a banked card is face-DOWN to opponents now — the caption reveals neither its value nor
+      // its identity, only that a note was banked. Count is public; the amount is bluff-tension private.
+      rest = `banked ${BANKED_A_NOTE}`;
       break;
     case 'built':
       rest = captionName(card); // MAKAAN / HAVELI
@@ -240,7 +243,8 @@ export function describeEvent(event: GameEvent): string | null {
     case 'CardsDrawn':
       return `P${event.player} drew ${event.cardIds.length}`;
     case 'CardBanked':
-      return `P${event.player} banked ${describeCard(event.cardId)}`;
+      // S2: the ticker never names a banked card's value/identity — "P2 banked a note", never "₹3 Cr".
+      return `P${event.player} banked ${BANKED_A_NOTE}`;
     case 'PropertyPlaced':
       return `P${event.player} placed ${describeCard(event.cardId)}`;
     case 'BuildingPlaced':

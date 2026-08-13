@@ -12,6 +12,7 @@ import { CardBack } from './CardBack';
 import { ScaledCard } from './CardFace';
 import { SetCascade } from './SetCascade';
 import { useMeasuredWidth } from '../game/useMeasuredWidth';
+import { opponentBankLabel } from '../game/redaction';
 import { STAGE, INK, FONT, CARD, GLOW, LAYERS } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
@@ -347,18 +348,21 @@ export function DiscardTop({ topId }: { topId: string | undefined }) {
   );
 }
 
-// A player's header pill: name, gold ₹ bank total, hidden-hand pips, and (the active
-// player) the gold ring + play pips. Inactive players sit dim.
+// A player's header pill: name, then — for ME — the gold ₹ bank total, or — for an OPPONENT (S2) —
+// the note-stack glyph + COUNT of banked cards (their exact cash is private), hidden-hand pips, and
+// (the active player) the gold ring + play pips. Inactive players sit dim.
 export function PlayerHeader({
   name,
   bankTotal,
+  bankCount,
   handCount,
   active,
   self,
   expandable,
 }: {
   name: string;
-  bankTotal: number;
+  bankTotal: number; // shown only on MY own pill (self); an opponent's total is never rendered
+  bankCount?: number | undefined; // an opponent's banked-card COUNT — the only cash info shown for them
   handCount: number;
   active: boolean;
   self?: boolean | undefined; // MY pill: drop the redundant hand chrome so End turn fits (H2b)
@@ -367,7 +371,10 @@ export function PlayerHeader({
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 8px', borderRadius: 999, background: STAGE.scrimDrag, boxShadow: active ? STAGE.glowGold : 'none', opacity: active ? 1 : 0.6 }}>
       <span style={{ fontFamily: FONT.display, fontWeight: 700, fontSize: 13, color: STAGE.cardCream }}>{name}</span>
-      <span style={{ fontFamily: FONT.mono, fontWeight: 700, fontSize: 12, color: STAGE.accentGold }}>₹{bankTotal}</span>
+      {/* S2: my own pill shows my real ₹ total; an opponent's shows only their note-stack count. */}
+      <span style={{ fontFamily: FONT.mono, fontWeight: 700, fontSize: 12, color: STAGE.accentGold }}>
+        {self ? `₹${bankTotal}` : opponentBankLabel(bankCount ?? 0)}
+      </span>
       {/* Hidden-hand card-backs are meaningful only for OPPONENTS (I see my own hand in the wheel).
           My own pill drops them, AND drops the play-pips (plays-left already reads in the table band,
           and the pips clashed with the Munshi chip's) — so the header has clean room for End turn

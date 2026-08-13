@@ -691,3 +691,28 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   so the pickup stays instant.
 - **Dev lab.** The `#/dev/wheel/<n>` route name is kept (so the existing capture scripts still resolve)
   but now renders `HandSpread` — relabelled "spread lab".
+
+### S2 — hidden bot cash (a deliberate genre divergence for bluff tension)
+
+- **Ruling (owner directive, 13 Aug).** In this set-collection/take-that genre bank totals are
+  traditionally PUBLIC. The owner deliberately diverges: an opponent's exact cash is PRIVATE, so a
+  hidden bankroll creates bluff tension. What stays PUBLIC is the COUNT of banked cards — you can see
+  how many notes a stack holds, you just can't read the values. Recorded here as the divergence + why.
+- **Presentation-layer only.** The redaction lives entirely in the UI over the existing Observation
+  (`apps/mobile/src/game/redaction.ts`); `packages/engine` is byte-identical (OpponentView still
+  carries `bankTotal` — the UI simply declines to render it). One helper `opponentBankLabel(count)`
+  emits the note-stack glyph "▤" + count and never a ₹, and is the single place opponent cash becomes text.
+- **Leak audit — every surface that showed an opponent total, and how it was closed:**
+  1. **Bot rail chip** (`BotTabRail`) — `₹{bankTotal}` → `▤ {bank.length}` (glyph + count).
+  2. **Opponent zoom header** (`TableView`) — `Bank ₹{bankTotal} Cr` → `Bank ▤ {count}`.
+  3. **Opponent zoom bank row** (`TableView`) — real card FACES → face-DOWN card BACKS, one per banked
+     card (count legible, no value/identity). Gated by a new `revealBank` prop (default false).
+  4. **Spectate acting-bot pill** (`PlayerHeader` via `SpectateLayout`) — `₹{bankTotal}` → `▤ {count}`.
+  5. **Ticker / log line** (`describeEvent` `CardBanked`) — `P2 banked ₹3 Cr` → `P2 banked a note`.
+  6. **Spectate stage caption** (`shortLabel` `banked`) — `B2 · banked ₹3` → `B2 · banked a note`.
+- **My own bank is unchanged.** Every "self" surface still shows my real total + faces: my `PlayerHeader`
+  (MY TURN + spectate), my `TableView` zoom (`revealBank`), the bank inspect (`BankView`).
+- **EXCEPTION — debts stay explicit.** What a bot pays ME / owes ME is shown with real amounts and
+  faces: the payment sheet (`PaymentSheet`, "Pay ₹N Cr"), the `Paid` ticker line, and the received-card
+  flow are untouched. Only STANDING totals are hidden. A unit test (`redaction.test.ts`) asserts the
+  formatter never emits a ₹ amount for a bank, and that a Paid line still names what changed hands.

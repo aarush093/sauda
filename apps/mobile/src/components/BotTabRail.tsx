@@ -1,8 +1,9 @@
 /**
  * The bot TAB RAIL (LAYOUT v3 — owner landscape directive, 2 Aug). Focus follows turn: on MY turn the
  * bot boards do NOT render in full — instead this slim vertical rail sits on the far edge, one chip
- * per bot, each a glanceable summary (seat, bank total, set count, a FULL badge if any set is
- * complete, a gold ring on the active player). Tapping a chip opens that bot's full board zoom (the
+ * per bot, each a glanceable summary (seat, a note-stack + COUNT of banked cards — S2: their exact
+ * cash is private, only the stack SIZE is public — set count, a FULL badge if any set is complete, a
+ * gold ring on the active player). Tapping a chip opens that bot's full board zoom (the
  * TableView, landscape-adapted). In spectate the acting bot fills the main panel, so the caller passes
  * only the NON-acting bots here.
  *
@@ -12,6 +13,7 @@
 import type { CSSProperties } from 'react';
 import { SETS, isSetComplete } from '@sauda/engine';
 import type { OpponentView, PropertyGroup, SetId } from '@sauda/engine';
+import { opponentBankLabel } from '../game/redaction';
 import { STAGE, INK, FONT } from '../design/tokens';
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
@@ -59,7 +61,11 @@ export function BotTabRail({
             style={chipStyle(active)}
           >
             <span style={seatStyle}>B{opponent.id}</span>
-            <span style={bankStyle}>₹{opponent.bankTotal}</span>
+            {/* S2: the note-stack glyph + COUNT of banked cards — visible info (you can see how many
+                notes someone holds); their exact cash total is private (never rendered). */}
+            <span style={bankStyle} title="Banked cards (count only — their cash is hidden)">
+              {opponentBankLabel(opponent.bank.length)}
+            </span>
             <span style={setsStyle}>▦ {setCount}</span>
             {hasFull && <span style={fullBadgeStyle}>FULL</span>}
           </button>

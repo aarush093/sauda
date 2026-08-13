@@ -11,10 +11,12 @@ import { SETS } from '@sauda/engine';
 import type { CardId, PropertyGroup, SetId } from '@sauda/engine';
 import { SetCascade } from './SetCascade';
 import { ScaledCard } from './CardFace';
+import { CardBack } from './CardBack';
 import { Surface } from './Surface';
+import { opponentBankLabel } from '../game/redaction';
 import { STAGE, INK, FONT, LAYERS } from '../design/tokens';
 
-const BANK_FACE_PX = 60; // R3: a banked card's real face in the zoom's bank row
+const BANK_FACE_PX = 60; // R3: a banked card's real face in the zoom's bank row (my own bank only)
 
 const ALL_SETS = Object.keys(SETS) as SetId[];
 const EXPAND_CARD_PX = 96; // K5 legibility floor: cards render at >= 96px wide (was 92)
@@ -31,15 +33,18 @@ export function TableView({
   bankTotal,
   bank,
   kiraya,
+  revealBank = false,
   onClose,
 }: {
   title: string;
   properties: Record<SetId, PropertyGroup[]>;
   bankTotal: number;
-  // R3: the banked cards (public — money AND banked actions), shown as real faces below the sets. The
-  // bank is public in this genre, so an opponent's zoom shows their real bank the same way mine does.
+  // The banked cards. S2: for an OPPONENT (revealBank false, the default) these render as face-DOWN
+  // CARD BACKS + a count — never faces, never a ₹ total — since their cash is private bluff tension.
+  // For MY OWN bank (revealBank true) they render as real faces with my total, exactly as before.
   bank?: CardId[] | undefined;
   kiraya?: Record<SetId, number[]> | undefined; // my current rents per group; opponents show none
+  revealBank?: boolean; // true only for my own zoom — an opponent's bank is always redacted
   onClose: () => void;
 }) {
   const groups: { set: SetId; group: PropertyGroup; index: number }[] = [];
@@ -73,7 +78,10 @@ export function TableView({
       <Surface style={panelStyle}>
         <div style={headerStyle}>
           <span style={titleStyle}>{title}</span>
-          <span style={bankStyle}>Bank ₹{bankTotal} Cr</span>
+          {/* S2: my own header shows my real total; an opponent's shows only the note-stack count. */}
+          <span style={bankStyle}>
+            {revealBank ? `Bank ₹${bankTotal} Cr` : `Bank ${opponentBankLabel(bank?.length ?? 0)}`}
+          </span>
         </div>
         {/* a rich board scrolls INTERNALLY (modal internal scroll — spec-compliant) rather than
             clipping, so every set stays reachable at the >= 96px legibility floor. */}
@@ -89,13 +97,16 @@ export function TableView({
             ))
           )}
         </div>
-        {/* R3: the bank as real faces — money notes and banked action cards alike (public info). */}
+        {/* The bank row. S2: my own bank shows real faces + total; an opponent's shows face-DOWN card
+            backs, one per banked card, so the COUNT is legible but no value or identity leaks. */}
         {bank && bank.length > 0 && (
           <div style={bankRowStyle} onClick={(event) => event.stopPropagation()}>
             <span style={bankLabelStyle}>Bank</span>
-            {bank.map((cardId, index) => (
-              <ScaledCard key={`${cardId}-${index}`} cardId={cardId} width={BANK_FACE_PX} />
-            ))}
+            {revealBank
+              ? bank.map((cardId, index) => (
+                  <ScaledCard key={`${cardId}-${index}`} cardId={cardId} width={BANK_FACE_PX} />
+                ))
+              : bank.map((_cardId, index) => <CardBack key={`back-${index}`} width={BANK_FACE_PX} />)}
           </div>
         )}
         <div style={hintStyle}>Tap anywhere off a card — or ✕ — to close</div>

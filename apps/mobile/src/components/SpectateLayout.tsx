@@ -51,7 +51,7 @@ export function SpectateLayout(props: SpectateLayoutProps) {
       <div data-zone="acting" style={{ width: zones.acting, minWidth: 0, display: 'flex', flexDirection: 'column', padding: 6, gap: 4, cursor: 'pointer' }} onClick={props.onExpandActing}>
         {acting ? (
           <>
-            <PlayerHeader name={seatName(seats, acting.id)} bankTotal={acting.bankTotal} handCount={acting.handCount} active expandable />
+            <PlayerHeader name={seatName(seats, acting.id)} bankTotal={acting.bankTotal} bankCount={acting.bank.length} handCount={acting.handCount} active expandable />
             {/* their board — read-only real cascades */}
             <div style={{ flexShrink: 0, maxHeight: '46%', overflow: 'hidden' }}>
               <GroupRow properties={acting.properties} width={ACTING_SET_CARD_PX} />
