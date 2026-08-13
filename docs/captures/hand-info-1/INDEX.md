@@ -38,3 +38,34 @@ computed — see `results.json.legibility`.
 Redaction state: `S6_haveli` (seed 7), my turn, bot banks [4, 1, 4]. The "banked a note"
 still is a fresh bot banking driven from seed 7 (step 3). Debts stay explicit — the
 `redaction_rail` ticker also shows real payment amounts ("P3 paid P0: ₹2 Cr"), the S2 exception.
+
+## S3 — targeting = real cards + assisted pick
+
+| file | what |
+|------|------|
+| `s3_haath_targeting_915x412.png` · `s3_haath_targeting_740x360.png` | HAATH KI SAFAI targets as REAL property cards (Purani Dilli / Wildcards / Kashi Ghats + owner tags) — was "P1 · MI Road" text pills |
+| `s3_hint_medium_915x412.png` | MEDIUM table: the best target (Purani Dilli) wears a brighter/wider gold ring — the assist hint (`[data-hint]` present, DOM-verified) |
+| `s3_hint_bounce_medium.webm` | the hint's gentle bounce on medium |
+| `s3_no_hint_hard_915x412.png` | HARD table: no hint — every target glows equally (`[data-hint]` count 0, DOM-verified) |
+
+## S4 — wildcard combination assistant (owner's pink-pink-dual)
+
+| file | what |
+|------|------|
+| `s4_nudge_915x412.png` | the quiet gold "◈ arrange" nudge on a crafted 2-jaipur + jaipur/kolkata-dual board |
+| `s4_preview_915x412.png` | the preview: "Completes your Jaipur set", the FULL end-state cascade in real cards, "1. Move Wildcard to Jaipur", Confirm/Cancel, "Free moves — no play used" |
+| `s4_pink_scenario_915x412.webm` | the scenario resolving: nudge → preview → Confirm fires the free REARRANGE; jaipur completes (asserted before=false → after=true) |
+
+## S5 — blast-radius sweep (no collisions found)
+
+The spread's bigger cards fit the existing wheel-band budget (a flat 78–98 px card is shorter than
+the retired arc), so the top row (turn token · bank tray · Munshi) stays clear and nothing clips.
+
+| file | what |
+|------|------|
+| `s5_hand11_915x412.png` · `s5_hand11_740x360.png` | a FULL 11-card hand — the worst case; turn token / bank tray / Munshi sit clear above the spread, no clip even at 740×360 |
+| `s5_discard_915x412.png` · `s5_discard_740x360.png` | the discard overlay entry — every hand card as a real face over the dimmed spread |
+| `s5_spectate_915x412.png` · `s5_spectate_740x360.png` | the SPECTATE my-panel (a bot acting) — my sets + bank + hand-as-backs, unchanged |
+
+Profile harness (`landscapeLayout.test.ts`) green at both profiles; legibility measured above
+(no regression — the spread only grew the card, and its invariants are unit-proven in `spreadLayout.test.ts`).

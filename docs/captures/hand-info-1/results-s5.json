@@ -1,0 +1,30 @@
+{
+  "results": [
+    {
+      "file": "s5_hand11_915x412.png",
+      "ok": true,
+      "note": "spread cards 11, errors 0"
+    },
+    {
+      "file": "s5_discard_915x412.png",
+      "ok": true
+    },
+    {
+      "file": "s5_spectate_915x412.png",
+      "ok": true
+    },
+    {
+      "file": "s5_hand11_740x360.png",
+      "ok": true,
+      "note": "spread cards 11, errors 0"
+    },
+    {
+      "file": "s5_discard_740x360.png",
+      "ok": true
+    },
+    {
+      "file": "s5_spectate_740x360.png",
+      "ok": true
+    }
+  ]
+}
