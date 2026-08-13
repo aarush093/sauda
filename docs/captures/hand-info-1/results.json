@@ -1,0 +1,105 @@
+{
+  "legibility": [
+    {
+      "profile": "915x412",
+      "cardWidthPx": 98,
+      "bannerDevicePx": 13.4,
+      "badgeDevicePx": 10.4
+    },
+    {
+      "profile": "740x360",
+      "cardWidthPx": 78,
+      "bannerDevicePx": 10.6,
+      "badgeDevicePx": 8.3
+    }
+  ],
+  "results": [
+    {
+      "file": "spread_n5_915x412.png",
+      "note": "spread at n=5, 915x412",
+      "ok": true
+    },
+    {
+      "file": "spread_n8_915x412.png",
+      "note": "spread at n=8, 915x412",
+      "ok": true
+    },
+    {
+      "file": "spread_n11_915x412.png",
+      "note": "spread at n=11, 915x412",
+      "ok": true
+    },
+    {
+      "file": "spread_n5_740x360.png",
+      "note": "spread at n=5, 740x360",
+      "ok": true
+    },
+    {
+      "file": "spread_n8_740x360.png",
+      "note": "spread at n=8, 740x360",
+      "ok": true
+    },
+    {
+      "file": "spread_n11_740x360.png",
+      "note": "spread at n=11, 740x360",
+      "ok": true
+    },
+    {
+      "file": "redaction_state",
+      "note": "mid-game driven for redaction",
+      "ok": true,
+      "summary": {
+        "phase": "playing",
+        "actor": 0,
+        "botBanks": [
+          {
+            "seat": 0,
+            "bank": 5
+          },
+          {
+            "seat": 1,
+            "bank": 4
+          },
+          {
+            "seat": 2,
+            "bank": 1
+          },
+          {
+            "seat": 3,
+            "bank": 4
+          }
+        ],
+        "recentLog": [
+          "P0 paid P3: ₹1 Cr, ₹1 Cr",
+          "— Turn 29: Player 0",
+          "P0 drew 2",
+          "P0 played LAGAAN (Chennai/Bangalore)",
+          "P3 paid P0: ₹2 Cr, ₹1 Cr",
+          "P2 paid P0: ₹3 Cr",
+          "P1 paid P0: ₹3 Cr",
+          "P0 built makaan on Purani Dilli"
+        ]
+      }
+    },
+    {
+      "file": "redaction_rail_915x412.png",
+      "note": "bot rail note-counts + ticker \"banked a note\"",
+      "ok": true
+    },
+    {
+      "file": "redaction_opponent_zoom_915x412.png",
+      "note": "opponent zoom — bank = card backs + count",
+      "ok": true
+    },
+    {
+      "file": "redaction_my_bank_915x412.png",
+      "note": "MY bank — real faces + total (asymmetry)",
+      "ok": true
+    },
+    {
+      "file": "redaction_banked_a_note_915x412.png",
+      "note": "SPECTATE — \"P1 banked a note\" in ticker + caption",
+      "ok": true
+    }
+  ]
+}

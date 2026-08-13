@@ -23,6 +23,8 @@
     "capture:fixes": "node scripts/capture-fixes.mjs",
     "capture:fixes2": "node scripts/capture-fixes-2.mjs",
     "capture:excellence": "node scripts/capture-excellence.mjs",
+    "capture:handinfo1": "node scripts/capture-hand-info-1.mjs",
+    "capture:handinfo1clips": "node scripts/capture-hand-info-1-clips.mjs",
     "measure": "node scripts/excellence-measure.mjs",
     "plates:variants": "node scripts/build-plate-variants.mjs"
   },

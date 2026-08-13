@@ -33,13 +33,17 @@ function devDeck(): string[] {
 export function DevWheel({ count }: { count: number }) {
   const [cards, setCards] = useState<string[]>(() => devDeck().slice(0, count));
   const interactive = new Set(cards);
+  // S1: the lab fills the LANDSCAPE viewport (the game is landscape-only now) with the spread in a
+  // bottom band spanning the width minus the rail + gap, so it measures the same container the real
+  // my-area gives it — the n-series stills then show the true rest size at each profile.
   return (
-    <div style={{ width: 360, height: 740, margin: '0 auto', background: STAGE.felt, color: STAGE.textOnFelt, position: 'relative', overflow: 'hidden', fontFamily: FONT.serif }}>
+    <div style={{ width: '100vw', height: '100dvh', background: STAGE.felt, color: STAGE.textOnFelt, position: 'relative', overflow: 'hidden', fontFamily: FONT.serif }}>
       <div style={{ position: 'absolute', top: 10, left: 0, right: 0, textAlign: 'center', fontFamily: FONT.mono, fontSize: 12, opacity: 0.7 }}>
         spread lab · n={cards.length} · tap a card to play it (glide)
       </div>
-      {/* the my-area bottom band: same 8px insets as the real board, hub at bottom-centre. */}
-      <div style={{ position: 'absolute', left: 8, right: 8, bottom: 8 }}>
+      {/* the my-area bottom band: rail (46) + gutter (8) on the left, 8px on the right, matching the
+          real wheelContainer so the measured width — and the derived card size — are true to the game. */}
+      <div style={{ position: 'absolute', left: 54, right: 8, bottom: 8 }}>
         <div style={{ borderTop: `1px solid ${INK.agedLine}`, opacity: 0.25, marginBottom: 4 }} />
         <HandSpread
           cards={cards}
