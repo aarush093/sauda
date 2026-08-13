@@ -6,7 +6,7 @@
  *
  * The faces are drawn at 132 px then transform-scaled, so `srcset`/`sizes` can't respond (the browser
  * only sees the 132-px `<img>` box, not the outer transform). Selection is therefore an EXPLICIT hint:
- * ScaledCard/HandWheel know the real rendered width and pass it down; we pick the smallest tier whose
+ * ScaledCard/HandSpread know the real rendered width and pass it down; we pick the smallest tier whose
  * pixel width still covers rendered-width × devicePixelRatio. This file is pure (no Vite glob) so the
  * selection maths is unit-testable on its own; plates.ts wires it to the actual built files.
  */

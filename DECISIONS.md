@@ -655,3 +655,39 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   fresh seeds (S6a) + genuinely weaker opponents (S6b). Easy at ~74% is already generous, so no
   dealing-assist is implemented. If the owner still finds easy punishing, a `?dealAssist` flag (bias
   the human's opening hand toward a workable colour) is PROPOSED for his decision — not built.
+
+### S1 — THE SPREAD retires the wheel (flat upright cards + size-up)
+
+- **The rotated roulette wheel is retired.** The hand is now a FLAT row of UPRIGHT cards (rotation 0
+  always), bottom-anchored, evenly overlapping, later cards on top. One pure function `spreadLayout(n,
+  containerWidth, cardWidth) → per-card {x, z}` (`apps/mobile/src/game/spreadLayout.ts`); the component
+  `HandSpread` measures its slot, derives the card width, and renders these. `wheelLayout.ts`,
+  `wheelLayout.test.ts` and `HandWheel.tsx` were DELETED in the same commit; the 80 wheel tests are
+  replaced by 80 spread invariant tests (n=1..12 × 6 widths + scalars) — count held, not dropped.
+- **Even spacing, no clip, readable strip — by construction.** step = min(comfortable = 0.8·cardWidth,
+  (container − cardWidth)/(n−1)). Low n → the comfortable step (cards nearly side-by-side); high n →
+  the container clause squeezes them so all n fit. The row is centred and its footprint never exceeds
+  the container, so no left/right/top clip at any count; the exposed left strip (= step for every card
+  but the last) stays ≥ READABLE_STRIP (0.32·cardWidth) with real margin even at n=12 (at 740→container
+  694, cardWidth 80, n=12: step 56 ≥ min 26; at 915→container 869, cardWidth 96, step 70 ≥ 31).
+- **REST SIZE UP (owner: "reasonable size, understandable without tapping").** cardWidth =
+  clamp(round(container·0.115), 68, 100). At the 915 profile the spread container is 915 − rail(46) =
+  869 → **96 px** (was ~69 on the wheel, capped at 78). Legibility recomputed from the 132 px face
+  (banner title fontSize 9, value badge fontSize 7, each scaled by cardWidth/132):
+
+  | metric              | old wheel W≈69 @DPR2 | spread W=96 @DPR2 | spread W=96 @DPR3 |
+  |---------------------|---------------------|-------------------|-------------------|
+  | banner title (9 px) | 9.4 device px       | **13.1**          | 19.6              |
+  | value badge (7 px)  | 7.3 device px       | **10.2**          | 15.3              |
+
+  The value badge now clears the 10-device-px H3 floor at DPR2 **with the badge-floor toggle OFF** —
+  the size-up buys the legibility the wheel needed a special-case grow for. The 139 px-tall 96 px card
+  fits the ~166–178 px wheel band with headroom (no band change needed).
+- **PRESS, not spoke-peek.** The scrubbed card slides STRAIGHT UP 40% of its height and grows 1.12×,
+  full card clear above its neighbours (no rotation maths — it is already upright). Slide-along
+  re-targets card by card (scrub preserved); lifting ~40 px above the band becomes a DRAG (unchanged
+  physics via useFanGesture); a release in the band taps → INSPECT. The ~175 ms re-spacing glide on the
+  outer layer carries over from the wheel unchanged; the press lives on a transition-less inner layer,
+  so the pickup stays instant.
+- **Dev lab.** The `#/dev/wheel/<n>` route name is kept (so the existing capture scripts still resolve)
+  but now renders `HandSpread` — relabelled "spread lab".

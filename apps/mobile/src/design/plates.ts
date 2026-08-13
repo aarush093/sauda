@@ -77,7 +77,7 @@ export function hasPlate(cardId: string): boolean {
   return plateUrl(cardId) !== null;
 }
 
-// J2: the URL for a plate at a given ON-SCREEN rendered width (the hint ScaledCard/HandWheel pass
+// J2: the URL for a plate at a given ON-SCREEN rendered width (the hint ScaledCard/HandSpread pass
 // down). Picks the smallest built tier covering rendered-width × DPR; if that tier or its file is
 // missing (variants not built yet), it falls back to the full-resolution source — so nothing ever
 // breaks, it just uses more decode memory until the build step runs. A null renderedWidth (full-size

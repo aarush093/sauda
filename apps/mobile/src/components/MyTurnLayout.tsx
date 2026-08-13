@@ -17,7 +17,7 @@ import { GroupRow, PlayerHeader } from './BoardParts';
 import { BankTray } from './BankTray';
 import { MunshiChip } from './MunshiChip';
 import { TurnToken } from './TurnToken';
-import { HandWheel } from './HandWheel';
+import { HandSpread } from './HandSpread';
 import { Ticker } from './Ticker';
 import { StageSpotlight } from './StageSpotlight';
 import { TableBand } from './TableBand';
@@ -193,7 +193,7 @@ export function MyTurnLayout(props: MyTurnLayoutProps) {
             pointerEvents: props.handAsleep ? 'none' : undefined,
           }}
         >
-          <HandWheel
+          <HandSpread
             cards={props.wheel.cards}
             interactiveIds={props.wheel.interactiveIds}
             carriedCardId={props.wheel.carriedCardId}
