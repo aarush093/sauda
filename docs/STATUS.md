@@ -25,6 +25,18 @@ Six owner directives, all landed green + playable across two passes (12 commits)
   REARRANGE moves; never auto-executes. The owner's pink-pink-dual resolves.
 - **S5 — sweep:** the bigger cards cause no collisions at either profile (turn token/tray/discard/spectate).
 
+**T — verification + closure (2026-08-15, 4 commits).** Proved the claims that were only argued: (T1)
+the difficulty tier reaches LIVE play — three games at one seed diverge by tier in a browser (P1 places
+the wildcard on hard, plays Aage Badho on medium, banks on easy); `#/autostart` gained `?difficulty=` +
+`?bots=` and the HUD shows the live tier. (T2) NO p95 regression from the bigger card (spread scrub+drag
+p95 16.7–16.8 ms at both profiles), and legibility ROSE (badge 7.3 → 10.4 device-px — the earlier
+"unchanged" note was wrong); hard's win band landed at ~23% not 25–30 (it IS the real bot, can't raise
+without weakening it). (T3) the assist hint now fires on ADLA-BADLI's second pick too, and the arrange
+nudge anchors to the affected group. (T4) Home → KHELO → setup (difficulty + win-share copy) → DEAL →
+#/play works at both profiles; `pnpm phone` serves HEAD over the tunnel (deep-link
+`…/?difficulty=easy&bots=3#/autostart`). Evidence: `docs/captures/hand-info-1/` (INDEX + `t1_`/`t3_`/`t4_`
+stills + `verify-*.json`).
+
 The difficulty tiers now MEAN: **easy** = bots often misplay (a forgiving game to learn on); **medium**
 = a solid game with the odd slip; **hard** = full-strength (the ~95.8%-win bot, a near-fair fight at 3
 opponents). Evidence pack: `docs/captures/hand-info-1/INDEX.md`. `packages/engine` + `packages/bots`
@@ -47,7 +59,7 @@ Full report + evidence: `docs/AUDIT_Z.md`; driven log `docs/captures/audit-z/aud
 - **Playable, end to end, on the web.** A full solo game (you vs 3 bots) deals, plays and wins in a
   real browser at the landscape profiles. First true deal→win playthrough proven in
   `docs/captures/landscape-4/PLAYTHROUGH.md` (human win, turn 37, all six screen states PASS).
-- **Tests:** **456 green** — engine 76 · bots 14 · difficulty 9 · tools 15 · mobile 342 (floor was 419
+- **Tests:** **462 green** — engine 76 · bots 14 · difficulty 9 · tools 15 · mobile 348 (floor was 419
   before the S pass). `pnpm gate` (ip-guard → typecheck → lint → test) is green and enforced by an
   unskippable pre-commit hook.
 - **Not yet shippable to a phone.** No native package, no stable hosting — today the only way onto a

@@ -1,0 +1,26 @@
+{
+  "results": [
+    {
+      "profile": "915x412",
+      "ok": true,
+      "hasBlurb": true,
+      "hasShare": true,
+      "dealt": {
+        "hash": "#/play",
+        "hasGame": true
+      },
+      "errors": []
+    },
+    {
+      "profile": "740x360",
+      "ok": true,
+      "hasBlurb": true,
+      "hasShare": true,
+      "dealt": {
+        "hash": "#/play",
+        "hasGame": true
+      },
+      "errors": []
+    }
+  ]
+}
