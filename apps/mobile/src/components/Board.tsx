@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Action, CardId, Observation, SetId } from '@sauda/engine';
 import type { SeatConfig } from '../game/store';
-import { dropZonesForCard, rearrangeDestinations, assistHintKey } from '../game/interaction';
+import { dropZonesForCard, rearrangeDestinations, assistHintAction } from '../game/interaction';
 import type { DropZone } from '../game/interaction';
 import { evaluateArrangements } from '../game/arrangeAssistant';
 import { ArrangeAssistant } from './ArrangeAssistant';
@@ -424,7 +424,7 @@ export function Board({
           myProperties={observation.myProperties}
           myKiraya={observation.myKiraya}
           opponents={observation.opponents}
-          hintedKey={assistHintKey(observation, actions, targeting, observation.me, tableDifficulty)}
+          hintAction={assistHintAction(observation, actions, targeting, tableDifficulty)}
           reducedMotion={reducedMotion}
           onCommit={(action) => {
             onAct(action);

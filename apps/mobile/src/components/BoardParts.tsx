@@ -67,6 +67,7 @@ function MiniGroup({
   onExpand,
   expandHint,
   rearrange,
+  anchorSet,
 }: {
   set: SetId;
   group: PropertyGroup;
@@ -78,12 +79,14 @@ function MiniGroup({
   onExpand?: (() => void) | undefined;
   expandHint?: boolean | undefined; // J4 touch audit: show a visible "tap to enlarge" glyph (my groups)
   rearrange?: GroupRearrange | undefined; // P7: ◈ handles for this group's movable wildcards
+  anchorSet?: SetId | undefined; // S4/T3: tag MY group so the arrange nudge can anchor to it
 }) {
   const theme = SETS[set];
   const boxShadow = hot ? GLOW.hot : soft ? GLOW.soft : undefined;
   return (
     <div
       data-drop={dropId}
+      {...(anchorSet ? { 'data-myset': anchorSet } : {})}
       onClick={onExpand}
       style={{ flex: '0 0 auto', position: 'relative', borderRadius: 6, boxShadow, cursor: onExpand ? 'pointer' : undefined }}
       title={`${theme.label} ${group.cards.length}/${theme.size} — tap to expand`}
@@ -221,6 +224,7 @@ export function GroupRow({
             group={group}
             width={width}
             rent={mine ? kiraya?.[set]?.[index] : undefined}
+            anchorSet={mine ? set : undefined}
             dropId={droppable ? `set:${set}` : undefined}
             soft={droppable && !hot}
             hot={hot}

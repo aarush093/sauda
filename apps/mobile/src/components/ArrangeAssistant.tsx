@@ -8,7 +8,7 @@
  * auto-end drain) and re-evaluates after every state change, keying this by the suggestion so a new
  * board resets it.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Action, SetId } from '@sauda/engine';
 import { SETS } from '@sauda/engine';
@@ -29,10 +29,22 @@ export function ArrangeAssistant({
   onDismiss: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  // T3: anchor the nudge to the AFFECTED group (the colour the suggestion completes), measured from
+  // its live DOM tag, rather than the my-sets column head. Falls back to the head if it can't be found.
+  const [anchor, setAnchor] = useState<{ left: number; top: number } | null>(null);
+  useEffect(() => {
+    const el = typeof document !== 'undefined' ? document.querySelector(`[data-myset="${suggestion.targetSet}"]`) : null;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setAnchor({ left: Math.round(rect.left), top: Math.round(Math.max(4, rect.top - 30)) }); // just above the group
+    } else {
+      setAnchor(null);
+    }
+  }, [suggestion.targetSet]);
 
   if (!open) {
     return (
-      <button style={nudgeStyle} onClick={() => setOpen(true)} aria-label={`Arrange: ${suggestion.summary}`}>
+      <button style={nudgeStyle(anchor)} onClick={() => setOpen(true)} aria-label={`Arrange: ${suggestion.summary}`}>
         ◈ arrange
       </button>
     );
@@ -70,10 +82,13 @@ function groupForSet(suggestion: ArrangeSuggestion, set: SetId) {
 
 // A quiet gold chip, pinned above the hand near the affected colour. Deliberately understated (never
 // modal): it invites, it does not demand.
-const nudgeStyle: CSSProperties = {
-  position: 'absolute',
-  left: 52, // clear of the far-left bot rail; sits at the head of my-sets, the affected colour's column
-  top: 50,
+// The nudge sits BESIDE the affected group (measured), or — if that group can't be located — at the
+// head of the my-sets column (clear of the far-left bot rail) as a safe fallback.
+function nudgeStyle(anchor: { left: number; top: number } | null): CSSProperties {
+  return {
+  position: 'fixed',
+  left: anchor ? anchor.left : 52,
+  top: anchor ? anchor.top : 50,
   zIndex: LAYERS.board + 1,
   padding: '5px 12px',
   borderRadius: 999,
@@ -86,7 +101,8 @@ const nudgeStyle: CSSProperties = {
   letterSpacing: '0.04em',
   cursor: 'pointer',
   boxShadow: STAGE.glowGold,
-};
+  };
+}
 const overlayStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,

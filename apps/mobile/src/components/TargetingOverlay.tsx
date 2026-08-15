@@ -44,7 +44,7 @@ export function TargetingOverlay({
   myProperties,
   myKiraya,
   opponents = [],
-  hintedKey = null,
+  hintAction = null,
   reducedMotion = false,
   onCommit,
   onCancel,
@@ -58,9 +58,10 @@ export function TargetingOverlay({
   myKiraya?: Record<SetId, number[]> | undefined;
   // S3: opponents' public boards, so a KABZA target set renders as its real cascade (not a pill).
   opponents?: OpponentView[];
-  // S3 assist (difficulty-gated): the key of the choice the frozen recommend() favours — it bounces /
-  // brightens. Null = no hint (hard tier, or no clear best). Never alters what is targetable.
-  hintedKey?: string | null;
+  // S3 assist (difficulty-gated): the target ACTION the frozen recommend() favours — whichever choice
+  // leads to it (on ANY step, incl. ADLA-BADLI's second pick — T3) bounces / brightens. Null = no hint
+  // (hard tier, or no clear best). Never alters what is targetable.
+  hintAction?: Action | null;
   reducedMotion?: boolean; // under reduced-motion the hint is a static brighter ring, not a bounce
   onCommit: (action: Action) => void;
   onCancel: () => void;
@@ -77,9 +78,9 @@ export function TargetingOverlay({
         <div style={targetsPaneStyle}>
           <ScaledCard cardId={cardId} width={88} />
           {plan ? (
-            <KirayaPicker plan={plan} myProperties={myProperties} hintedKey={hintedKey} reducedMotion={reducedMotion} onCommit={onCommit} onCancel={onCancel} />
+            <KirayaPicker plan={plan} myProperties={myProperties} hintAction={hintAction} reducedMotion={reducedMotion} onCommit={onCommit} onCancel={onCancel} />
           ) : step ? (
-            <StepPicker firstStep={step} opponents={opponents} me={me} hintedKey={hintedKey} reducedMotion={reducedMotion} onCommit={onCommit} onCancel={onCancel} />
+            <StepPicker firstStep={step} opponents={opponents} me={me} hintAction={hintAction} reducedMotion={reducedMotion} onCommit={onCommit} onCancel={onCancel} />
           ) : (
             <CancelRow onCancel={onCancel} />
           )}
@@ -149,12 +150,25 @@ function TargetTile({
   );
 }
 
+// A choice is the hint on THIS step if it fires the recommended action OR (a first-step ADLA-BADLI
+// choice) leads to a sub-step that does. Same-object comparison — both come from `actions`. This is
+// what makes the hint per-step: it's re-evaluated for whatever step is currently shown (T3).
+function choiceLeadsTo(choice: TargetChoice, hintAction: Action | null): boolean {
+  if (hintAction === null) {
+    return false;
+  }
+  if (choice.action === hintAction) {
+    return true;
+  }
+  return choice.next ? choice.next.choices.some((c) => c.action === hintAction) : false;
+}
+
 // Walks the TargetStep tree: single-pick actions have one step; ADLA-BADLI has a `.next`.
 function StepPicker({
   firstStep,
   opponents,
   me,
-  hintedKey,
+  hintAction,
   reducedMotion,
   onCommit,
   onCancel,
@@ -162,7 +176,7 @@ function StepPicker({
   firstStep: TargetStep;
   opponents: OpponentView[];
   me: PlayerId;
-  hintedKey: string | null;
+  hintAction: Action | null;
   reducedMotion: boolean;
   onCommit: (action: Action) => void;
   onCancel: () => void;
@@ -186,7 +200,7 @@ function StepPicker({
               choice={choice}
               opponents={opponents}
               me={me}
-              hinted={hintedKey === choice.key}
+              hinted={choiceLeadsTo(choice, hintAction)}
               reducedMotion={reducedMotion}
               onPick={pick}
             />
@@ -203,18 +217,21 @@ function StepPicker({
 function KirayaPicker({
   plan,
   myProperties,
-  hintedKey,
+  hintAction,
   reducedMotion,
   onCommit,
   onCancel,
 }: {
   plan: KirayaPlan;
   myProperties: Record<SetId, PropertyGroup[]>;
-  hintedKey: string | null;
+  hintAction: Action | null;
   reducedMotion: boolean;
   onCommit: (action: Action) => void;
   onCancel: () => void;
 }) {
+  // The recommended LAGAAN charge, if any — a PLAY_KIRAYA; we hint its colour on the colour step and
+  // its opponent on the opponent step (a wild LAGAAN's second pick, T3).
+  const hintKiraya = hintAction?.type === 'PLAY_KIRAYA' ? hintAction : null;
   const [dugnaCount, setDugnaCount] = useState(0);
   const [color, setColor] = useState<SetId | null>(null);
 
@@ -259,7 +276,7 @@ function KirayaPicker({
             <div style={tileRowStyle}>
               {plan.colors.map((choice) => {
                 const group = myGroup(choice.color);
-                const hinted = hintedKey === choice.color;
+                const hinted = hintKiraya?.color === choice.color;
                 return (
                   <button key={choice.color} style={tileStyle(hinted, reducedMotion)} onClick={() => pickColor(choice.color)} aria-label={choice.label} {...(hinted ? { 'data-hint': 'true' } : {})}>
                     {group ? <SetCascade group={group} width={TARGET_SET_PX} /> : <span style={seatChipStyle}>{choice.label}</span>}
@@ -274,7 +291,7 @@ function KirayaPicker({
           <div style={promptStyle}>Charge which opponent?</div>
           <div style={tileRowStyle}>
             {plan.opponents.map((target) => {
-              const hinted = hintedKey === `p${target}`;
+              const hinted = hintKiraya?.color === color && hintKiraya?.target === target;
               return (
                 <button key={target} style={tileStyle(hinted, reducedMotion)} onClick={() => pickTarget(target)} aria-label={`Player ${target}`} {...(hinted ? { 'data-hint': 'true' } : {})}>
                   <SeatChip player={target} />

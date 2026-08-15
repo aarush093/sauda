@@ -31,6 +31,7 @@
     "verify:difficulty": "node scripts/verify-difficulty-live.mjs",
     "verify:profile": "node scripts/verify-profile-landscape.mjs",
     "verify:legibility": "node scripts/verify-legibility.mjs",
+    "capture:handinfo5": "node scripts/capture-hand-info-5.mjs",
     "measure": "node scripts/excellence-measure.mjs",
     "plates:variants": "node scripts/build-plate-variants.mjs"
   },

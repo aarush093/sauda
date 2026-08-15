@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "file": "t3_arrange_anchor_915x412.png",
+      "ok": true,
+      "geo": {
+        "nudge": {
+          "left": 42,
+          "top": 4
+        },
+        "jaipurGroup": {
+          "left": 52,
+          "top": 34
+        }
+      }
+    },
+    {
+      "file": "t3_adla_step2_915x412.png",
+      "ok": true,
+      "note": "step1 hints 1, step2 hints 1"
+    }
+  ]
+}

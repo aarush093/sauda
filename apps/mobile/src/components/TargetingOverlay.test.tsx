@@ -16,7 +16,10 @@ const kabza = deck.find((c) => c.kind === 'action' && c.action === 'kabza')!.id;
 const vasooli = deck.find((c) => c.kind === 'action' && c.action === 'vasooli')!.id;
 const haath = deck.find((c) => c.kind === 'action' && c.action === 'haathKiSafai')!.id;
 const jaipurProp = deck.find((c) => c.kind === 'property' && c.set === 'jaipur')!.id;
+const jaipurProp2 = deck.filter((c) => c.kind === 'property' && c.set === 'jaipur')[1]!.id;
 const mumbaiProp = deck.find((c) => c.kind === 'property' && c.set === 'mumbai')!.id;
+const mumbaiProp2 = deck.filter((c) => c.kind === 'property' && c.set === 'mumbai')[1]!.id;
+const adlaBadli = deck.find((c) => c.kind === 'action' && c.action === 'adlaBadli')!.id;
 
 function emptyBoard(): Record<SetId, PropertyGroup[]> {
   const record = {} as Record<SetId, PropertyGroup[]>;
@@ -97,5 +100,44 @@ describe('TargetingOverlay renders REAL cards, never text pills (S3)', () => {
     // tapping a target commits the EXACT enumerated engine action (legalActions is the only oracle)
     fireEvent.click(screen.getAllByRole('button').find((b) => b.getAttribute('aria-label')?.includes('Jaipur'))!);
     expect(onCommit).toHaveBeenCalledWith(actions[0]);
+  });
+});
+
+describe('TargetingOverlay assist hint — per step, incl. ADLA-BADLI step 2 (T3)', () => {
+  // mine_1 → {their_1, their_2}, and mine_2 → their_1. The recommended action is mine_1 → their_1.
+  const adlaActions: Action[] = [
+    { type: 'PLAY_ACTION', cardId: adlaBadli, params: { action: 'adlaBadli', myCardId: jaipurProp, target: 1, theirCardId: mumbaiProp } },
+    { type: 'PLAY_ACTION', cardId: adlaBadli, params: { action: 'adlaBadli', myCardId: jaipurProp, target: 1, theirCardId: mumbaiProp2 } },
+    { type: 'PLAY_ACTION', cardId: adlaBadli, params: { action: 'adlaBadli', myCardId: jaipurProp2, target: 1, theirCardId: mumbaiProp } },
+  ];
+
+  it('hints the leading choice on step 1, then the recommended pick on step 2', () => {
+    const { container } = render(
+      <TargetingOverlay cardId={adlaBadli} actions={adlaActions} me={0} myProperties={emptyBoard()} opponents={[]} hintAction={adlaActions[0]!} onCommit={() => {}} onCancel={() => {}} />,
+    );
+    // step 1 (give mine): exactly one hinted tile — the mine card that leads to the recommended leaf
+    expect(screen.getByText('Give which of your properties?')).toBeTruthy();
+    expect(container.querySelectorAll('[data-hint]')).toHaveLength(1);
+    // advance to step 2 by tapping the hinted mine tile
+    fireEvent.click(container.querySelector('[data-hint]')!);
+    // step 2 (take theirs): the hint MOVES to the recommended their-card — the fix (was missing before)
+    expect(screen.getByText('Take which of theirs?')).toBeTruthy();
+    expect(container.querySelectorAll('[data-hint]')).toHaveLength(1);
+  });
+
+  it('shows NO hint on either step at a HARD table (hintAction null)', () => {
+    const { container } = render(
+      <TargetingOverlay cardId={adlaBadli} actions={adlaActions} me={0} myProperties={emptyBoard()} opponents={[]} hintAction={null} onCommit={() => {}} onCancel={() => {}} />,
+    );
+    expect(container.querySelectorAll('[data-hint]')).toHaveLength(0);
+  });
+
+  it('under reduced-motion the hint is a static ring — no bounce animation', () => {
+    const { container } = render(
+      <TargetingOverlay cardId={adlaBadli} actions={adlaActions} me={0} myProperties={emptyBoard()} opponents={[]} hintAction={adlaActions[0]!} reducedMotion onCommit={() => {}} onCancel={() => {}} />,
+    );
+    const hinted = container.querySelector('[data-hint]')!;
+    expect(hinted).toBeTruthy(); // the brighter ring is still applied
+    expect(hinted.getAttribute('style') ?? '').not.toContain('bounce'); // …but no bounce animation
   });
 });

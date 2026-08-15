@@ -197,20 +197,21 @@ function adlaBadliStep(play: PlayActionMove[], me: PlayerId): TargetStep {
 // S3 ASSIST — the difficulty-gated best-target hint (owner-directed).
 // ---------------------------------------------------------------------------
 
-// The KEY of the target choice the frozen full-strength recommend() favours for THIS card — the UI
-// bounces / brightens it as a gentle hint on easy/medium tables. READ-ONLY: it never changes what is
-// targetable (legalActions is untouched), so BAD_TARGET stays unreachable. Returns null on the HARD
-// tier (no hint), and when there is nothing to single out (one target, or no clear best). recommendFn
-// is injectable for the unit test. Determinism/strength: recommend is called at full strength ('hard')
-// so the hint is the BEST target; the tier gates only whether the hint is SHOWN.
-export function assistHintKey(
+// The exact target ACTION the frozen full-strength recommend() favours for THIS card — the UI
+// brightens / bounces whichever choice leads to it, on EVERY step (so ADLA-BADLI's second pick is
+// hinted too, T3). Returning the action rather than one choice key is what makes the hint per-step:
+// each picker asks "does my choice lead to this action?" for its own current step. READ-ONLY: it
+// never changes what is targetable (legalActions is untouched), so BAD_TARGET stays unreachable.
+// Returns null on the HARD tier (no hint) and when there is nothing to single out (one target). The
+// action is called at full strength ('hard') so the hint is always the BEST target; the tier gates
+// only whether the hint is SHOWN. recommendFn is injectable for the unit test.
+export function assistHintAction(
   observation: Observation,
   actions: Action[],
   cardId: CardId,
-  me: PlayerId,
   difficulty: Difficulty,
   recommendFn: typeof recommend = recommend,
-): string | null {
+): Action | null {
   if (difficulty === 'hard') {
     return null; // hard: no hint — the player reads the board unaided (already-locked decision)
   }
@@ -226,25 +227,8 @@ export function assistHintKey(
   if (subset.length <= 1) {
     return null; // a single target fires without a pick → nothing to hint
   }
-  const best = recommendFn(observation, subset, 'hard').action; // full-strength BEST target
-  if (best.type === 'PLAY_KIRAYA') {
-    return best.color; // the LAGAAN colour choice is keyed by its SetId
-  }
-  const step = actionTargeting(actions, cardId, me);
-  if (!step) {
-    return null;
-  }
-  // The choice whose action IS `best` (same object, both filtered from `actions`), or — for the
-  // two-step ADLA-BADLI — the first-step choice whose sub-step contains it.
-  for (const choice of step.choices) {
-    if (choice.action === best) {
-      return choice.key;
-    }
-    if (choice.next && choice.next.choices.some((c) => c.action === best)) {
-      return choice.key;
-    }
-  }
-  return null;
+  // The full-strength BEST target action; the overlay highlights whichever choice leads to it, per step.
+  return recommendFn(observation, subset, 'hard').action;
 }
 
 // ---------------------------------------------------------------------------
