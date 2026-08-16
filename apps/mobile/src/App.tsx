@@ -67,7 +67,7 @@ function AutoStartTable() {
   return state ? (
     <>
       <Table />
-      {hudEnabled() && <Hud />}
+      {import.meta.env.DEV && hudEnabled() && <Hud />}
     </>
   ) : null;
 }
@@ -91,33 +91,38 @@ export function App() {
     }
   }, [phase]);
 
-  // Dev-only routes for M4 art / layout review.
-  if (hash.startsWith('#/dev/card/')) {
-    const cardId = hash.slice('#/dev/card/'.length);
-    return (
-      <div style={{ minHeight: '100vh', background: INK.tableIndigo, padding: 32 }}>
-        <div style={{ transform: 'scale(3)', transformOrigin: 'top left' }}>
-          <CardFace cardId={cardId} />
+  // Dev-only routes for M4 art / layout review. The whole block is gated on `import.meta.env.DEV`,
+  // which Vite replaces with `false` in a production build — so these routes AND the dev-only
+  // components they reach (PlateSheet, DevWheel) are dead-code-eliminated from the shipped bundle.
+  if (import.meta.env.DEV) {
+    if (hash.startsWith('#/dev/card/')) {
+      const cardId = hash.slice('#/dev/card/'.length);
+      return (
+        <div style={{ minHeight: '100vh', background: INK.tableIndigo, padding: 32 }}>
+          <div style={{ transform: 'scale(3)', transformOrigin: 'top left' }}>
+            <CardFace cardId={cardId} />
+          </div>
         </div>
-      </div>
-    );
-  }
-  if (hash === '#/dev/plates') {
-    return <PlateSheet />;
-  }
-  // Dev-only (tree-shaken from prod): the hand WHEEL in isolation at N cards, in a my-area-sized
-  // band, for the H3 legibility n-series stills + the re-spacing glide clip. `#/dev/wheel/5` etc.
-  if (import.meta.env.DEV && hash.startsWith('#/dev/wheel/')) {
-    const n = Math.max(1, Math.min(12, Number(hash.slice('#/dev/wheel/'.length)) || 5));
-    return <DevWheel count={n} />;
+      );
+    }
+    if (hash === '#/dev/plates') {
+      return <PlateSheet />;
+    }
+    // The hand WHEEL in isolation at N cards, in a my-area-sized band, for the H3 legibility
+    // n-series stills + the re-spacing glide clip. `#/dev/wheel/5` etc.
+    if (hash.startsWith('#/dev/wheel/')) {
+      const n = Math.max(1, Math.min(12, Number(hash.slice('#/dev/wheel/'.length)) || 5));
+      return <DevWheel count={n} />;
+    }
   }
 
   // R0 (owner landscape directive, 2 Aug): SAUDA is LANDSCAPE-ONLY. In portrait the game never lays
   // out — the rotate gate stands over an UNMOUNTED, paused game (its state waits safely in the store,
   // so rotating back resumes exactly where we were, with no bot having stepped behind the gate). The
-  // pure dev ART routes above (#/dev/card, /plates, /wheel) are ungated: they are review tools shot in
-  // a tall box, not the game. The dev HUD rides above the gate so orientation stays debuggable.
-  const hud = hudEnabled() ? <Hud /> : null;
+  // pure dev ART routes above (#/dev/card, /plates, /wheel) are not orientation-gated (they are review
+  // tools shot in a tall box, not the game) — but they ARE DEV-gated, so prod never sees them. The dev
+  // HUD rides above the gate so orientation stays debuggable.
+  const hud = import.meta.env.DEV && hudEnabled() ? <Hud /> : null;
   if (orientation === 'portrait') {
     return (
       <>
@@ -130,7 +135,7 @@ export function App() {
   if (hash === '#/autostart') {
     return <AutoStartTable />; // AutoStartTable renders its own HUD
   }
-  if (hash === '#/dev/frame360') {
+  if (import.meta.env.DEV && hash === '#/dev/frame360') {
     // R0: the live play screen inside an exact LANDSCAPE box (740x360, the legacy tight profile) — an
     // iframe, so the board's vw/vh resolve to the frame and not the desktop viewport, and the inner
     // #/autostart sees a landscape viewport so it never gates. Neutral surround for captures.
