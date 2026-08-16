@@ -4,6 +4,37 @@
 **AUDIT-Z note appended 2026-08-06.** Four polish passes made the true state hard to read; this is the
 map the owner and any future session can trust. It records state only — **no new work is proposed here.**
 
+## DEPLOY-1 — THE PERMANENT WEB LINK (2026-08-16) — launch-blocker #1
+
+The #1 launch blocker was "no stable link": every playtest needed the owner's laptop alive with a
+rotating Cloudflare quick tunnel (`pnpm phone`), which repeatedly blocked testing. DEPLOY-1 makes the
+solo, fully-client-side web build shippable to a static host (Vercel) so any phone can open it any time.
+
+- **D1 — production build audit.** The prod build is clean (no warnings/errors, 259 modules, main JS
+  320.87 kB / gzip 96.69 kB, CSS 3.24 kB; ~5.7 MB total, almost all card-art webp). Every dev-only
+  surface is now dead-code-eliminated: the `#/dev/*` routes, the spread lab, `?hud`, and the
+  `window.__replay/__sauda/__craft/__saudaCapturePaused` capture bridge. Three routes
+  (`#/dev/card`, `#/dev/plates`, `#/dev/frame360`) and the HUD were previously reachable statically and
+  leaked into the bundle — now gated behind `import.meta.env.DEV`. A grep of the built output for those
+  identifiers is empty, and the globals read `undefined` in the served build. **Served the prod build
+  and played it** (915-profile): Home → KHELO → setup → deal-in renders; plates load, fonts render
+  (system-fallback stacks, no external font fetch), the upright spread renders, tap-to-inspect and the
+  drag magnetic-assist are live, the portrait rotate-gate + "Go fullscreen" work, **zero console
+  errors**. (Driving to literal gameOver needs manual drag precision the synthetic-drag harness can't
+  commit — identical dev-or-prod, not a build defect.)
+- **D2/D3 — deploy config landed, one owner login from live.** `vercel.json` is committed (build cmd,
+  output dir, install cmd, SPA rewrites) and the exact build command is verified from the repo root.
+  The Vercel CLI runs (v59.1.3, Node 24.15.0) but reports **Logged out** — `vercel login` is
+  interactive and only the owner can do it (it must not be automated). The repo also has **no git
+  remote** yet, so auto-deploy needs the owner to create a GitHub repo + push. **Both owner steps are
+  written out precisely in `docs/DEPLOY.md`** (a 2-command CLI deploy, plus the GitHub route that gives
+  fix → push → open-same-URL auto-deploy).
+
+**Net:** the stable-link blocker is engineered shut — the moment the owner runs the two documented
+commands, SAUDA has a permanent `*.vercel.app` URL. The rotating-tunnel dependency is retired.
+`packages/engine` + `packages/bots` stayed byte-identical (the only code change was DEV-gating dead
+routes in `apps/mobile/src/App.tsx`). Tests held at **462** (floor).
+
 ## S — HAND + INFO REDESIGN (2026-08-13) — the owner playtest pass
 
 Six owner directives, all landed green + playable across two passes (12 commits). What S changed:
@@ -62,8 +93,10 @@ Full report + evidence: `docs/AUDIT_Z.md`; driven log `docs/captures/audit-z/aud
 - **Tests:** **462 green** — engine 76 · bots 14 · difficulty 9 · tools 15 · mobile 348 (floor was 419
   before the S pass). `pnpm gate` (ip-guard → typecheck → lint → test) is green and enforced by an
   unskippable pre-commit hook.
-- **Not yet shippable to a phone.** No native package, no stable hosting — today the only way onto a
-  device is `pnpm phone` (an ephemeral Cloudflare tunnel that rotates every run). See "Top open threads".
+- **Web-shippable — stable hosting is one owner login away (DEPLOY-1).** The Vercel deploy is fully
+  configured and committed (`vercel.json`, dev surfaces stripped, build verified); the permanent
+  `*.vercel.app` URL goes live the moment the owner runs the two commands in `docs/DEPLOY.md`. Until
+  then the rotating `pnpm phone` tunnel still works as a stopgap. **Still no native package** (M5).
 
 ## Milestones — done
 
@@ -89,22 +122,25 @@ committed capture pack under `docs/captures/`. It does **not** mean the M4 *spec
 | **M4c — motion/juice/sound** | deferred | Stamp-slam victory, FULL-ribbon slide, drop-zone/commit feedback, received-card travel, overlay open/close transitions, wheel peek ease, Munshi bouncing arrow, **sound + haptics**. Catalogued in `docs/M4C_MOTION_BACKLOG.md`. None are bugs. |
 | **M4 spec gate (tutorial + Lighthouse)** | not met | The M4 gate in BUILD_SPEC — "a friend can learn from the tutorial alone" + "Lighthouse perf ≥ 90" — is **not** satisfied: there is **no tutorial/onboarding**, and no Lighthouse run is recorded. |
 | **M5 — Ship (Android)** | not started | Capacitor project, keystore + signed AAB, versionCode/Name, `store/` assets, `privacy.html`, Play data-safety answers, current target-SDK check. Nothing exists yet. |
-| **Stable web hosting** | not started | No `vite build` deploy (e.g. Vercel). The only device path is the rotating quick tunnel. |
+| **Stable web hosting** | configured, not yet live | DEPLOY-1: `vite build` → Vercel is fully set up (`vercel.json` committed, dev surfaces stripped, build verified). Goes live on one owner `vercel login` + `vercel --prod`. See `docs/DEPLOY.md`. |
 | **M6 — ML / IsmctsBot / Boss** | out of scope for now | Optional, only after M5. |
 | **MP1 — online multiplayer** | out of scope for v1 | Plus accounts/backend/ads/iOS/localization — BUILD_SPEC §13. Do not add. |
 
 ## Top 5 open threads — ranked by what most blocks a real launch
 
-1. **No stable link a friend can open.** `pnpm phone` mints a fresh tunnel URL each run and it dies when
-   the terminal closes. The fastest route to a real, shareable launch is a `vite build` → static host
-   (e.g. Vercel) of the landscape web app (with the rotate-gate + "Go fullscreen" shell). Until that
-   exists, "playable" means "playable while the owner's PC + tunnel are up." **Biggest blocker.**
-2. **No native package (M5).** For an installable app that pins landscape in the manifest (and drops the
+1. **Stable link — DONE bar one owner login (DEPLOY-1, was the biggest blocker).** The `vite build` →
+   Vercel static deploy is fully prepared and committed: `vercel.json`, dev surfaces stripped from the
+   prod bundle, the rotate-gate + "Go fullscreen" shell confirmed in the built app, build command
+   verified from repo root. What remains is **owner-only**: `vercel login` (interactive) then
+   `vercel --prod`, or create a GitHub repo + import it for push-to-deploy. Exact steps in
+   `docs/DEPLOY.md`. Once run, `pnpm phone` is retired for good.
+2. **Never run on a real phone.** Everything to date is emulated device profiles + one tunnel curl.
+   Real touch, real Android Chrome, and battery-saver-forced reduced motion on a friend's phone are
+   unverified. The live URL (thread #1) is what finally lets this happen — the web build is the
+   parallel feedback path while the M5 Play-Store 14-day tester clock is untouched.
+3. **No native package (M5).** For an installable app that pins landscape in the manifest (and drops the
    browser fullscreen/orientation-lock caveats entirely), the Capacitor → signed AAB → Play Store track
    is untouched. This is the "proper" launch and a larger effort than #1.
-3. **Never run on a real phone.** Everything to date is emulated device profiles + one tunnel curl. Real
-   touch, real Android Chrome, and battery-saver-forced reduced motion on the friend's phone are
-   unverified. N3 made the link + HUD work so this test can finally happen — but it hasn't yet.
 4. **No onboarding + no sound/juice (M4 gate + M4c).** A first-time player gets no tutorial and no audio/
    haptic feedback; the M4c feedback motions (commit/victory/received-card) are stubs. A cold launch to a
    friend would lean entirely on the Munshi advisor and the rules Book.
