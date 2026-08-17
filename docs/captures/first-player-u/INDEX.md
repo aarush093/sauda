@@ -56,4 +56,27 @@ landscape (the banner says as much), but every zone is present and reachable and
 sits above the bottom edge. Landscape remains the full experience; portrait adapts rather than blocks.
 Native orientation lock proper arrives with the M5 Capacitor manifest (DECISIONS "U4").
 
-Rerun: `pnpm dev:lan` in one shell, then `pnpm --filter @sauda/mobile capture:firstplayer`.
+## U3 — the guided tutorial ("Sikho")
+
+A demo game the player WATCHES, driven by the gold cursor, teaching every kind of move and tying each to
+the rulebook. The deterministic brain (`game/tutorial.ts`) is a fixed crafted game + scripted actions
+replayed through the engine — proven legal + ending in a real declared SAUDA by `tutorial.test.ts`. The
+UI (`TutorialPlayer` + `TutorialCursor`) plays it on the real Board with teaching beats and Book
+tap-throughs. It auto-offers ONCE on the first visit (an invitation, not a wall) and lives permanently
+on Home as "Sikho — watch a demo".
+
+Clip: `tutorial/tutorial_beats.webm` — the demo running through the first three beats **including a Book
+jump and return**. Stills in `tutorial/`:
+
+| Still | What it shows |
+|-------|---------------|
+| `beat1_drawing.png` | The first teaching beat: "Drawing", with the Niyam 2 tap-through, over the dimmed board. |
+| `beat1_book_jump.png` | Tapping the Niyam link opens that Book chapter, over the paused demo. |
+| `beat1_book_return.png` | Closing the Book returns to the paused beat — no route change. |
+| `beat2_placing.png` | Beat two — "Placing property" (Niyam 3). |
+| `beat3_completing.png` | Beat three — "Completing a set" (Niyam 1). |
+| `demo_board_cursor.png` | Mid-demo: the caption "That completes the Kashi set!" as the board updates. |
+
+**Result: 6/6 shots, 0 console errors.** Rerun: `pnpm --filter @sauda/mobile capture:tutorial`.
+
+Rerun the U1/U2 packs: `pnpm dev:lan` in one shell, then `pnpm --filter @sauda/mobile capture:firstplayer`.

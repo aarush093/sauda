@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "shot": "beat1_drawing.png",
+      "ok": true
+    },
+    {
+      "shot": "beat1_book_jump.png",
+      "ok": true
+    },
+    {
+      "shot": "beat1_book_return.png",
+      "ok": true
+    },
+    {
+      "shot": "beat2_placing.png",
+      "ok": true
+    },
+    {
+      "shot": "beat3_completing.png",
+      "ok": true
+    },
+    {
+      "shot": "demo_board_cursor.png",
+      "ok": true
+    }
+  ],
+  "errors": []
+}

@@ -16,7 +16,7 @@ import { useGame } from '../game/store';
 import type { SeatConfig } from '../game/store';
 import { useOrientation } from '../game/orientation';
 import { resolveSeed } from '../game/seed';
-import { hasCompletedGame } from './firstRun';
+import { hasCompletedGame, hasSeenTutorialOffer, markTutorialOfferSeen } from './firstRun';
 import { STAGE, INK, FONT, SHADOW } from '../design/tokens';
 
 function go(hash: string): void {
@@ -31,9 +31,23 @@ export function Home() {
   const [bots, setBots] = useState(3); // solo: number of bot opponents (1–3)
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const showRibbon = !hasCompletedGame();
+  // U3: the guided tutorial auto-offers ONCE on the first visit — an invitation, never a wall (KHELO
+  // stays right there). After it is taken or declined it never auto-appears; the permanent "Sikho"
+  // door below always remains.
+  const [offerTutorial, setOfferTutorial] = useState(() => !hasSeenTutorialOffer());
   // U2: with the rotate gate retired, Home can render in portrait too — stack the two panes vertically
   // there so the wordmark and the doors each get the full width instead of a squeezed half.
   const portrait = useOrientation() === 'portrait';
+
+  function watchTutorial() {
+    markTutorialOfferSeen();
+    setOfferTutorial(false);
+    go('#/sikho');
+  }
+  function declineTutorial() {
+    markTutorialOfferSeen();
+    setOfferTutorial(false);
+  }
 
   function deal() {
     const seats: SeatConfig[] = [{ kind: 'human' }];
@@ -56,7 +70,17 @@ export function Home() {
         {/* the rubber-stamp wordmark — code-drawn ring, no asset */}
         <StampWordmark />
         <div style={taglineStyle}>{GAME.tagline}</div>
-        {showRibbon && !setupOpen && (
+        {/* U3: the first-visit tutorial invitation — an offer, not a wall. Decline drops it forever. */}
+        {offerTutorial && !setupOpen && (
+          <div style={offerCardStyle}>
+            <div style={offerTextStyle}>Pehli baar? Dekho ek demo game.</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button style={offerWatchStyle} onClick={watchTutorial}>Sikho →</button>
+              <button style={offerLaterStyle} onClick={declineTutorial}>Baad mein</button>
+            </div>
+          </div>
+        )}
+        {showRibbon && !setupOpen && !offerTutorial && (
           <button style={ribbonStyle} onClick={() => go('#/niyam?chapter=1')}>
             Naye ho? Niyam se shuru karo →
           </button>
@@ -75,6 +99,10 @@ export function Home() {
             </button>
             <button style={secondaryButton} onClick={() => go('#/niyam')}>
               NIYAM
+            </button>
+            {/* U3: the permanent tutorial door — always here, first visit or not. */}
+            <button style={secondaryButton} onClick={() => go('#/sikho')}>
+              SIKHO — watch a demo
             </button>
           </div>
         ) : (
@@ -355,4 +383,42 @@ const ribbonStyle = {
   fontSize: 13,
   padding: '8px 16px',
   cursor: 'pointer',
+} as const;
+
+// U3: the first-visit tutorial invitation card — quiet, offered once, easy to decline.
+const offerCardStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: 8,
+  padding: '10px 16px',
+  borderRadius: 12,
+  border: `1px solid ${INK.gold}`,
+  background: STAGE.scrimSheet,
+} as const;
+const offerTextStyle = {
+  fontFamily: FONT.serif,
+  fontSize: 13,
+  color: STAGE.accentGold,
+} as const;
+const offerWatchStyle = {
+  minHeight: 38,
+  padding: '6px 16px',
+  borderRadius: 999,
+  border: `2px solid ${INK.gold}`,
+  background: STAGE.accentGold,
+  color: INK.deepInk,
+  fontFamily: FONT.display,
+  fontWeight: 700,
+  fontSize: 13,
+} as const;
+const offerLaterStyle = {
+  minHeight: 38,
+  padding: '6px 14px',
+  borderRadius: 999,
+  border: `1px solid ${INK.agedLine}`,
+  background: 'transparent',
+  color: STAGE.textOnFelt,
+  fontFamily: FONT.serif,
+  fontSize: 13,
 } as const;

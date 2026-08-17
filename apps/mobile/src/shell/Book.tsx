@@ -160,9 +160,10 @@ const CHAPTERS: Chapter[] = [
   },
 ];
 
-export function Book({ onClose }: { onClose: () => void }) {
-  // Deep-link: the Home ribbon opens #/niyam?chapter=1. 0 = the contents page.
-  const initial = readChapterParam();
+export function Book({ onClose, initialChapter }: { onClose: () => void; initialChapter?: number }) {
+  // Deep-link: the Home ribbon opens #/niyam?chapter=1; the tutorial beat passes initialChapter
+  // directly (it opens the Book OVER the demo without changing the route). 0 = the contents page.
+  const initial = initialChapter ?? readChapterParam();
   const [chapter, setChapter] = useState<number>(initial);
   const current = chapter >= 1 && chapter <= CHAPTERS.length ? CHAPTERS[chapter - 1]! : null;
 
