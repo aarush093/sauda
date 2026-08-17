@@ -1,10 +1,11 @@
 /**
- * THE GUIDED TUTORIAL — "Sikho" (U3, first-player pass; the owner's sister asked for it). A demo game
- * the player WATCHES, driven by an automated pointer, that teaches every kind of move and ties each to
- * the rulebook. This module is the deterministic BRAIN of it — the fixed starting state + the scripted
- * action list — kept pure and browser-free so the whole demo is testable (tutorial.test.ts) and plays
- * out identically every time. The cursor, the teaching-beat cards and the Book links are the UI layer
- * (TutorialPlayer / TutorialCursor); this file decides no pixels.
+ * DETERMINISTIC LEGAL-GAME FIXTURE (was the U3 "Sikho" demo script). The W2 first-player pass replaced
+ * the watch-only tutorial with just-in-time coach marks the player meets inside their OWN game, so the
+ * demo PLAYER (TutorialPlayer) is gone. This module survives as a pure, engine-legal FULL GAME — a fixed
+ * start state + a scripted action list that runs from deal to a real declared SAUDA, exercising every
+ * move class — used only by tests now: tutorial.test.ts proves it stays legal, and onboardingLive.test.ts
+ * uses it as a real game to prove the coach marks fire at the right moment. It ships in no bundle (no app
+ * import). Kept browser-free and deterministic so both tests are reproducible.
  *
  * HOW IT STAYS DETERMINISTIC AND LEGAL. We craft one 2-player game with `makeState` (You = seat 0, one
  * bot = seat 1) and then STACK the draw pile so each DRAW hands out exactly the cards the script needs

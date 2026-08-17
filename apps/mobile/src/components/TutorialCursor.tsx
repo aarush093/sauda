@@ -1,12 +1,13 @@
 /**
- * THE TUTORIAL CURSOR (U3). The visible pointer that drives the guided demo, rendered in the SAUDA
- * design language — a bright GOLD ring with a pale centre and a soft gold glow, tokens only (no new
- * colours, no asset). It travels between board elements with easing, shows a press pulse when it "taps",
- * and CARRIES the card during a drag so the gesture is legible. Under prefers-reduced-motion it is
- * instant — no eased travel, no pulse — so the demo stays comprehension, not decoration.
+ * THE GOLD CURSOR (built in U3, reused by W2). The visible pointer rendered in the SAUDA design language —
+ * a bright GOLD ring with a pale centre and a soft gold glow, tokens only (no new colours, no asset). It
+ * travels between board elements with easing, shows a press pulse when it "taps", and CARRIES a card
+ * during a drag so the gesture is legible. Under prefers-reduced-motion it is instant — no eased travel,
+ * no pulse — comprehension, not decoration.
  *
- * It is a pure presentational component: TutorialPlayer computes where it should be and whether it is
- * pressing / carrying; this just paints it. pointer-events:none so it never intercepts a tap.
+ * It is a pure presentational component: the caller (now CoachMark — the just-in-time gesture ghost)
+ * computes where it should be and whether it is pressing / carrying; this just paints it.
+ * pointer-events:none so it never intercepts a tap.
  */
 import type { CSSProperties } from 'react';
 import { CardFace } from './CardFace';

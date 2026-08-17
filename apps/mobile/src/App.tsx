@@ -6,7 +6,6 @@ import { Home } from './shell/Home';
 import { Book } from './shell/Book';
 import { markGameCompleted } from './shell/firstRun';
 import { Table } from './components/Table';
-import { TutorialPlayer } from './components/TutorialPlayer';
 import { RotateScreen } from './components/RotateScreen';
 import { useOrientation } from './game/orientation';
 import { PlateSheet } from './components/PlateSheet';
@@ -147,16 +146,10 @@ export function App() {
 
   // P8 shell routing. HOME is the default door; the game lives at #/play; the Book at #/niyam.
   // Home and Book each own their own fixed felt shell, so neither is wrapped in .app.
+  // W2 (first-player pass): the U3 watch-only tutorial route (#/sikho) is gone — onboarding is now the
+  // just-in-time coach marks the player meets INSIDE their own first game (see useCoachMark / CoachMark).
+  // The Book (#/niyam) stays as the reference; nothing auto-plays a game for the player any more.
   const route = hash.split('?')[0];
-  if (route === '#/sikho') {
-    // U3: the guided tutorial ("Sikho"). Its own full-screen surface; Skip / finish returns Home.
-    return (
-      <>
-        <TutorialPlayer onExit={() => { window.location.hash = '#/'; }} />
-        {hud}
-      </>
-    );
-  }
   if (route === '#/niyam') {
     return (
       <>

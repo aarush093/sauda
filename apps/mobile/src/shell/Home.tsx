@@ -15,7 +15,8 @@ import type { Difficulty } from '@sauda/bots';
 import { useGame } from '../game/store';
 import type { SeatConfig } from '../game/store';
 import { resolveSeed } from '../game/seed';
-import { hasCompletedGame, hasSeenTutorialOffer, markTutorialOfferSeen } from './firstRun';
+import { hasCompletedGame } from './firstRun';
+import { tipsEnabled, setTipsEnabled } from './tips';
 import { STAGE, INK, FONT, SHADOW } from '../design/tokens';
 
 function go(hash: string): void {
@@ -30,19 +31,16 @@ export function Home() {
   const [bots, setBots] = useState(3); // solo: number of bot opponents (1–3)
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const showRibbon = !hasCompletedGame();
-  // U3: the guided tutorial auto-offers ONCE on the first visit — an invitation, never a wall (KHELO
-  // stays right there). After it is taken or declined it never auto-appears; the permanent "Sikho"
-  // door below always remains.
-  const [offerTutorial, setOfferTutorial] = useState(() => !hasSeenTutorialOffer());
-
-  function watchTutorial() {
-    markTutorialOfferSeen();
-    setOfferTutorial(false);
-    go('#/sikho');
-  }
-  function declineTutorial() {
-    markTutorialOfferSeen();
-    setOfferTutorial(false);
+  // W2: the just-in-time onboarding switch. Tips (the in-game coach marks) are the teacher now, the Book
+  // is the reference — nothing auto-plays a demo game. This toggle turns the coaching on/off; the same
+  // switch (plus Reset tips) lives in the in-game pause sheet.
+  const [tipsOn, setTipsOn] = useState(() => tipsEnabled());
+  function toggleTips() {
+    setTipsOn((on) => {
+      const next = !on;
+      setTipsEnabled(next);
+      return next;
+    });
   }
 
   function deal() {
@@ -66,17 +64,7 @@ export function Home() {
         {/* the rubber-stamp wordmark — code-drawn ring, no asset */}
         <StampWordmark />
         <div style={taglineStyle}>{GAME.tagline}</div>
-        {/* U3: the first-visit tutorial invitation — an offer, not a wall. Decline drops it forever. */}
-        {offerTutorial && !setupOpen && (
-          <div style={offerCardStyle}>
-            <div style={offerTextStyle}>Pehli baar? Dekho ek demo game.</div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button style={offerWatchStyle} onClick={watchTutorial}>Sikho →</button>
-              <button style={offerLaterStyle} onClick={declineTutorial}>Baad mein</button>
-            </div>
-          </div>
-        )}
-        {showRibbon && !setupOpen && !offerTutorial && (
+        {showRibbon && !setupOpen && (
           <button style={ribbonStyle} onClick={() => go('#/niyam?chapter=1')}>
             Naye ho? Niyam se shuru karo →
           </button>
@@ -96,9 +84,10 @@ export function Home() {
             <button style={secondaryButton} onClick={() => go('#/niyam')}>
               NIYAM
             </button>
-            {/* U3: the permanent tutorial door — always here, first visit or not. */}
-            <button style={secondaryButton} onClick={() => go('#/sikho')}>
-              SIKHO — watch a demo
+            {/* W2: the onboarding is inside the game now (coach marks). Home carries the Book (above) plus
+                this single Show-tips switch — the U3 "watch a demo" door is gone; nothing auto-plays. */}
+            <button style={tipsToggleStyle} onClick={toggleTips} aria-pressed={tipsOn}>
+              In-game tips: {tipsOn ? 'On' : 'Off'}
             </button>
           </div>
         ) : (
@@ -381,40 +370,13 @@ const ribbonStyle = {
   cursor: 'pointer',
 } as const;
 
-// U3: the first-visit tutorial invitation card — quiet, offered once, easy to decline.
-const offerCardStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: 8,
-  padding: '10px 16px',
-  borderRadius: 12,
-  border: `1px solid ${INK.gold}`,
-  background: STAGE.scrimSheet,
-} as const;
-const offerTextStyle = {
-  fontFamily: FONT.serif,
-  fontSize: 13,
-  color: STAGE.accentGold,
-} as const;
-const offerWatchStyle = {
-  minHeight: 38,
-  padding: '6px 16px',
-  borderRadius: 999,
-  border: `2px solid ${INK.gold}`,
-  background: STAGE.accentGold,
-  color: INK.deepInk,
-  fontFamily: FONT.display,
-  fontWeight: 700,
-  fontSize: 13,
-} as const;
-const offerLaterStyle = {
-  minHeight: 38,
-  padding: '6px 14px',
-  borderRadius: 999,
-  border: `1px solid ${INK.agedLine}`,
+// W2: the Show-tips switch on Home — a quieter door than the primary/secondary buttons above it, since
+// it toggles a preference rather than opening a screen.
+const tipsToggleStyle = {
+  ...baseButton,
+  minHeight: 48,
+  fontSize: 15,
+  border: `1.5px solid ${INK.agedLine}`,
   background: 'transparent',
   color: STAGE.textOnFelt,
-  fontFamily: FONT.serif,
-  fontSize: 13,
 } as const;
