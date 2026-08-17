@@ -4,6 +4,48 @@
 **AUDIT-Z note appended 2026-08-06.** Four polish passes made the true state hard to read; this is the
 map the owner and any future session can trust. It records state only — **no new work is proposed here.**
 
+## RELEASE-1 — SAFE SHIP: production build verified, preview published, promote PENDING (2026-08-17)
+
+The U pass landed on the owner's machine but the live link (`sauda-rouge.vercel.app`) still served the
+OLD, pre-U build — the one whose cards clipped on the sister's iPhone 12. RELEASE-1 verifies the U work
+against a real **production** build and puts it on a **preview** URL, so the fixed build can be tested on
+the real iPhone 12 **before** it replaces the live link. **Production was NOT promoted** — that is the
+owner's call once his sister confirms.
+
+- **What shipped in U (now production-verified):** true measured-viewport responsiveness (the iPhone 12
+  clip fix), the retired rotate dead-end (portrait stays playable), tier-scaled bot traits + the easy
+  opening-hand assist, and the "Sikho" guided tutorial. `packages/engine` + `packages/bots` are
+  byte-identical to origin (confirmed by an empty diff). Tests **486** green (floor).
+- **Production build:** clean, no warnings. Main JS **342.59 kB / gzip 102.32 kB** (was 320.87 / 96.69
+  at DEPLOY-1 D1 — grew ~+22 kB raw / +5.6 kB gzip from the U additions: the tutorial engine, measured
+  layout, difficulty traits). CSS 3.14 kB. **Every dev surface is stripped:** `#/dev/*`, the spread lab,
+  `?hud`, and `window.__replay/__sauda/__craft/__saudaCapturePaused` are gone from the built JS (grep
+  empty; the globals read `undefined` in the served build), no sourcemaps emitted.
+- **Driven at the device profiles in the served production build** (iPhone 12 / SE landscape + one
+  Android landscape, plus a mid-game viewport-height change and an orientation flip): Home, a dealt game,
+  the tutorial start→finish (real declared SAUDA), the Book, and the portrait fallback all render with
+  **zero console errors, nothing clipped, no page scroll**; the measured box re-fits correctly when the
+  window shrinks/grows mid-game and on orientation change.
+- **Preview is LIVE (HEAD), production is untouched.** A Vercel preview of HEAD serves the new bundle
+  (`index-B8cF5pLJ.js`, distinct from the stale live `index-Cwz10pm6.js`); a full game was driven on the
+  preview URL itself at two profiles. The exact preview URL, the promote command, and the rollback
+  command are in the RELEASE-1 report and `docs/DEPLOY.md`.
+
+### RELEASE-1 blockers / things the owner must know
+
+1. **Real-hardware testing is STILL PENDING.** Everything remains emulated device profiles in desktop
+   Chrome — no touch on a real iPhone 12 / Android yet. The preview URL exists precisely so the sister
+   can do that on her real phone; that test is the gate for promotion.
+2. **The preview is behind Vercel login (Deployment Protection).** Preview URLs redirect to a Vercel
+   sign-in, so the sister cannot open the preview until the owner makes it reachable — either create a
+   per-deployment **share link** (Vercel dashboard → the deployment → Share) or set **Settings →
+   Deployment Protection → Vercel Authentication → Preview → Off** (production stays public regardless).
+3. **The unpushed commits live only on `master` (local) + branch `release-1-verify` (pushed).** Origin
+   `master` is still at the pre-U build. Promotion is the owner's step; do not push `master` blind (a
+   push to `master` auto-deploys production).
+4. **Portrait is usable but a first-timer will likely rotate** — see the U-flags close-out in the
+   RELEASE-1 report. Not a blocker; the dismissible banner nudges to rotate/fullscreen.
+
 ## FIRST-PLAYER PASS (U) — the owner's sister played the live build (2026-08-17)
 
 The first outside player (iPhone 12, Safari) returned three real problems and one request; all four are

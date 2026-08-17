@@ -803,3 +803,42 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   ring, pale cream centre, soft glow — no new colours). Auto-offered ONCE on first visit (an invitation,
   not a wall — KHELO stays reachable; `firstRun` localStorage flag), permanently on Home as "Sikho".
   Instant + no pulse under prefers-reduced-motion.
+
+## RELEASE-1 — the safe ship (2026-08-17): verify the production build, preview before promote
+
+### The easy game HELPS beginners on purpose — traits alone did not reach the 4-in-5 target
+
+- **State it plainly for the owner:** on EASY, the game quietly stacks the human's opening hand in their
+  favour. This is deliberate and it is why a first-timer (the sister) can win most easy games. The
+  six tier-scaled bot traits (U4) alone could NOT get a beginner to the owner's "wins 4 games in 5"
+  target — because the beginner floor the traits were measured against is RandomBot (literally random
+  play), and no *believable* beginner bot loses to random play 4-in-5 without being visibly broken. So a
+  human-side helper was added.
+- **What it does:** at the deal, on an easy table only, up to five of the human's smallest money cards
+  are swapped for the best building material sitting at the top of the already-shuffled draw pile. It is
+  a *fair* swap — the 106-card deck stays complete (proven in `opening-assist.test.ts`), nothing is
+  added, and nothing is rigged after the deal; the shuffle and every later draw are untouched. Medium and
+  hard get NO assist. Hard is byte-identical to the frozen bot.
+- **The numbers (1-bot, `pnpm --filter @sauda/tools winrates`):** the random-floor beginner on easy rises
+  7.4% (no difficulty) → 24.4% (old wrapper) → **43.1%** with the U4 traits + assist; a *competent*
+  player wins **~91%** on easy. A real novice sits between those, in the ~4-in-5 band. Turn the assist
+  off by setting the one constant to 0 — the easy beginner win-rate falls back toward the low-20s%.
+- **Where it lives:** `EASY_OPENING_ASSIST_CARDS = 5` in `packages/difficulty/src/opening-assist.ts`
+  (one named constant). Full before/after tables: `docs/captures/first-player-u/U4_DIFFICULTY.md`.
+
+### The preview is deployed but PROTECTED; production must be promoted, never pushed blind
+
+- **Ship via a preview first (owner directive).** The live link (`sauda-rouge.vercel.app`) was still the
+  pre-U build that clipped on the iPhone 12. RELEASE-1 built the production bundle, verified the U pass
+  against it, and published a Vercel PREVIEW of HEAD — production is left untouched until the sister
+  confirms on her real iPhone 12.
+- **Vercel Deployment Protection is ON for previews.** Preview URLs 302-redirect to a Vercel login, so
+  the sister cannot open the preview on her phone until the owner either creates a per-deployment share
+  link or turns Vercel Authentication off for Preview. Production is public, so this only gates the
+  pre-promote test. Recorded so the owner isn't surprised by a login wall. Steps in `docs/DEPLOY.md` /
+  `docs/STATUS.md`.
+- **`vercel deploy` (CLI) uploads the local tree and ignores `.gitignore`.** The dev-only
+  `apps/mobile/public/dev-scenarios.json` (~98 kB, referenced by nothing shipped) therefore rode along on
+  the first CLI preview as a public file. A root `.vercelignore` now excludes it, so CLI deploys match
+  git deploys — no dev surface reaches production. Verified: on the clean preview that path returns the
+  SPA shell (410 B), not the 98 kB JSON.
