@@ -29,7 +29,7 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
 - **The heuristic is a race-to-3-sets.** In priority order: complete a set for free by rearranging a wildcard → a placement that completes a set → KABZA a whole opponent set → HAATH KI SAFAI a single property that advances one of my sets → place toward the cheapest (size-2) sets → dig for cards with AAGE BADHO → play a charge only when the expected take beats banking the card → build MAKAAN/HAVELI → bank a cash reserve. A smart discard keeps property/wildcards and drops spare money first.
 - **Payment is delegated, not reinvented.** The bot never builds a payment itself — it returns the single `RESPOND_PAY` that `legalActions` already filled from the engine's shared `suggestPayment`. A test asserts the bot's choice is identical to `suggestPayment`. This is the "one tested way to pick cards" the M1 design promised, now consumed for real.
 - **`suggestPayment` got smarter (still shared).** It still minimises overpay first, but now breaks ties by damage — pay with cash before property, and never break a complete set unless forced. This one change (in the engine, so bots *and* the M3 UI benefit) noticeably raised win-rate because the bot stops shattering its own sets to pay rent.
-- **The driver + simulator.** A single loop figures out whose move it is (interrupt responder or turn player), asks that bot, applies it with `reduce`, and checks invariants after every step. The simulator runs 1000 seeded HeuristicBot(Medium)-vs-RandomBot games and enforces the §8.3 gate: **zero invariant violations across all games**, ≥90% win, ≤25 avg turns. Measured: **95.0% win, 20.6 avg turns, 0 violations**.
+- **The driver + simulator.** A single loop figures out whose move it is (interrupt responder or turn player), asks that bot, applies it with `reduce`, and checks invariants after every step. The simulator runs 1000 seeded HeuristicBot(Medium)-vs-RandomBot games and enforces the §8.3 gate: **zero invariant violations across all games**, ≥90% win, ≤25 avg turns. Measured (fresh 1000-game run): **95.8% win (958/1000), 20.27 avg turns, longest 39, 0 violations**.
 - **The CLI.** `pnpm play` is a readable terminal game — one human vs three bots — where the menu is built straight from `legalActions`, so it can only offer legal moves (the same guarantee the mobile UI will use in M3). `--auto` plays every seat with a bot and prints a full transcript; a demo game finishes with a real winner in ~22 turns.
 
 ## M3 — Mobile core (web)
@@ -355,3 +355,67 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   captioned bot turn, HAATH KI SAFAI + My-Sets reference, Rs3-banked overpay, wheel scrub) landed in
   `docs/captures/landscape-2/` and are real non-empty webm — so LANDSCAPE-3 re-verified them rather than
   re-rendering.
+
+## AUDIT-Z — the demanding-user quality pass (interview crib)
+
+- **A quality audit is a driven proof, not a read-through.** AUDIT-Z drove the *real* build through
+  both landscape profiles across **5 full solo games on 5 seeds** and asserted zero page-scroll,
+  console-error, soft-lock, unhandled-phase or stuck-bot events — property placement by drag (including
+  the first property of a new colour) and overlay dismissal driven live. The output is a ledger +
+  `docs/captures/audit-z/audit-z-results.json`, so "no defects found" is evidenced, not asserted.
+- **The one code change was a deletion.** The audit found dead code — an orphaned `DropBand` and a
+  `suppressDrop` plumbing path with no live caller — and removed it (Z1). Everything else it touched was
+  documentation of confirmed-good behaviour. The launch-blocker ranking was confirmed unchanged: the
+  blockers are the *deferred-by-decision* items (native package, onboarding, sound), not bugs.
+
+## S — HAND + INFO REDESIGN, and difficulty that MEANS something (interview crib)
+
+> This pass supersedes some of the M4b/PHONE wheel notes above: **the half-roulette wheel is retired.**
+> The hand is now a flat row of UPRIGHT cards (the SPREAD). The wheel history is left in place because it
+> happened and the containment proof was real, but the shipping hand is the spread described here.
+
+- **The owner lost every game — because all three difficulties were the same bot.** Root cause: the
+  frozen HeuristicBot only varied a NAHI threshold, so medium ≡ hard exactly, and every tier ran the
+  same ~95.8%-win brain. The fix is a new **`packages/difficulty`** wrapper that WRAPS the frozen
+  `recommend()` and DEGRADES it by tier: hard = the bot verbatim (consumes no rng, so byte-identical);
+  medium/easy discard the recommendation with a tuned probability and play a weaker *legal* move instead
+  (easy prefers a quiet bank/build/pass over a wasted attack — a timid beginner, not a wrecking ball).
+  The only randomness is the seeded game rng, so a game stays fully reproducible. **Munshi is exempt** —
+  the advisor always calls full-strength `recommend()`, so the human's advice is sharpest regardless of
+  the table's tier (enforced in the store, asserted in tests).
+- **The tiers were tuned against the simulator, and the win-rate tables are committed.** `pnpm winrates`
+  measures seat-0 win share over ≥1000 seeded games per config. Against a strong player at the 3-bot
+  table the tuned bands land **easy ~74% · medium ~46% · hard ~23%** (hard IS the real bot ≈ the 25%
+  fair share; it can't go lower without weakening the frozen brain). The slip probabilities live in one
+  exported table (`SLIP_PROBABILITY`), tuned there if the bands ever drift.
+- **The other five S directives were all presentation over `legalActions`.** The SPREAD (S1) is a flat
+  upright row whose no-clip invariants replace the wheel's; the rest card grew ~69→~98px at the 915
+  profile, lifting the value badge past the legibility floor with the toggle OFF. Opponent bank cash is
+  now private — only the note *count* is public, for bluff tension (S2). All five targeted actions pick
+  **real cards**, not text pills, with a difficulty-gated best-target hint (S3). A quiet "◈ arrange"
+  nudge assists the wildcard-combination case (preview → Confirm fires free REARRANGE moves; never
+  auto-plays) (S4). The bigger cards were swept for collisions at both profiles (S5).
+- **T — proving the claims that were only argued.** The difficulty tier is proven to reach *live* play:
+  three games at one seed diverge by tier in a real browser (`?difficulty=` + `?bots=` deep-link params,
+  live tier shown in the HUD). No p95 regression from the bigger card (spread scrub+drag p95 ~16.7ms at
+  both profiles) and legibility *rose* (badge 7.3→10.4 device-px). Evidence:
+  `docs/captures/hand-info-1/`. `packages/engine` + `packages/bots` stayed byte-identical throughout —
+  the difficulty wrapper and the assistant only *sequence* moves the engine already offered.
+
+## DEPLOY-1 — a permanent web link (interview crib)
+
+- **The #1 launch blocker was "no stable link", and it's an engineering problem, not a devops afterthought.**
+  Every playtest needed the owner's laptop alive running a *rotating* Cloudflare quick tunnel, which kept
+  stranding testers on dead URLs. DEPLOY-1 makes the solo, fully-client-side build shippable to a static
+  host (Vercel): `vercel.json` (build/output/install + SPA rewrites) is committed and the build verified
+  from the repo root.
+- **Dev surfaces are dead-code-eliminated from the prod bundle.** The `#/dev/*` routes, the spread lab,
+  `?hud`, and the `window.__replay/__sauda/__craft` capture bridge are now gated behind
+  `import.meta.env.DEV`; a grep of the built output for those identifiers is empty and the globals read
+  `undefined` in the served build. The prod build is clean (259 modules, main JS 320.87 kB / gzip
+  96.69 kB). The only code change was DEV-gating those routes in `App.tsx` — `packages/engine` +
+  `packages/bots` stayed byte-identical.
+- **The last mile is owner-only, and that boundary is deliberate.** `vercel login` is interactive
+  (it must not be automated) and creating the GitHub repo + first push is the owner's to do; both
+  steps are written out precisely in `docs/DEPLOY.md`. Once run, the app has a permanent `*.vercel.app`
+  URL and the rotating-tunnel dependency is retired for good. Tests held at the **462** floor.

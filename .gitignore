@@ -8,3 +8,5 @@ coverage/
 .vscode/
 settings.local.json
 apps/mobile/public/dev-scenarios.json
+
+.vercel

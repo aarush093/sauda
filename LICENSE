@@ -1,0 +1,34 @@
+SAUDA — All Rights Reserved (source available for review)
+
+Copyright (c) 2025–2026 Aarush Pandit. All rights reserved.
+
+SAUDA is an original property card game. This source code is published
+publicly so that it can be read, reviewed, and evaluated — for example by
+recruiters, collaborators, and other engineers judging the work. Making the
+code readable is the point (see the readability contract in CONTRIBUTING.md).
+
+Permission is granted to any person to VIEW and CLONE this repository for the
+sole purposes of personal reading, evaluation, and non-commercial study.
+
+Except for the limited permission above, no rights are granted. In particular,
+without the prior written permission of the copyright holder you may NOT:
+
+  - use, run, or distribute this software as, or as part of, a product or
+    service (including any commercial or ad-supported release);
+  - copy, modify, merge, publish, sublicense, or sell copies of the software
+    or any substantial portion of it;
+  - reskin, rebrand, or otherwise create a derivative game from this code,
+    its rules, its card data, or its artwork; or
+  - remove or alter this notice.
+
+The game's names, rules text, card names, and all artwork are original works
+and are protected independently of this source code.
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+To request broader permission, contact the copyright holder.
