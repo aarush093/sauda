@@ -12,7 +12,7 @@ import { createGame, legalActions, makeState, mulberry32, observe, reduce } from
 import type { Action, GameEvent, GameState, Observation, Rng } from '@sauda/engine';
 import { Munshi, MUNSHI_USES_PER_GAME } from '@sauda/bots';
 import type { Bot, Difficulty, MunshiAdvice } from '@sauda/bots';
-import { DifficultyBot } from '@sauda/difficulty';
+import { DifficultyBot, assistOpeningHand } from '@sauda/difficulty';
 import { describeEvent } from './labels';
 
 export type SeatConfig = { kind: 'human' } | { kind: 'bot'; difficulty: Difficulty };
@@ -139,11 +139,25 @@ export const useGame = create<GameStore>((set, get) => {
       botRng = mulberry32(config.seed);
       munshi = new Munshi(MUNSHI_DIFFICULTY); // fresh advisor: 3 uses, no carry-over from the last game
       const created = createGame({ players: config.seats.length, seed: config.seed });
+      // U4: on an EASY table (every bot is easy) each human gets the easy opening-hand assist — a
+      // stronger deal so a first-timer can actually win ~4 in 5, matching the fairness harness. Bots
+      // never get it, and it is a fair swap that keeps the deck complete (see @sauda/difficulty).
+      let initialState = created.state;
+      const tableEasy =
+        config.seats.some((seat) => seat.kind === 'bot') &&
+        config.seats.every((seat) => seat.kind !== 'bot' || seat.difficulty === 'easy');
+      if (tableEasy) {
+        config.seats.forEach((seat, index) => {
+          if (seat.kind === 'human') {
+            initialState = assistOpeningHand(initialState, index);
+          }
+        });
+      }
       const texts = created.events
         .map(describeEvent)
         .filter((text): text is string => text !== null);
       set({
-        state: created.state,
+        state: initialState,
         seats: config.seats,
         revealedSeat: null,
         handoffSeat: null,

@@ -88,20 +88,23 @@ export function Home() {
   );
 }
 
-// S6e (owner playtest, 13 Aug): a one-sentence explainer per difficulty, so the owner knows what he
-// is picking before he deals.
+// U4 (first-player pass): the OPPONENT described in the owner's framing — an inexperienced player on
+// easy, a decent one on medium, a sharp one on hard. So the player knows who they are sitting across
+// from, not just an abstract "difficulty".
 const DIFFICULTY_BLURB: Record<Difficulty, string> = {
-  easy: 'Bots often misplay — a forgiving game to learn on.',
-  medium: 'Bots play a solid game, with the odd slip.',
-  hard: 'Full-strength bots — as sharp as the advisor.',
+  easy: 'A beginner still learning the game — plays gently, misses the sharp moves.',
+  medium: 'Knows the game, but misses a trick now and then.',
+  hard: 'Plays to win — as sharp as the advisor.',
 };
 
-// The human's rough expected win share, by difficulty × bot count (1/2/3), from the S6c 1000-game
-// measurement (strong-player proxy; see DECISIONS "S6c"). Shown so the owner's expectation matches
-// reality — at a 3-bot table a fair share is only ~25%, so even Hard is meant to be a near-fair fight.
+// The human's rough expected win share, by difficulty × bot count (1/2/3), from the U4 1000-game
+// fairness measurement (a competent-player proxy; see DECISIONS "U4"). Shown so the player's
+// expectation matches reality — at a 3-bot table a fair share is only ~25%, so even a strong player
+// cannot win 4-in-5 there; the copy states that honestly. A first-timer wins less than these; on easy
+// the opening-hand assist keeps them in the game (see DECISIONS "U4").
 const WIN_SHARE: Record<Difficulty, [number, number, number]> = {
-  easy: [86, 77, 74],
-  medium: [66, 52, 46],
+  easy: [91, 88, 84],
+  medium: [68, 54, 45],
   hard: [57, 32, 23],
 };
 

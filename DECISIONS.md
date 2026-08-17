@@ -742,3 +742,30 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   so the "no race" holds by construction). `packages/engine` stays byte-identical.
 - **Dev tooling:** a dev-only `window.__craft(spec)` (engine testkit `makeState`, tree-shaken from prod)
   lets the capture harness stage boards the seeded deals don't produce — e.g. the owner's pink-pink-dual.
+
+### U4 — winnability is CHARACTER, not randomness (first-player pass; the sister lost on easy)
+
+- **The tier wrapper is rebuilt from RANDOM-SLIP to TIER-SCALED TRAITS.** The S6b wrapper degraded a
+  tier by, with probability p, discarding the strong recommendation and playing a RANDOM legal move —
+  which makes a weak bot bank properties and fire actions at random targets (reads as a bug). U4 scales
+  six traits per tier — aggression, greed/focus, wildcard skill, defence, closing, and a small random
+  slip — and the wrapper only ever FILTERS/REORDERS the moves the frozen brain already offered: when a
+  trait suppresses a class of move (an attack, a free rearrange, a premature declare, a NAHI) it falls
+  back to the best REMAINING legal move (a bank or a build), never a random one. `packages/engine` and
+  `packages/bots` stay byte-identical; the values live in one place (`TRAITS`,
+  `packages/difficulty/src/index.ts`). Hard is every trait at 1 with zero slip, so it draws no rng and
+  is byte-identical to the frozen `recommend()` (asserted in the tests). Munshi stays exempt.
+- **The easy opening-hand assist was REQUIRED, and is a fair swap.** The beginner proxy is RandomBot —
+  literally random play — and no *plausible* bot can lose to that 4-in-5 (a bot that reliably banks and
+  builds beats randomness most of the time, and the easy bot must stay a believable beginner, not be
+  broken to throw the game). Per the owner's fallback, an opening-hand assist for the human on easy was
+  added behind one named constant (`EASY_OPENING_ASSIST_CARDS`, `opening-assist.ts`): at the deal, on an
+  easy table, up to five of the human's non-building cards are swapped for building material from the
+  shuffled draw pile. It is a fair swap — the deck stays complete (106 cards, tested), nothing is added,
+  and nothing is rigged mid-game. It lifts the random-floor beginner on easy 1-bot from 7% → 24% (old
+  wrapper) → 43% (U4), while a competent player wins ~91%; a real novice (the sister) lands between, in
+  the ~4-in-5 zone the owner wants. Hard is frozen, so a beginner still wins ~6% against it — by design.
+  Full before/after tables + the qualitative fingerprint: `docs/captures/first-player-u/U4_DIFFICULTY.md`.
+- **Native orientation lock arrives with the M5 Capacitor build** (recorded here for U2): a browser
+  cannot force orientation outside fullscreen, so the web build adapts (U2 portrait) rather than blocking
+  — the manifest pins landscape only in the packaged app.

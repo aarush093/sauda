@@ -16,6 +16,7 @@ import {
   reduce,
 } from '@sauda/engine';
 import type { GameEvent, GameState, Rules } from '@sauda/engine';
+import { assistOpeningHand } from '@sauda/difficulty';
 import type { Bot } from '@sauda/bots';
 
 export interface GameSummary {
@@ -30,6 +31,9 @@ export interface PlayGameOptions {
   maxTurns?: number;
   rules?: Rules;
   onEvent?: (event: GameEvent, state: GameState) => void;
+  // U4: apply the EASY opening-hand assist to this seat right after the deal (the fairness harness uses
+  // it to measure the easy band for the human proxy; the live store applies the same on an easy table).
+  assistSeat?: number;
 }
 
 // Whose move is it right now?
@@ -44,6 +48,9 @@ export function playGame(bots: Bot[], seed: number, options: PlayGameOptions = {
   const maxTurns = options.maxTurns ?? 500;
   const created = createGame({ players: bots.length, seed, ...(options.rules ? { rules: options.rules } : {}) });
   let state = created.state;
+  if (options.assistSeat !== undefined) {
+    state = assistOpeningHand(state, options.assistSeat); // U4: easy opening-hand leg-up for the human
+  }
 
   // A dedicated RNG for the bots, derived from the game seed so runs are reproducible
   // but independent of the deck shuffle stream inside the engine.

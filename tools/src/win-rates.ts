@@ -55,11 +55,14 @@ function buildTable(world: World, proxy: Proxy, tier: Difficulty, botCount: numb
   return bots;
 }
 
-// Seat-0 win rate over `games` seeded games. Unfinished games (should be none) count as non-wins.
+// Seat-0 win rate over `games` seeded games. Unfinished games (should be none) count as non-wins. In
+// the AFTER world at EASY, seat 0 (the human proxy) gets the live easy opening-hand assist (U4), so the
+// measurement matches what a real player experiences on an easy table.
 function winRate(world: World, proxy: Proxy, tier: Difficulty, botCount: number, opts: Options): number {
+  const easyAssist = world === 'after' && tier === 'easy';
   let wins = 0;
   for (let i = 0; i < opts.games; i++) {
-    const summary = playGame(buildTable(world, proxy, tier, botCount), opts.seed + i);
+    const summary = playGame(buildTable(world, proxy, tier, botCount), opts.seed + i, easyAssist ? { assistSeat: 0 } : {});
     if (summary.finished && summary.winner === 0) {
       wins += 1;
     }

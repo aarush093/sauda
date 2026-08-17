@@ -9,7 +9,8 @@
     "simulate": "tsx src/simulate.ts",
     "scenarios": "tsx src/find-scenarios.ts",
     "play": "tsx src/play.ts",
-    "winrates": "tsx src/win-rates.ts"
+    "winrates": "tsx src/win-rates.ts",
+    "tiers": "tsx src/describe-tiers.ts"
   },
   "dependencies": {
     "@sauda/bots": "workspace:*",
