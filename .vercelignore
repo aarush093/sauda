@@ -1,0 +1,9 @@
+# Files that must never reach a Vercel deployment.
+#
+# Vercel's `vercel deploy` CLI uploads the local working tree, and (unlike a
+# git-based deploy) it does NOT honour .gitignore. dev-scenarios.json is a
+# ~98 kB dev-only scenario fixture (gitignored, referenced by nothing in the
+# shipped app) that would otherwise ride along on a CLI preview/prod deploy and
+# be publicly downloadable. Excluding it here keeps CLI deploys byte-consistent
+# with git deploys — both ship a build with no dev surfaces.
+apps/mobile/public/dev-scenarios.json
