@@ -16,6 +16,7 @@ import { SETS, isSetComplete, legalActions, observe } from '@sauda/engine';
 import type { Action, GameEvent, GameState, PropertyGroup, SetId } from '@sauda/engine';
 import { actorOf, useGame, viewSeat } from '../game/store';
 import type { SeatConfig } from '../game/store';
+import { useViewport } from '../game/viewport';
 import { paymentDetails } from '../game/paymentModel';
 import { botBeatDelayMs, zeroPayableResponse } from '../game/interaction';
 import { describeThreat, shortLabel, stagePlayFromEvents } from '../game/labels';
@@ -90,6 +91,11 @@ export function Table() {
   const stepBot = useGame((store) => store.stepBot);
   const ackHandoff = useGame((store) => store.ackHandoff);
   const reset = useGame((store) => store.reset);
+
+  // U1: the LIVE measured viewport — the shell is sized from this, not from static 100dvh/100vw, so
+  // the play surface fits the rectangle that ACTUALLY exists on iOS Safari (URL bar / tab strip already
+  // subtracted) and re-fits the instant that chrome shows or hides.
+  const viewport = useViewport();
 
   // P8 in-game nav (K8): the pause sheet. While `paused`, every automatic beat below is frozen (bot
   // timer, auto-draw, auto-resolve) and the turn token's auto-end drain is held (paused prop → Board),
@@ -279,7 +285,7 @@ export function Table() {
   const showPaymentSheet = payAction?.type === 'RESPOND_PAY' && autoResolve === null;
 
   return (
-    <div className="table" style={shellStyle}>
+    <div className="table" style={{ ...shellStyle, top: viewport.offsetTop, height: viewport.height, width: viewport.width }}>
       <Board
         observation={observation}
         seats={seats}
@@ -363,16 +369,17 @@ export function Table() {
   );
 }
 
-// P1: the app shell. Fixed to the viewport at the DYNAMIC viewport height (100dvh — so the phone's
-// URL bar showing/hiding can never reveal a scroll), padded by the safe-area insets (notch / home
-// indicator), and locked down: overscroll-behavior none kills pull-to-refresh, touch-action
-// manipulation kills the double-tap zoom, and overflow hidden means the page can never scroll in any
-// state. The felt fills edge to edge — no centered box, no void (owner phone test 1 Aug).
+// P1 + U1: the app shell. Fixed at the top-left of the LAYOUT viewport, then sized in JS to the LIVE
+// visualViewport box (top / height / width injected at the call site) — not 100dvh/100vw, which iOS
+// Safari reports unreliably and which let the hand cards fall under the URL bar (the iPhone 12 clip).
+// Anchored top-left (not inset:0) so the injected height/width actually govern the box. Padded by the
+// safe-area insets (in landscape the notch inset sits on the SIDE), and locked down: overscroll-
+// behavior none kills pull-to-refresh, touch-action manipulation kills the double-tap zoom, overflow
+// hidden means the page can never scroll. The felt fills the measured box edge to edge — no void.
 const shellStyle = {
   position: 'fixed',
-  inset: 0,
-  height: '100dvh',
-  width: '100vw',
+  top: 0,
+  left: 0,
   paddingTop: 'env(safe-area-inset-top, 0px)',
   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
   paddingLeft: 'env(safe-area-inset-left, 0px)',

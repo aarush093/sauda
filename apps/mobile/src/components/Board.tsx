@@ -24,6 +24,7 @@ import { ArrangeAssistant } from './ArrangeAssistant';
 import { useReducedMotion } from '../design/motion';
 import { useHandDrag } from '../game/useHandDrag';
 import { useMeasuredSize } from '../game/useMeasuredWidth';
+import { fitToBox } from '../game/viewport';
 import { resolveMyTurn, resolveSpectate } from '../game/landscapeLayout';
 import { useDragController } from '../game/useDragController';
 import type { CarrySpec } from '../game/useDragController';
@@ -310,8 +311,16 @@ export function Board({
   // interaction glue above and just hands each layout the props it needs; the ghost + overlays below
   // stay here, in one place. Fallbacks (740×360) cover the first paint and jsdom (no layout engine).
   const [boardRef, boardSize] = useMeasuredSize<HTMLDivElement>();
-  const width = boardSize.width > 0 ? boardSize.width : 740;
-  const height = boardSize.height > 0 ? boardSize.height : 360;
+  // U1 (iPhone 12 cut-off fix): measure the REAL box, then FIT the board into it. At or above the min
+  // playable box we lay out 1:1 (every real device profile hits this once the shell is sized from the
+  // live visualViewport — see Table). Below it, fitToBox lays the board out at the min box and returns
+  // a `scale` < 1 so the WHOLE board shrinks to fit rather than clipping the hand off the bottom. The
+  // zone maths run on the LAYOUT box; the scale is a CSS transform on the layout wrapper below.
+  const measuredWidth = boardSize.width > 0 ? boardSize.width : 740;
+  const measuredHeight = boardSize.height > 0 ? boardSize.height : 360;
+  const fit = fitToBox(measuredWidth, measuredHeight);
+  const width = fit.layoutWidth;
+  const height = fit.layoutHeight;
   const myTurnZones = resolveMyTurn(width, height);
   const spectateZones = resolveSpectate(width, height);
 
@@ -320,6 +329,12 @@ export function Board({
 
   return (
     <div ref={boardRef} style={boardStyle}>
+      {/* U1: the LAYOUT layer — sized to the fit's layout box and scaled to fill the measured box. At
+          scale 1 (every real device) this is a no-op wrapper the size of the board; below the min box
+          it shrinks the whole play surface uniformly so nothing clips. The drag ghost and the response
+          overlays stay OUTSIDE this wrapper (fixed to the viewport), so their pointer maths and full-
+          screen sizing are unaffected by the scale. */}
+      <div style={{ position: 'absolute', top: 0, left: 0, width, height, transform: `scale(${fit.scale})`, transformOrigin: 'top left' }}>
       {/* FOCUS FOLLOWS TURN: the key flips when control crosses my-turn ↔ spectate, so FocusTransition
           remounts and plays one ~250ms slide/fade — no dead frame between the two states (R1). */}
       <FocusTransition key={myTurn ? 'mine' : 'spectate'} direction={myTurn ? 'mine' : 'spectate'}>
@@ -384,6 +399,7 @@ export function Board({
         />
       )}
       </FocusTransition>
+      </div>
 
       {/* the floating drag preview — lifted above the finger, pointer-events:none so it never
           hides the drop zone beneath it from the hit-test. */}

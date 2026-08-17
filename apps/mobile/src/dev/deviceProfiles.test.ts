@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DEVICE_PROFILES, DEFAULT_PROFILE_ID, profileById } from './deviceProfiles';
+import { DEVICE_PROFILES, DEFAULT_PROFILE_ID, profileById, usableHeight } from './deviceProfiles';
 
 // The testbed contract — LANDSCAPE (owner landscape directive, 2 Aug). These aren't decorative
 // numbers: the whole pass is judged on device-emulated evidence, so the profile set itself must stay
@@ -36,5 +36,40 @@ describe('device profiles (landscape testbed)', () => {
 
   it('profileById returns undefined for an unknown id', () => {
     expect(profileById('does-not-exist')).toBeUndefined();
+  });
+
+  // U1 (first-player pass): the two iOS Safari devices the sister and other real testers hold. These
+  // carry the extra reality the Android set omits — browser chrome that eats usable height, and a
+  // safe-area inset that in LANDSCAPE sits on the SIDE.
+  it('covers the iPhone 12 and iPhone SE landscape profiles the sister actually held', () => {
+    const twelve = profileById('iphone12-844x390');
+    const se = profileById('iphonese-667x375');
+    expect(twelve).toBeDefined();
+    expect(se).toBeDefined();
+    expect(`${twelve!.width}x${twelve!.height}`).toBe('844x390');
+    expect(`${se!.width}x${se!.height}`).toBe('667x375');
+  });
+
+  it('the iOS profiles simulate real browser chrome (reduced usable height)', () => {
+    for (const id of ['iphone12-844x390', 'iphonese-667x375']) {
+      const profile = profileById(id)!;
+      expect(profile.chrome).toBeGreaterThan(0); // Safari's URL bar / tab strip take real height
+      expect(usableHeight(profile)).toBeLessThan(profile.height); // so the usable box is shorter
+      expect(usableHeight(profile)).toBe(profile.height - profile.chrome!);
+    }
+  });
+
+  it('the notch device carries a non-zero SIDE safe-area inset (landscape notch)', () => {
+    const twelve = profileById('iphone12-844x390')!;
+    expect(twelve.safeArea).toBeDefined();
+    // In landscape the notch is on the left OR right — a top-only pad would miss it entirely.
+    expect(twelve.safeArea!.left + twelve.safeArea!.right).toBeGreaterThan(0);
+    expect(twelve.safeArea!.bottom).toBeGreaterThan(0); // the home indicator
+  });
+
+  it('a full-bleed Android profile has no chrome and its usable height is the full height', () => {
+    const legacy = profileById(DEFAULT_PROFILE_ID)!;
+    expect(legacy.chrome).toBeUndefined();
+    expect(usableHeight(legacy)).toBe(legacy.height);
   });
 });

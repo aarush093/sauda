@@ -14,6 +14,16 @@
  */
 import data from './deviceProfiles.json';
 
+// The four safe-area insets, in CSS px. In LANDSCAPE the notch sits on the SIDE (left/right); the home
+// indicator on the bottom. Non-zero only on notch/home-indicator devices (iPhone 12); a home-button
+// phone (iPhone SE) has none.
+export interface SafeAreaInsets {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 export interface DeviceProfile {
   id: string; // stable slug used in capture filenames / HUD
   label: string; // human label for the HUD picker
@@ -21,9 +31,22 @@ export interface DeviceProfile {
   height: number; // CSS px — the layout viewport height (the SHORT edge, the tight budget)
   dpr: number; // real deviceScaleFactor for the emulated device
   reducedMotion: boolean; // drive prefers-reduced-motion for this profile
+  // U1 (iOS Safari): the browser chrome height (px) that eats USABLE height — the capture simulates it
+  // by shrinking the viewport, since Playwright renders no real URL bar. Absent = a full-bleed profile.
+  chrome?: number;
+  // U1 (iOS Safari): the safe-area inset the notch/home-indicator reserves. Absent = no insets.
+  safeArea?: SafeAreaInsets;
 }
 
 export const DEVICE_PROFILES: DeviceProfile[] = data.profiles;
+
+// The usable height after browser chrome is subtracted — what visualViewport.height reports on a real
+// iOS Safari once the URL bar / tab strip take their share. Full-bleed profiles (no `chrome`) keep the
+// full height. This is the height the capture harness sizes its viewport to, so the app measures the
+// same constrained box a real phone reports.
+export function usableHeight(profile: DeviceProfile): number {
+  return profile.height - (profile.chrome ?? 0);
+}
 
 // The legacy small screen (740x360) is the tightest budget in landscape — the shortest height AND
 // the narrowest width — so the layout must survive here with no clipping; it stays the default
