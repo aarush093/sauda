@@ -769,3 +769,37 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
 - **Native orientation lock arrives with the M5 Capacitor build** (recorded here for U2): a browser
   cannot force orientation outside fullscreen, so the web build adapts (U2 portrait) rather than blocking
   — the manifest pins landscape only in the packaged app.
+
+### U1 — the play surface is sized from the LIVE measured viewport, not static units (the iPhone 12 clip)
+
+- **The shell is sized from `visualViewport`, not `100dvh`/`100vw`.** On the sister's iPhone 12 Safari the
+  hand cards were clipped: iOS reports viewport units unreliably (the URL bar / tab strip occupy real
+  height dvh doesn't subtract) and in landscape the notch inset sits on the SIDE. `game/viewport.ts`
+  reads visualViewport (width/height/offsetTop/scale) + the safe-area insets on every resize / scroll /
+  orientationchange; the Table shell is sized to that box. Root-cause fix for the clip.
+- **Below a minimum playable box the WHOLE board scales down; it never clips.** `fitToBox` (pure,
+  unit-tested) lays out 1:1 at/above the min box (600×300 — every real target hits this once the shell is
+  measured), else returns a scale<1 so the board shrinks uniformly. The invariant test proves that,
+  across a dense sweep of boxes (incl. short chrome-reduced ones), the zone maths + scale never place any
+  element outside the measured box. Dev-only `window.__saudaInsets` lets the capture harness feed insets
+  Chromium can't emulate (tree-shaken from prod). Evidence: `docs/captures/first-player-u/`.
+
+### U2 — portrait is playable, the rotate gate is retired (owner directive)
+
+- **No blocking interstitial.** The old full-screen "Rotate your phone" gate was a wall (a browser can't
+  force orientation outside fullscreen). Portrait now lays out a compressed, centred LANDSCAPE-aspect
+  board, bottom-aligned so the hand sits in the thumb zone (Board U2 branch — a no-op in landscape), and
+  a slim dismissible banner (`PortraitBanner`) offers "rotate / go fullscreen" without covering the board.
+  RotateGate.tsx + its keyframes removed. It ADAPTS; landscape remains the full view.
+
+### U3 — the guided tutorial "Sikho" is a real, deterministic, engine-legal demo (the sister's request)
+
+- **The demo is one continuous legal game, not disconnected snippets.** `game/tutorial.ts` crafts a fixed
+  2-player game (with `makeState`) and an explicitly STACKED draw pile so each DRAW hands out exactly the
+  scripted cards; every step is a real engine action applied through `reduce`, and the end-to-end test
+  replays the whole script asserting each step is legal and the game ends in a real declared SAUDA — so
+  the demo can never drift out of the rules. It covers every move class the owner listed.
+- **Teaching beats link to the real Book;** the cursor is new UI in the existing token language (a gold
+  ring, pale cream centre, soft glow — no new colours). Auto-offered ONCE on first visit (an invitation,
+  not a wall — KHELO stays reachable; `firstRun` localStorage flag), permanently on Home as "Sikho".
+  Instant + no pulse under prefers-reduced-motion.

@@ -4,6 +4,30 @@
 **AUDIT-Z note appended 2026-08-06.** Four polish passes made the true state hard to read; this is the
 map the owner and any future session can trust. It records state only — **no new work is proposed here.**
 
+## FIRST-PLAYER PASS (U) — the owner's sister played the live build (2026-08-17)
+
+The first outside player (iPhone 12, Safari) returned three real problems and one request; all four are
+landed green + playable, each with committed evidence in `docs/captures/first-player-u/`.
+
+- **U1 — true responsiveness (the iPhone 12 cut-off).** The play surface is now sized from the LIVE
+  measured viewport (`visualViewport` + safe-area insets, re-fit on every resize/scroll/orientation),
+  not `100dvh`/`100vw` — the root cause of the clip. Below a min playable box the whole board scales
+  down rather than clipping anything (`fitToBox`, pure + invariant-tested). New iOS profiles (iPhone 12
+  844×390, iPhone SE 667×375) with simulated chrome + side-notch insets; 8/8 landscape stills clean.
+- **U2 — the rotate dead-end is retired.** Portrait stays playable (a compressed, centred landscape
+  board) with a slim dismissible "rotate / go fullscreen" banner — no blocking gate. Native orientation
+  lock arrives with the M5 Capacitor manifest.
+- **U4 — winnability as CHARACTER.** The difficulty wrapper is rebuilt from random-slip to six
+  tier-scaled traits (aggression, greed, wildcard, defence, closing, small residual slip); a weak bot
+  now plays like a gentle beginner (banks + builds, rarely attacks/rearranges, dawdles on the win), not
+  a broken one. Bands (1-bot, strong proxy): easy 91% · medium 68% · hard 57%. The easy opening-hand
+  assist (one named constant) was required for the random-floor beginner and is a fair swap; full
+  before/after tables + the qualitative fingerprint in `docs/captures/first-player-u/U4_DIFFICULTY.md`.
+- **U3 — the guided tutorial "Sikho".** A deterministic, engine-legal demo game the player watches,
+  driven by a gold cursor, teaching every move class with teaching beats that tap through to the real
+  Book; auto-offered once on first visit, permanent on Home. `packages/engine` + `packages/bots` stayed
+  byte-identical throughout. Tests **462 → 486**.
+
 ## DEPLOY-1 — THE PERMANENT WEB LINK (2026-08-16) — launch-blocker #1
 
 The #1 launch blocker was "no stable link": every playtest needed the owner's laptop alive with a
@@ -90,9 +114,9 @@ Full report + evidence: `docs/AUDIT_Z.md`; driven log `docs/captures/audit-z/aud
 - **Playable, end to end, on the web.** A full solo game (you vs 3 bots) deals, plays and wins in a
   real browser at the landscape profiles. First true deal→win playthrough proven in
   `docs/captures/landscape-4/PLAYTHROUGH.md` (human win, turn 37, all six screen states PASS).
-- **Tests:** **462 green** — engine 76 · bots 14 · difficulty 9 · tools 15 · mobile 348 (floor was 419
-  before the S pass). `pnpm gate` (ip-guard → typecheck → lint → test) is green and enforced by an
-  unskippable pre-commit hook.
+- **Tests:** **486 green** — engine 76 · bots 14 · difficulty 18 · tools 15 · mobile 363 (was 462
+  before the first-player pass U). `pnpm gate` (ip-guard → typecheck → lint → test) is green and enforced
+  by an unskippable pre-commit hook.
 - **Web-shippable — stable hosting is one owner login away (DEPLOY-1).** The Vercel deploy is fully
   configured and committed (`vercel.json`, dev surfaces stripped, build verified); the permanent
   `*.vercel.app` URL goes live the moment the owner runs the two commands in `docs/DEPLOY.md`. Until
@@ -120,7 +144,7 @@ committed capture pack under `docs/captures/`. It does **not** mean the M4 *spec
 | Item | State | Notes |
 |------|-------|-------|
 | **M4c — motion/juice/sound** | deferred | Stamp-slam victory, FULL-ribbon slide, drop-zone/commit feedback, received-card travel, overlay open/close transitions, wheel peek ease, Munshi bouncing arrow, **sound + haptics**. Catalogued in `docs/M4C_MOTION_BACKLOG.md`. None are bugs. |
-| **M4 spec gate (tutorial + Lighthouse)** | not met | The M4 gate in BUILD_SPEC — "a friend can learn from the tutorial alone" + "Lighthouse perf ≥ 90" — is **not** satisfied: there is **no tutorial/onboarding**, and no Lighthouse run is recorded. |
+| **M4 spec gate (tutorial + Lighthouse)** | partial | **The tutorial now exists** (U3 "Sikho" — a guided demo teaching every move, tied to the Book). The remaining gap is a recorded **Lighthouse perf ≥ 90** run. |
 | **M5 — Ship (Android)** | not started | Capacitor project, keystore + signed AAB, versionCode/Name, `store/` assets, `privacy.html`, Play data-safety answers, current target-SDK check. Nothing exists yet. |
 | **Stable web hosting** | configured, not yet live | DEPLOY-1: `vite build` → Vercel is fully set up (`vercel.json` committed, dev surfaces stripped, build verified). Goes live on one owner `vercel login` + `vercel --prod`. See `docs/DEPLOY.md`. |
 | **M6 — ML / IsmctsBot / Boss** | out of scope for now | Optional, only after M5. |

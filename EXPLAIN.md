@@ -419,3 +419,30 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   (it must not be automated) and creating the GitHub repo + first push is the owner's to do; both
   steps are written out precisely in `docs/DEPLOY.md`. Once run, the app has a permanent `*.vercel.app`
   URL and the rotating-tunnel dependency is retired for good. Tests held at the **462** floor.
+
+## First-player pass (U) — the sister's playtest (interview crib)
+
+- **The iPhone 12 clip was a viewport-units bug, not a layout bug.** iOS Safari reports `100dvh`/`100vw`
+  unreliably (URL bar / tab strip occupy height dvh doesn't subtract) and in landscape the notch inset
+  sits on the SIDE. Fix: `game/viewport.ts` reads the LIVE `visualViewport` + safe-area insets on every
+  resize/scroll/orientation event, and the shell is sized to that measured box — so the board fits the
+  rectangle that actually exists.
+- **Below a minimum playable box, scale the whole board — never clip.** `fitToBox` is a pure function:
+  at/above the min box (600×300) it lays out 1:1; below it, it returns a uniform `scale<1` so everything
+  shrinks together. A dense invariant test proves no element ever lands outside the measured box; at
+  scale 1 (every real device) the change is a no-op, so existing behaviour is untouched.
+- **Portrait adapts instead of blocking (U2).** The old rotate gate was a wall a browser can't honour;
+  now portrait fits a compressed, bottom-aligned landscape board with a slim dismissible banner.
+- **Difficulty is CHARACTER, not randomness (U4).** The wrapper only filters/reorders the frozen brain's
+  already-legal moves by six tier-scaled traits; when it suppresses (say) an attack it falls back to the
+  best remaining build/bank — never a random move. That's why a weak bot reads as a gentle beginner, not
+  a broken one (proven by the `tiers` fingerprint: easy still banks + places normally, just rarely
+  attacks/rearranges and dawdles on the win). Hard = all traits 1, zero slip → draws no rng → byte-for-
+  byte the frozen bot.
+- **A random-floor beginner can't beat a plausible bot 4-in-5 — so the human gets a fair deal on easy.**
+  The opening-hand assist (one named constant) swaps a few of the human's non-building cards for building
+  material at the deal, on easy only; it keeps the 106-card deck complete and rigs nothing mid-game.
+- **The tutorial is a real, deterministic, engine-legal game (U3).** `game/tutorial.ts` crafts a fixed
+  game + a stacked draw pile so each draw is known, and every scripted step goes through `reduce`; the
+  test replays the whole thing, proving each move legal and the finale a real declared SAUDA. The cursor
+  and beats are pure UI on top — the correctness lives in the replayable script.
