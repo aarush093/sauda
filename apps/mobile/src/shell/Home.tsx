@@ -14,7 +14,6 @@ import { GAME } from '@sauda/engine';
 import type { Difficulty } from '@sauda/bots';
 import { useGame } from '../game/store';
 import type { SeatConfig } from '../game/store';
-import { useOrientation } from '../game/orientation';
 import { resolveSeed } from '../game/seed';
 import { hasCompletedGame, hasSeenTutorialOffer, markTutorialOfferSeen } from './firstRun';
 import { STAGE, INK, FONT, SHADOW } from '../design/tokens';
@@ -35,9 +34,6 @@ export function Home() {
   // stays right there). After it is taken or declined it never auto-appears; the permanent "Sikho"
   // door below always remains.
   const [offerTutorial, setOfferTutorial] = useState(() => !hasSeenTutorialOffer());
-  // U2: with the rotate gate retired, Home can render in portrait too — stack the two panes vertically
-  // there so the wordmark and the doors each get the full width instead of a squeezed half.
-  const portrait = useOrientation() === 'portrait';
 
   function watchTutorial() {
     markTutorialOfferSeen();
@@ -63,9 +59,9 @@ export function Home() {
 
   // R7: landscape two-pane front door — the wordmark + tagline on one side, the doors on the other,
   // so the whole shell fits the short landscape height (the old single vertical column would overflow
-  // a 360px-tall screen). The rotate gate (R0) guarantees we are always landscape here.
+  // a 360px-tall screen). W1's app-root rotate screen guarantees we are always landscape here.
   return (
-    <div style={{ ...screenStyle, flexDirection: portrait ? 'column' : 'row' }}>
+    <div style={screenStyle}>
       <div style={leftPaneStyle}>
         {/* the rubber-stamp wordmark — code-drawn ring, no asset */}
         <StampWordmark />

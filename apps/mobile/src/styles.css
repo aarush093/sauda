@@ -31,10 +31,34 @@
     transform: translateY(-6px);
   }
 }
+/* W1 (first-player pass): the rotate-screen phone mark tilts gently from upright to sideways and back,
+   inviting a rotate. transform-only (GPU), and the reduced-motion guard below holds it sideways and
+   still — the mark is an invitation, never a demand for motion. */
+@keyframes sauda-rotate-phone {
+  0%,
+  28% {
+    transform: rotate(0deg);
+  }
+  55%,
+  85% {
+    transform: rotate(-90deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+.sauda-rotate-phone {
+  animation: sauda-rotate-phone 3.4s ease-in-out infinite;
+}
 @media (prefers-reduced-motion: reduce) {
   .munshi-medallion,
   [data-hint] {
     animation: none !important;
+  }
+  /* second belt: never animate the phone mark, and hold it in the resolved landscape angle. */
+  .sauda-rotate-phone {
+    animation: none !important;
+    transform: rotate(-90deg) !important;
   }
 }
 /* P1 (owner phone test 1 Aug): the document itself never scrolls or bounces. The play screen is a

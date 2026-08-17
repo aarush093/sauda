@@ -7,6 +7,8 @@ import { Book } from './shell/Book';
 import { markGameCompleted } from './shell/firstRun';
 import { Table } from './components/Table';
 import { TutorialPlayer } from './components/TutorialPlayer';
+import { RotateScreen } from './components/RotateScreen';
+import { useOrientation } from './game/orientation';
 import { PlateSheet } from './components/PlateSheet';
 import { CardFace } from './components/CardFace';
 import { DevWheel } from './components/DevWheel';
@@ -74,6 +76,7 @@ function AutoStartTable() {
 export function App() {
   const state = useGame((store) => store.state);
   const hash = useHash();
+  const orientation = useOrientation();
 
   // H4: warm every plate (fetch + async-decode) once on mount, so no card's first mid-game
   // appearance stalls on a webp decode on the target budget WebView.
@@ -114,13 +117,19 @@ export function App() {
     }
   }
 
-  // U2 (retire the rotate dead-end, first-player pass): SAUDA plays best in landscape, but the old
-  // full-screen "Rotate your phone" gate was a WALL — a browser can't force orientation outside
-  // fullscreen, so a player who couldn't rotate was stuck. We no longer block: the game lays out and
-  // stays playable in portrait too (a compressed, centred landscape board — see Board), and a slim
-  // dismissible banner in the Table offers "rotate / go fullscreen" (see PortraitBanner). Native
-  // orientation lock proper arrives with the M5 Capacitor manifest (DECISIONS "U4").
+  // W1 (first-player pass — supersedes U2): SAUDA is a LANDSCAPE game from open to game-over. In
+  // portrait we show ONE clean full-screen rotate invitation (RotateScreen) INSTEAD of any real screen,
+  // and the instant the device reports landscape the game appears. The guard sits here, above every
+  // production route (Home / autostart / play / niyam / sikho), so it covers the whole app in one place.
+  // Because the game state lives in the external store (not in a component), swapping the whole tree for
+  // RotateScreen and back loses NOTHING — a rotate mid-game returns to exactly the same state. The dev
+  // art routes above are unaffected (they render only in `import.meta.env.DEV`). U2's "portrait stays
+  // playable" is reversed here (DECISIONS "W1"): the compressed portrait board misrepresented the game.
   const hud = import.meta.env.DEV && hudEnabled() ? <Hud /> : null;
+
+  if (orientation === 'portrait') {
+    return <RotateScreen />;
+  }
 
   if (hash === '#/autostart') {
     return <AutoStartTable />; // AutoStartTable renders its own HUD

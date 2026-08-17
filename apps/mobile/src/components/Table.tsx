@@ -17,8 +17,6 @@ import type { Action, GameEvent, GameState, PropertyGroup, SetId } from '@sauda/
 import { actorOf, useGame, viewSeat } from '../game/store';
 import type { SeatConfig } from '../game/store';
 import { useViewport } from '../game/viewport';
-import { useOrientation } from '../game/orientation';
-import { PortraitBanner } from './PortraitBanner';
 import { paymentDetails } from '../game/paymentModel';
 import { botBeatDelayMs, zeroPayableResponse } from '../game/interaction';
 import { describeThreat, shortLabel, stagePlayFromEvents } from '../game/labels';
@@ -99,10 +97,8 @@ export function Table() {
   // subtracted) and re-fits the instant that chrome shows or hides.
   const viewport = useViewport();
 
-  // U2: in portrait the game stays playable (a compressed, centred landscape board — see Board); a slim
-  // dismissible banner offers "rotate / go fullscreen" without ever covering the board. No blocking gate.
-  const orientation = useOrientation();
-  const [bannerDismissed, setBannerDismissed] = useState(false);
+  // W1: orientation is handled ONCE at the app root — in portrait the whole tree is swapped for the
+  // rotate screen (App.tsx), so the Table only ever renders in landscape and needs no portrait branch.
 
   // P8 in-game nav (K8): the pause sheet. While `paused`, every automatic beat below is frozen (bot
   // timer, auto-draw, auto-resolve) and the turn token's auto-end drain is held (paused prop → Board),
@@ -291,16 +287,13 @@ export function Table() {
   // C4 opens no sheet — the beat auto-submits it. The sheet renders only with real cards.
   const showPaymentSheet = payAction?.type === 'RESPOND_PAY' && autoResolve === null;
 
-  const showBanner = orientation === 'portrait' && !bannerDismissed && handoffSeat === null && !gameOver;
-
   return (
     <div
       className="table"
       style={{ ...shellStyle, top: viewport.offsetTop, height: viewport.height, width: viewport.width, display: 'flex', flexDirection: 'column' }}
     >
-      {showBanner && <PortraitBanner onDismiss={() => setBannerDismissed(true)} />}
-      {/* the board takes whatever height is left below the banner (all of it, in landscape or once the
-          banner is dismissed). The response overlays below are fixed, so they sit outside this flow. */}
+      {/* the board fills the whole measured shell (landscape-only, W1). The response overlays below are
+          fixed, so they sit outside this flow. */}
       <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
         <Board
           observation={observation}
