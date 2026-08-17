@@ -38,4 +38,22 @@ fitted layout box and scaled back down — land **every element inside the measu
 dense sweep of viewport sizes (widths 360→960, heights 200→440, including short chrome-reduced boxes
 well below the min box) and for every device profile.
 
+## U2 — the rotate dead-end is retired (portrait stays playable)
+
+The old full-screen "Rotate your phone to play" card was a wall — a browser can't force orientation
+outside fullscreen, so a player who couldn't rotate was stuck. U2 removes the block: in portrait the
+game lays out a **compressed, centred landscape board** (bottom-aligned so the hand sits in the thumb
+zone) and shows a **slim, dismissible banner** — "Rotate for the full view" + Go fullscreen — that never
+covers the board. Same self-verification (no card clipped, no page scroll).
+
+| Portrait still | iPhone 12 (390×844) | iPhone SE (375×667) |
+|----------------|---------------------|---------------------|
+| Rest + banner | `portrait_rest__390x844.png` | `portrait_rest__375x667.png` |
+| 11-card hand | `portrait_hand11__390x844.png` | `portrait_hand11__375x667.png` |
+
+**Result: 4/4 portrait stills clean — 0 cards clipped, 0 page scroll.** The board is smaller than in
+landscape (the banner says as much), but every zone is present and reachable and the full 11-card hand
+sits above the bottom edge. Landscape remains the full experience; portrait adapts rather than blocks.
+Native orientation lock proper arrives with the M5 Capacitor manifest (DECISIONS "U4").
+
 Rerun: `pnpm dev:lan` in one shell, then `pnpm --filter @sauda/mobile capture:firstplayer`.

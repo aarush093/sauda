@@ -39,6 +39,26 @@
       "file": "payment__667x375.png",
       "ok": true,
       "note": "payment sheet — cards 0, clipped 0, pageScroll false"
+    },
+    {
+      "file": "portrait_rest__390x844.png",
+      "ok": true,
+      "note": "portrait rest + banner — cards 5, clipped 0, pageScroll false"
+    },
+    {
+      "file": "portrait_hand11__390x844.png",
+      "ok": true,
+      "note": "portrait 11-card hand — cards 11, clipped 0, pageScroll false"
+    },
+    {
+      "file": "portrait_rest__375x667.png",
+      "ok": true,
+      "note": "portrait rest + banner — cards 5, clipped 0, pageScroll false"
+    },
+    {
+      "file": "portrait_hand11__375x667.png",
+      "ok": true,
+      "note": "portrait 11-card hand — cards 11, clipped 0, pageScroll false"
     }
   ]
 }

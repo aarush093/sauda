@@ -1,8 +1,10 @@
 /**
- * Orientation model (R0 — owner landscape directive, 2 Aug). SAUDA is a LANDSCAPE-ONLY game: the
- * play screen only ever lays out with the long edge horizontal. A browser cannot FORCE orientation
- * outside fullscreen, so instead of fighting the device we detect portrait and raise the rotate gate
- * (see RotateGate), keeping the game unmounted — never laid out at the wrong aspect ratio.
+ * Orientation model (R0, owner landscape directive; U2 update, first-player pass). SAUDA plays best in
+ * LANDSCAPE. A browser cannot FORCE orientation outside fullscreen, so rather than block portrait with a
+ * wall (the old rotate gate, retired in U2) we now stay PLAYABLE in portrait — the board lays out in a
+ * compressed, centred landscape composition (see Board) and a slim dismissible banner (PortraitBanner)
+ * offers "rotate / go fullscreen". This module supplies the portrait detection the banner uses and the
+ * one "Go fullscreen" gesture.
  *
  * The detection itself is a pure, unit-tested function of the two viewport dimensions; the hook is a
  * thin subscription around it so a real rotation (or a URL-bar resize) re-renders the app.

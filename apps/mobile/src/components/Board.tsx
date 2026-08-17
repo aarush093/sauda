@@ -24,7 +24,7 @@ import { ArrangeAssistant } from './ArrangeAssistant';
 import { useReducedMotion } from '../design/motion';
 import { useHandDrag } from '../game/useHandDrag';
 import { useMeasuredSize } from '../game/useMeasuredWidth';
-import { fitToBox } from '../game/viewport';
+import { fitToBox, MIN_PLAYABLE_BOX } from '../game/viewport';
 import { resolveMyTurn, resolveSpectate } from '../game/landscapeLayout';
 import { useDragController } from '../game/useDragController';
 import type { CarrySpec } from '../game/useDragController';
@@ -318,11 +318,25 @@ export function Board({
   // zone maths run on the LAYOUT box; the scale is a CSS transform on the layout wrapper below.
   const measuredWidth = boardSize.width > 0 ? boardSize.width : 740;
   const measuredHeight = boardSize.height > 0 ? boardSize.height : 360;
-  const fit = fitToBox(measuredWidth, measuredHeight);
+  // U2 (retire the rotate dead-end): SAUDA is a landscape game, but in PORTRAIT we no longer block —
+  // we fit the largest LANDSCAPE-aspect board across the width and centre it (the slim banner in Table
+  // says "rotate for the full view"). Capping the box height to the landscape aspect keeps the board a
+  // real, readable landscape composition instead of stretching it down a tall portrait box. Landscape
+  // uses the whole measured box exactly as before (this branch is a no-op there).
+  const portrait = measuredHeight > measuredWidth;
+  const landscapeAspectHeight = Math.round(measuredWidth * (MIN_PLAYABLE_BOX.height / MIN_PLAYABLE_BOX.width));
+  const boxWidth = measuredWidth;
+  const boxHeight = portrait ? Math.min(measuredHeight, landscapeAspectHeight) : measuredHeight;
+  const fit = fitToBox(boxWidth, boxHeight);
   const width = fit.layoutWidth;
   const height = fit.layoutHeight;
   const myTurnZones = resolveMyTurn(width, height);
   const spectateZones = resolveSpectate(width, height);
+  // In portrait the fitted board is shorter than the measured box; sit it at the BOTTOM so the hand
+  // lands in the thumb zone (the empty felt goes above, under the banner). In landscape boxHeight is
+  // the full measured height, so this offset is 0 and nothing moves.
+  const boardOffsetTop = Math.max(0, measuredHeight - boxHeight);
+  const boardOffsetLeft = 0;
 
   const onExpandMine = () => setExpandedView({ kind: 'me' });
   const onOpenBot = (id: number) => setExpandedView({ kind: 'opponent', id });
@@ -334,7 +348,7 @@ export function Board({
           it shrinks the whole play surface uniformly so nothing clips. The drag ghost and the response
           overlays stay OUTSIDE this wrapper (fixed to the viewport), so their pointer maths and full-
           screen sizing are unaffected by the scale. */}
-      <div style={{ position: 'absolute', top: 0, left: 0, width, height, transform: `scale(${fit.scale})`, transformOrigin: 'top left' }}>
+      <div style={{ position: 'absolute', top: boardOffsetTop, left: boardOffsetLeft, width, height, transform: `scale(${fit.scale})`, transformOrigin: 'top left' }}>
       {/* FOCUS FOLLOWS TURN: the key flips when control crosses my-turn ↔ spectate, so FocusTransition
           remounts and plays one ~250ms slide/fade — no dead frame between the two states (R1). */}
       <FocusTransition key={myTurn ? 'mine' : 'spectate'} direction={myTurn ? 'mine' : 'spectate'}>

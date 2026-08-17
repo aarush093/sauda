@@ -4,8 +4,6 @@ import type { SeatConfig } from './game/store';
 import { resolveSeed, resolveAutostartConfig } from './game/seed';
 import { Home } from './shell/Home';
 import { Book } from './shell/Book';
-import { RotateGate } from './shell/RotateGate';
-import { useOrientation } from './game/orientation';
 import { markGameCompleted } from './shell/firstRun';
 import { Table } from './components/Table';
 import { PlateSheet } from './components/PlateSheet';
@@ -75,7 +73,6 @@ function AutoStartTable() {
 export function App() {
   const state = useGame((store) => store.state);
   const hash = useHash();
-  const orientation = useOrientation();
 
   // H4: warm every plate (fetch + async-decode) once on mount, so no card's first mid-game
   // appearance stalls on a webp decode on the target budget WebView.
@@ -116,21 +113,13 @@ export function App() {
     }
   }
 
-  // R0 (owner landscape directive, 2 Aug): SAUDA is LANDSCAPE-ONLY. In portrait the game never lays
-  // out — the rotate gate stands over an UNMOUNTED, paused game (its state waits safely in the store,
-  // so rotating back resumes exactly where we were, with no bot having stepped behind the gate). The
-  // pure dev ART routes above (#/dev/card, /plates, /wheel) are not orientation-gated (they are review
-  // tools shot in a tall box, not the game) — but they ARE DEV-gated, so prod never sees them. The dev
-  // HUD rides above the gate so orientation stays debuggable.
+  // U2 (retire the rotate dead-end, first-player pass): SAUDA plays best in landscape, but the old
+  // full-screen "Rotate your phone" gate was a WALL — a browser can't force orientation outside
+  // fullscreen, so a player who couldn't rotate was stuck. We no longer block: the game lays out and
+  // stays playable in portrait too (a compressed, centred landscape board — see Board), and a slim
+  // dismissible banner in the Table offers "rotate / go fullscreen" (see PortraitBanner). Native
+  // orientation lock proper arrives with the M5 Capacitor manifest (DECISIONS "U4").
   const hud = import.meta.env.DEV && hudEnabled() ? <Hud /> : null;
-  if (orientation === 'portrait') {
-    return (
-      <>
-        <RotateGate />
-        {hud}
-      </>
-    );
-  }
 
   if (hash === '#/autostart') {
     return <AutoStartTable />; // AutoStartTable renders its own HUD

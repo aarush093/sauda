@@ -140,6 +140,19 @@ async function main() {
       // 4. payment sheet (a charge lands on me; my bank can pay)
       { const { context, page, box } = await newPage(browser, profile); try { await boot(page); const s = FX.states['S3_pay_from_bank']; await page.evaluate((x) => window.__replay(x.seed, x.actions), s); await page.evaluate(() => { window.__saudaCapturePaused = false; }); await page.waitForTimeout(900); await shoot(page, box, `payment__${tag}.png`, 'payment sheet'); } finally { await context.close(); } }
     }
+
+    // U2 — PORTRAIT: the rotate dead-end is retired, so the same two devices held UPRIGHT must stay
+    // playable (a compressed, centred landscape board + the slim banner) with nothing clipped.
+    const PORTRAIT = [
+      { id: 'iphone12-portrait', width: 390, height: 844, dpr: 3, chrome: 88, safeArea: { top: 47, right: 0, bottom: 34, left: 0 } },
+      { id: 'iphonese-portrait', width: 375, height: 667, dpr: 2, chrome: 88, safeArea: { top: 0, right: 0, bottom: 0, left: 0 } },
+    ];
+    for (const profile of PORTRAIT) {
+      const tag = `${profile.width}x${profile.height}`;
+      console.log(`\nprofile ${profile.id} (portrait)`);
+      { const { context, page, box } = await newPage(browser, profile); try { await boot(page); await page.evaluate((s) => window.__craft(s), REST_SPEC); await page.waitForTimeout(500); await shoot(page, box, `portrait_rest__${tag}.png`, 'portrait rest + banner'); } finally { await context.close(); } }
+      { const { context, page, box } = await newPage(browser, profile); try { await boot(page); await page.evaluate((s) => window.__craft(s), HAND11_SPEC); await page.waitForTimeout(500); await shoot(page, box, `portrait_hand11__${tag}.png`, 'portrait 11-card hand'); } finally { await context.close(); } }
+    }
   } finally { await browser.close(); }
   writeFileSync(join(OUT, 'results.json'), JSON.stringify({ results }, null, 2));
   const ok = results.filter((r) => r.ok).length;

@@ -14,6 +14,7 @@ import { GAME } from '@sauda/engine';
 import type { Difficulty } from '@sauda/bots';
 import { useGame } from '../game/store';
 import type { SeatConfig } from '../game/store';
+import { useOrientation } from '../game/orientation';
 import { resolveSeed } from '../game/seed';
 import { hasCompletedGame } from './firstRun';
 import { STAGE, INK, FONT, SHADOW } from '../design/tokens';
@@ -30,6 +31,9 @@ export function Home() {
   const [bots, setBots] = useState(3); // solo: number of bot opponents (1–3)
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const showRibbon = !hasCompletedGame();
+  // U2: with the rotate gate retired, Home can render in portrait too — stack the two panes vertically
+  // there so the wordmark and the doors each get the full width instead of a squeezed half.
+  const portrait = useOrientation() === 'portrait';
 
   function deal() {
     const seats: SeatConfig[] = [{ kind: 'human' }];
@@ -47,7 +51,7 @@ export function Home() {
   // so the whole shell fits the short landscape height (the old single vertical column would overflow
   // a 360px-tall screen). The rotate gate (R0) guarantees we are always landscape here.
   return (
-    <div style={screenStyle}>
+    <div style={{ ...screenStyle, flexDirection: portrait ? 'column' : 'row' }}>
       <div style={leftPaneStyle}>
         {/* the rubber-stamp wordmark — code-drawn ring, no asset */}
         <StampWordmark />
