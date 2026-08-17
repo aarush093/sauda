@@ -1,0 +1,44 @@
+{
+  "results": [
+    {
+      "file": "rest__844x390.png",
+      "ok": true,
+      "note": "rest state — cards 5, clipped 0, pageScroll false"
+    },
+    {
+      "file": "hand11__844x390.png",
+      "ok": true,
+      "note": "11-card hand — cards 11, clipped 0, pageScroll false"
+    },
+    {
+      "file": "targeting__844x390.png",
+      "ok": true,
+      "note": "targeting split — cards 3, clipped 0, pageScroll false"
+    },
+    {
+      "file": "payment__844x390.png",
+      "ok": true,
+      "note": "payment sheet — cards 0, clipped 0, pageScroll false"
+    },
+    {
+      "file": "rest__667x375.png",
+      "ok": true,
+      "note": "rest state — cards 5, clipped 0, pageScroll false"
+    },
+    {
+      "file": "hand11__667x375.png",
+      "ok": true,
+      "note": "11-card hand — cards 11, clipped 0, pageScroll false"
+    },
+    {
+      "file": "targeting__667x375.png",
+      "ok": true,
+      "note": "targeting split — cards 3, clipped 0, pageScroll false"
+    },
+    {
+      "file": "payment__667x375.png",
+      "ok": true,
+      "note": "payment sheet — cards 0, clipped 0, pageScroll false"
+    }
+  ]
+}

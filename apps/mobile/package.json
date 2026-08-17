@@ -34,6 +34,7 @@
     "capture:handinfo5": "node scripts/capture-hand-info-5.mjs",
     "capture:handinfo6": "node scripts/capture-hand-info-6.mjs",
     "measure": "node scripts/excellence-measure.mjs",
+    "capture:firstplayer": "node scripts/capture-first-player.mjs",
     "plates:variants": "node scripts/build-plate-variants.mjs"
   },
   "dependencies": {
