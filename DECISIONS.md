@@ -842,3 +842,48 @@ full-size card faces byte-identical. Spec laws in `docs/M4B_SPEC_v1.2.md` §K.
   the first CLI preview as a public file. A root `.vercelignore` now excludes it, so CLI deploys match
   git deploys — no dev surface reaches production. Verified: on the clean preview that path returns the
   SPA shell (410 B), not the 98 kB JSON.
+
+## W — ONBOARDING + ORIENTATION REBUILD (first-player pass, 2026-08-17): correcting two of MY earlier specs
+
+Both changes here fix decisions I (the spec author) made, not the implementation — the owner tested the
+preview on an iPhone and rejected the U2 portrait board and the U3 watch-only tutorial outright.
+
+### W1 — landscape-only, done properly (REVERSES the U2 "portrait remains playable" decision)
+
+- **The U2 decision "portrait stays playable" is REVERSED.** U2 laid out a compressed, centred landscape
+  board in portrait with a dismissible banner. On the owner's real iPhone that read as a mostly-empty
+  field with everything crushed at the bottom — not playable, and a misrepresentation of the game. So the
+  original landscape-only rule (R0 / spec §14) is restored: in portrait the app swaps the WHOLE tree for
+  one clean full-screen rotate screen; the compressed portrait board and `PortraitBanner` are removed.
+- **Why it is an app-root guard, not a per-screen one.** The orientation swap lives once at the App root,
+  above every production route, so Home / play / Book / autostart all get the same rotate screen. The
+  game state lives in the external zustand store, so swapping the tree for the rotate screen and back
+  loses nothing — rotating to portrait mid-game and back returns to exactly the same state (proven in
+  `RotateScreen.test`). [approved — owner directive]
+- **Browsers cannot force orientation outside fullscreen.** The rotate screen offers a "Go fullscreen"
+  control that best-effort enters fullscreen and calls `screen.orientation.lock('landscape')`, swallowing
+  any failure silently — fullscreen is the only context a browser may lock orientation in. The real
+  native landscape lock ships with the **M5 Capacitor build via the manifest**; the web rotate screen is
+  the invitation until then. The rotate screen is a designed invitation (aged-cream card, code-drawn
+  rotating-phone mark, still under reduced motion), not an error wall.
+
+### W2 — just-in-time contextual onboarding (REPLACES the U3 watch-only demo)
+
+- **The U3 "Sikho" watch-only demo is REMOVED.** It played a game FOR the player with an automated cursor;
+  the owner's model is Temple-Run-style just-in-time coaching — the player plays their OWN first game and
+  each mechanic is taught the instant it first becomes relevant. The `#/sikho` route + `TutorialPlayer`
+  are gone; the deterministic tutorial game survives only as a **test fixture** (no app import → ships in
+  no bundle) driving the onboarding-fires-at-the-right-moment proof. [approved — owner directive]
+- **Triggers read `legalActions`, never a script.** `onboarding.ts` is a pure function of the human's live
+  `legalActions` + `Observation`; one predicate per mechanic. It decides no rule, alters no `legalActions`,
+  and plays no move — a coach mark can only ever point at a move the engine already offered.
+- **"Completing a set" uses a pure near-complete heuristic** (a colour I hold is exactly one property
+  short) rather than simulating the placement — it is a teaching trigger, not a rule, so if it ever fires
+  a touch early it only teaches sooner and can never change what is legal. Logged as the defensible reading.
+- **One coach at a time; teach-once, persisted; two dismissals → quiet for the turn.** When several
+  mechanics are available at once, a fixed priority (responses first) shows one. Each mechanic teaches once
+  ever (`tips.ts` localStorage). Dismissing two in a row without acting silences onboarding for the rest of
+  that turn — it never nags. A "Show tips" switch (Home + pause sheet) and "Reset tips" control it.
+- **The `pay` trigger keys off the offered `RESPOND_PAY` + real value to pay with**, not an open-interrupt
+  flag — the engine's payment phase may not keep `interrupt` set, and a player can pay from bank OR
+  properties. The nothing-to-pay C4 case auto-resolves and is deliberately not taught.

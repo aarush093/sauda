@@ -446,3 +446,31 @@ Plain-English notes on the key design decisions per milestone. Read top-to-botto
   game + a stacked draw pile so each draw is known, and every scripted step goes through `reduce`; the
   test replays the whole thing, proving each move legal and the finale a real declared SAUDA. The cursor
   and beats are pure UI on top — the correctness lives in the replayable script.
+
+## W — onboarding + orientation rebuild (first-player pass)
+
+- **Landscape-only is a single app-root guard, not a per-screen check (W1).** `App` reads the live
+  orientation and, in portrait, returns `<RotateScreen/>` instead of the whole tree. Because the game
+  state lives in the external zustand store (not in any component), swapping the tree out and back loses
+  nothing — a rotate mid-game returns to the exact same state. That is why the fix is one `if` at the top
+  rather than portrait branches scattered through Board/Home/Table (all of which were deleted).
+- **The rotate screen is an invitation, not a wall (W1).** It is drawn in the SAUDA language (a code-drawn
+  phone SVG that tilts on a CSS keyframe, held still under `prefers-reduced-motion` by a media guard) and
+  offers the one thing a browser can do: `requestLandscapeFullscreen` best-effort enters fullscreen then
+  `screen.orientation.lock('landscape')`, swallowing failure — fullscreen is the only place a browser may
+  lock orientation. The real lock ships in the M5 native manifest.
+- **Onboarding is a pure trigger engine over `legalActions` (W2).** `onboarding.ts` answers "which mechanic
+  just became available?" from the human's `legalActions` + `Observation` alone — one small predicate per
+  mechanic, returned in a priority order. It reads only the engine's offer, so a coach mark can only ever
+  point at a move that is already legal; it decides no rule and plays no move. This is the whole reason the
+  onboarding can never break the game — it has no path to change what is legal.
+- **The coach controller is driven by state identity, not timers (W2).** `useCoachMark` shows one coach at
+  a time; "did the player act?" is just `state !== theStateWhenWeShowedIt` (the store hands back a fresh
+  state object per applied action). A coach clears the moment the player acts or taps it off; teach-once is
+  persisted; two dismissals in a turn go quiet. Nothing is scheduled — a coach appears because a move
+  became legal and clears because a move happened.
+- **The gesture ghost reuses the U3 cursor; the U3 demo player is gone (W2).** The gold `TutorialCursor`
+  survives as the coach mark's gesture ghost (a single travelled pass, or a static arrow + word under
+  reduced motion); the scripted `TutorialPlayer` that played a game FOR the player was removed. The old
+  tutorial script lives on only as a test fixture — `onboardingLive.test` runs it as a real legal game to
+  prove 6+ coach marks fire at exactly the moment each mechanic first becomes available.

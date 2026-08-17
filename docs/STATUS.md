@@ -4,6 +4,37 @@
 **AUDIT-Z note appended 2026-08-06.** Four polish passes made the true state hard to read; this is the
 map the owner and any future session can trust. It records state only — **no new work is proposed here.**
 
+## W — ONBOARDING + ORIENTATION REBUILD (2026-08-17): correcting two of MY earlier specs
+
+The owner tested the RELEASE-1 preview on an iPhone and rejected two things — both corrections of the
+SPEC I wrote, not the implementation. The tutorial had been built as a watch-only demo when he asked for
+just-in-time contextual onboarding; portrait had been made "playable" when he asked for a landscape-only
+game. Both are rebuilt to the correct design, green + playable at every commit. Tests **486 → 517**.
+
+- **W1 — landscape only, done properly (supersedes U2).** In portrait the app now swaps the whole tree
+  for ONE clean full-screen rotate screen in the SAUDA language (aged-cream card on indigo felt, a
+  code-drawn rotating-phone mark that animates gently — still under reduced motion — the wordmark, and
+  "SAUDA is played in landscape — turn your phone"), with a "Go fullscreen" control. The instant the
+  device reports landscape the game appears with **no state loss** — a rotate mid-game returns to exactly
+  the same game (the state lives in the store, not the tree; proven in `RotateScreen.test`). The U2
+  compressed-portrait board (the owner's "crushed at the bottom" field) and `PortraitBanner` are removed.
+  Native landscape lock ships with the M5 Capacitor manifest; the web can only invite (browsers can't lock
+  orientation outside fullscreen).
+- **W3 — landscape fit, re-verified.** The measured-box system re-verified at iPhone 12 (844×390) and
+  iPhone SE (667×375) landscape WITH chrome + insets: both lay out at scale 1.0, rows tile the box exactly
+  (no scroll, no dead zone), and — the check the U1 suite never made — the real upright hand card fits
+  INSIDE its wheel band, so an 11-card hand is never clipped. Zone-height tables + the locking test in
+  `docs/captures/onboarding-w/W3_LANDSCAPE_FIT.md` / `landscapeFitW3.test.ts`.
+- **W2 — just-in-time contextual onboarding (replaces the U3 watch demo).** The player plays their OWN
+  first game; a coach mark teaches each mechanic the first time it becomes available — detected from
+  `legalActions`, never a script — teaching once (persisted), with a gold gesture ghost (reduced-motion
+  static arrow) and a link into the exact Book chapter that returns to the same game. One coach at a time;
+  two dismissals go quiet for the turn; a "Show tips" switch + "Reset tips" control it (Home + pause
+  sheet). Onboarding plays no move and never alters `legalActions`. The `#/sikho` watch demo + its
+  `TutorialPlayer` are gone; nothing auto-plays a game for the player. Proven on a real engine-legal game
+  (`onboardingLive.test`): 6+ coach marks fire at their first-available moment, Book jump/return keeps
+  state intact, teach-once + two-dismissals-quiet hold. `packages/engine` + `packages/bots` byte-identical.
+
 ## RELEASE-1 — SAFE SHIP: production build verified, preview published, promote PENDING (2026-08-17)
 
 The U pass landed on the owner's machine but the live link (`sauda-rouge.vercel.app`) still served the

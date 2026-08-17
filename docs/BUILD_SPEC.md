@@ -250,7 +250,7 @@ Read this as the design brief; make deliberate choices, not template defaults.
 - **M1 — Engine complete:** everything in §4–§8.2. All 20 named edge cases covered; property tests pass; fixtures exported. *Gate: `pnpm -r test` green, coverage report shown.*
 - **M2 — Bots + CLI:** RandomBot, HeuristicBot; `pnpm play` terminal game (human vs 3 bots, readable table render); `pnpm simulate --games 1000` stats harness. *Gate: simulator targets in §8.3 met; you play one full CLI game and paste the log summary.*
 - **M3 — Mobile core:** full playable Table screen vs bots + pass-and-play with hand-off overlay. Every interaction driven by `legalActions`. *Gate: complete game start→win on web build with zero console errors.*
-- **M4 — Polish:** tutorial, sound/haptics, animations incl. stamp signature, settings + rule toggles, stats persistence, app icon + splash, reduced-motion path. *Gate: Lighthouse perf ≥ 90 on web build; a friend can learn the game from the tutorial alone.* *(U3, first-player pass: the guided tutorial "Sikho" now ships — a deterministic, engine-legal demo game teaching every move and tying each to the Book; auto-offered once, permanent on Home. Lighthouse run still outstanding.)*
+- **M4 — Polish:** tutorial, sound/haptics, animations incl. stamp signature, settings + rule toggles, stats persistence, app icon + splash, reduced-motion path. *Gate: Lighthouse perf ≥ 90 on web build; a friend can learn the game from the tutorial alone.* *(W2, first-player pass — supersedes U3: the tutorial is now JUST-IN-TIME contextual onboarding. The player plays their own first game and a coach mark teaches each mechanic the first time it becomes available (from `legalActions`, never a script), teaching once, with a gesture ghost and a link into the exact Book chapter; a "Show tips" switch + "Reset tips" control it. The U3 watch-only demo — an automated cursor that played FOR the player — was rejected by the owner and removed. Lighthouse run still outstanding.)*
 - **M5 — Ship:** Capacitor Android project, keystore + signed **AAB**, versionCode/versionName scheme, `store/` assets (feature graphic 1024×500, 6 screenshots via emulator script, listing copy), `privacy.html` (truthful: no data collected) ready for Vercel, Play data-safety answers drafted. Check and target the **current Play target-SDK requirement** at build time. *Gate: AAB builds reproducibly; `store/CHECKLIST.md` complete.*
 - **M6 (optional, only after M5):** IsmctsBot (500ms budget, determinized rollouts) → then the full §9 ML pipeline → "Boss" difficulty behind a flag.
 
@@ -275,8 +275,13 @@ the portrait play-screen layout (§10) for the play surface; the engine, bots, c
 **Orientation.** The play screen only ever lays out with the long edge horizontal. A browser cannot force
 orientation outside fullscreen, so in portrait the app renders a full-screen rotate interstitial over an
 **unmounted, paused** game (state persists in the store; no bot steps behind it) — the game never lays out
-in portrait. A "Go fullscreen" control best-effort enters fullscreen and `screen.orientation.lock('landscape')`.
-The M5 Capacitor build pins landscape in the native manifest, so the gate is a web-only fallback. The device
+in portrait, and the instant the device reports landscape the game returns to exactly the same state. The
+interstitial is a designed INVITATION in the SAUDA language (aged-cream card on indigo felt, a code-drawn
+rotating-phone mark that animates gently — still under reduced motion — the wordmark, one line), not an
+error wall. A "Go fullscreen" control best-effort enters fullscreen and `screen.orientation.lock('landscape')`.
+(W1, first-player pass: this reverses the U2 experiment that kept a compressed board "playable" in portrait —
+on a real iPhone it read as an empty field with everything crushed at the bottom, so the landscape-only rule
+above is restored.) The M5 Capacitor build pins landscape in the native manifest, so the gate is a web-only fallback. The device
 testbed is the four PHONE-1 Android sizes rotated: 740×360, 800×360, 832×384, 915×412, plus a reduced-motion
 variant; the binding constraint is now the **short edge (360px tall)**.
 
