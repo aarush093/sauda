@@ -21,6 +21,9 @@ import { paymentDetails } from '../game/paymentModel';
 import { botBeatDelayMs, zeroPayableResponse } from '../game/interaction';
 import { describeThreat, shortLabel, stagePlayFromEvents } from '../game/labels';
 import { Board } from './Board';
+import { CoachMark } from './CoachMark';
+import { useCoachMark } from '../game/useCoachMark';
+import { tipsEnabled, setTipsEnabled, resetTips } from '../shell/tips';
 import { Surface } from './Surface';
 import { PaymentSheet } from './PaymentSheet';
 import { InterruptPrompt } from './InterruptPrompt';
@@ -105,6 +108,39 @@ export function Table() {
   // so nothing advances behind the sheet. `showBook` opens Niyam OVER the paused game.
   const [paused, setPaused] = useState(false);
   const [showBook, setShowBook] = useState(false);
+
+  // W2: just-in-time onboarding. One coach mark at a time teaches each mechanic the first time it is
+  // available in the player's OWN game — driven purely off legalActions (useCoachMark + onboarding.ts),
+  // never a script. `tipsOn` is the Show-tips switch (toggled here from the pause sheet); `coachChapter`
+  // holds a Book chapter opened from a coach's Niyam link (over the game, no route change — closing
+  // returns to exactly this game). The hook is called every render (state may be null pre-deal); its
+  // inputs are gated so a coach only appears on the human's own turn/response, tips on, not paused.
+  const [tipsOn, setTipsOn] = useState(() => tipsEnabled());
+  const [coachChapter, setCoachChapter] = useState<number | null>(null);
+  const [tipsResetToken, setTipsResetToken] = useState(0);
+  const coachActor = state ? actorOf(state) : -1;
+  const coachIsHumanMoment = state !== null && state.phase !== 'gameOver' && seats[coachActor]?.kind === 'human';
+  const coachEnabled = tipsOn && coachIsHumanMoment && handoffSeat === null && !paused;
+  const coachObservation = coachEnabled && state ? observe(state, coachActor) : null;
+  const coachActions = coachEnabled && state ? legalActions(state, coachActor) : [];
+  const { coach, dismiss: dismissCoach } = useCoachMark({
+    state,
+    observation: coachObservation,
+    actions: coachActions,
+    enabled: coachEnabled,
+    resetToken: tipsResetToken,
+  });
+  function toggleTips() {
+    setTipsOn((on) => {
+      const next = !on;
+      setTipsEnabled(next); // persist the switch
+      return next;
+    });
+  }
+  function resetTipsNow() {
+    resetTips();
+    setTipsResetToken((token) => token + 1); // reload the hook's in-memory taught set → all teach again
+  }
 
   // Drive bot turns one step at a time; each step updates state and re-runs this. H5: the delay is
   // PACED — the first beat of a bot's turn holds longest, later beats are quicker, trimming toward a
@@ -328,6 +364,9 @@ export function Table() {
               window.location.hash = '#/';
             }
           }}
+          tipsOn={tipsOn}
+          onToggleTips={toggleTips}
+          onResetTips={resetTipsNow}
         />
       )}
       {paused && showBook && <Book onClose={() => setShowBook(false)} />}
@@ -375,6 +414,15 @@ export function Table() {
           sets glowing (see the Board `receive` prop), so there is no separate chooser overlay. */}
 
       {handoffSeat !== null && <HandoffOverlay seat={handoffSeat} onReady={ackHandoff} />}
+
+      {/* W2: the just-in-time coach mark — one at a time, over the player's own game, board still live
+          behind it (no scrim, never blocks the move). Hidden while its Book chapter is open. */}
+      {coach && coachChapter === null && (
+        <CoachMark coach={coach} onDismiss={dismissCoach} onOpenNiyam={(chapter) => setCoachChapter(chapter)} />
+      )}
+      {/* the Book chapter a coach's Niyam link opened — OVER the game, no route change; closing returns to
+          exactly this game state, and the coach reappears (its `active` never cleared by opening a book). */}
+      {coachChapter !== null && <Book initialChapter={coachChapter} onClose={() => setCoachChapter(null)} />}
     </div>
   );
 }

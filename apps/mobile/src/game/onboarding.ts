@@ -71,6 +71,17 @@ function largestGroupSize(observation: Observation, set: SetId): number {
   return largest;
 }
 
+// Do I hold any property on the table at all? Used only to tell a real payment (I can pay from my bank
+// OR my properties) apart from the nothing-to-pay C4 case that auto-resolves.
+function hasAnyProperty(observation: Observation): boolean {
+  for (const set of Object.keys(observation.myProperties) as SetId[]) {
+    if (observation.myProperties[set].some((group) => group.cards.length > 0)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // A play of a PLAY_ACTION whose kind matches — the small helper the action/target/building checks share.
 function hasActionKind(actions: Action[], kinds: readonly string[]): boolean {
   return actions.some((action) => action.type === 'PLAY_ACTION' && kinds.includes(action.params.action));
@@ -140,10 +151,11 @@ export function availableMechanics(observation: Observation, actions: Action[]):
     present.add('action');
   }
 
-  // Being charged and paying: a charge is open on me and I actually hold value to pay with (the
-  // nothing-to-pay C4 case auto-resolves with no sheet, so there is no move to teach there).
+  // Being charged and paying: a RESPOND_PAY is only ever offered while a charge is due, so its presence
+  // IS "I'm being charged". Teach it only when I actually hold value to pay with (bank or a property) —
+  // the nothing-to-pay C4 case auto-resolves with no sheet, so there is no move to teach there.
   const canPay = actions.some((action) => action.type === 'RESPOND_PAY');
-  if (canPay && observation.interrupt !== null && observation.myBankTotal > 0) {
+  if (canPay && (observation.myBankTotal > 0 || hasAnyProperty(observation))) {
     present.add('pay');
   }
 
@@ -153,8 +165,8 @@ export function availableMechanics(observation: Observation, actions: Action[]):
 // ── the coach-mark CONTENT (copy + where it points) ─────────────────────────────────────────────────
 // One entry per mechanic: the short teaching line, the gesture to show, the Book chapter it links to, and
 // the DOM anchor the mark sits beside + the ghost travels to. Anchors are the board's production-safe
-// `data-drop` zones (always rendered) or a `data-coach` hook; a missing anchor falls back to a sensible
-// spot (see CoachMark), so the mark is never lost. Chapter numbers match shell/Book.tsx (1..8).
+// layout landmarks (`data-zone` / `data-drop`, always rendered); a null anchor (the response overlays)
+// falls back to a sensible spot (see CoachMark), so the mark is never lost. Chapters match Book.tsx (1..8).
 
 export type Gesture = 'drag' | 'tap' | 'point';
 
@@ -169,9 +181,14 @@ export interface CoachContent {
   from: string | null; // the ghost's start for a drag (defaults to the hand band)
 }
 
-const HAND_ANCHOR = '[data-coach="hand"]'; // the wheel band — a drag ghost starts here
-const FIRST_SET = '[data-drop^="set:"]'; // the first colour group on the board
-const PLAY_ZONE = '[data-drop="play"]';
+// Anchors are the board's ALWAYS-rendered layout landmarks (production-safe): the wheel band, the
+// my-sets column, the play stage / bank drop zones, and the controls column. A drag ghost starts at the
+// hand and ends at the anchor; a null anchor (the response overlays) falls back to a sensible spot.
+const HAND_ANCHOR = '[data-zone="wheel"]'; // the hand band — a drag ghost starts here
+const MY_SETS = '[data-zone="mySets"]'; // the my-sets column — where properties / wildcards / builds land
+const PLAY_ZONE = '[data-drop="play"]'; // the centre play stage — where action cards / LAGAAN land
+const BANK_ZONE = '[data-drop="bank"]'; // the bank tray
+const CONTROLS = '[data-zone="myControls"]'; // the controls column (the turn token lives here)
 
 const CONTENT: Record<Mechanic, Omit<CoachContent, 'mechanic'>> = {
   bank: {
@@ -180,7 +197,7 @@ const CONTENT: Record<Mechanic, Omit<CoachContent, 'mechanic'>> = {
     gesture: 'drag',
     niyam: 4,
     niyamLabel: 'Niyam 4: Money & Payment',
-    anchor: '[data-drop="bank"]',
+    anchor: BANK_ZONE,
     from: HAND_ANCHOR,
   },
   place: {
@@ -189,7 +206,7 @@ const CONTENT: Record<Mechanic, Omit<CoachContent, 'mechanic'>> = {
     gesture: 'drag',
     niyam: 3,
     niyamLabel: 'Niyam 3: Properties & Wildcards',
-    anchor: FIRST_SET,
+    anchor: MY_SETS,
     from: HAND_ANCHOR,
   },
   complete: {
@@ -198,7 +215,7 @@ const CONTENT: Record<Mechanic, Omit<CoachContent, 'mechanic'>> = {
     gesture: 'drag',
     niyam: 1,
     niyamLabel: 'Niyam 1: Goal & Winning',
-    anchor: FIRST_SET,
+    anchor: MY_SETS,
     from: HAND_ANCHOR,
   },
   wildcard: {
@@ -207,7 +224,7 @@ const CONTENT: Record<Mechanic, Omit<CoachContent, 'mechanic'>> = {
     gesture: 'drag',
     niyam: 3,
     niyamLabel: 'Niyam 3: Properties & Wildcards',
-    anchor: FIRST_SET,
+    anchor: MY_SETS,
     from: HAND_ANCHOR,
   },
   building: {
@@ -216,7 +233,7 @@ const CONTENT: Record<Mechanic, Omit<CoachContent, 'mechanic'>> = {
     gesture: 'drag',
     niyam: 6,
     niyamLabel: 'Niyam 6: Action Cards',
-    anchor: FIRST_SET,
+    anchor: MY_SETS,
     from: HAND_ANCHOR,
   },
   action: {
@@ -261,7 +278,7 @@ const CONTENT: Record<Mechanic, Omit<CoachContent, 'mechanic'>> = {
     gesture: 'drag',
     niyam: 3,
     niyamLabel: 'Niyam 3: Properties & Wildcards',
-    anchor: FIRST_SET,
+    anchor: MY_SETS,
     from: null,
   },
   pay: {
@@ -297,7 +314,7 @@ const CONTENT: Record<Mechanic, Omit<CoachContent, 'mechanic'>> = {
     gesture: 'tap',
     niyam: 1,
     niyamLabel: 'Niyam 1: Goal & Winning',
-    anchor: '[data-coach="turn"]',
+    anchor: CONTROLS,
     from: null,
   },
 };

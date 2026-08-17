@@ -107,15 +107,14 @@ describe('availableMechanics — first-availability predicates (W2)', () => {
     expect(availableMechanics(obs(), [{ type: 'RESPOND_NAHI_CHALEGA', cardId: 'action_nahiChalega_0' }])).toContain('nahi');
   });
 
-  it('being charged: "pay" teaches only with an open charge AND value to pay with', () => {
-    const interrupt = { origin: 1, target: 0, status: 'open', effect: {} } as unknown as Observation['interrupt'];
+  it('being charged: "pay" teaches when a RESPOND_PAY is offered AND I hold value (bank or property)', () => {
     const pay: Action = { type: 'RESPOND_PAY', cardIds: [] };
-
-    expect(availableMechanics(obs({ interrupt, myBankTotal: 5 }), [pay])).toContain('pay');
-    // No open charge → nothing to pay yet.
-    expect(availableMechanics(obs({ myBankTotal: 5 }), [pay])).not.toContain('pay');
-    // A charge but nothing of value (the C4 case auto-resolves; no move to teach).
-    expect(availableMechanics(obs({ interrupt, myBankTotal: 0 }), [pay])).not.toContain('pay');
+    // Value in the bank → teachable.
+    expect(availableMechanics(obs({ myBankTotal: 5 }), [pay])).toContain('pay');
+    // No RESPOND_PAY offered → not a payment moment at all.
+    expect(availableMechanics(obs({ myBankTotal: 5 }), [])).not.toContain('pay');
+    // A charge but nothing of value at all (the C4 case auto-resolves; no move to teach).
+    expect(availableMechanics(obs({ myBankTotal: 0 }), [pay])).not.toContain('pay');
   });
 
   it('returns [] when the engine offers nothing to teach (a bot turn passes actions=[])', () => {

@@ -16,10 +16,18 @@ export function PauseSheet({
   onResume,
   onNiyam,
   onHome,
+  tipsOn,
+  onToggleTips,
+  onResetTips,
 }: {
   onResume: () => void;
   onNiyam: () => void;
   onHome: () => void;
+  // W2: the onboarding controls live here (and on Home) — one switch turns the just-in-time coach marks
+  // on/off at any time; "Reset tips" makes every mechanic eligible to teach again.
+  tipsOn: boolean;
+  onToggleTips: () => void;
+  onResetTips: () => void;
 }) {
   const [confirmingHome, setConfirmingHome] = useState(false);
   const reduced = useReducedMotion();
@@ -31,6 +39,13 @@ export function PauseSheet({
           <>
             <button style={primaryButton} onClick={onResume}>Resume</button>
             <button style={secondaryButton} onClick={onNiyam}>Niyam (rules)</button>
+            {/* W2: the Show-tips switch + Reset. Two rows, quiet ledger styling — not a shouty control. */}
+            <div style={tipsRowStyle}>
+              <button style={toggleButton} onClick={onToggleTips} aria-pressed={tipsOn}>
+                Tips: {tipsOn ? 'On' : 'Off'}
+              </button>
+              <button style={toggleButton} onClick={onResetTips}>Reset tips</button>
+            </div>
             <button style={secondaryButton} onClick={() => setConfirmingHome(true)}>Home</button>
           </>
         ) : (
@@ -88,3 +103,17 @@ const baseButton: CSSProperties = {
 const primaryButton: CSSProperties = { ...baseButton, border: `2px solid ${INK.gold}`, background: STAGE.accentGold, color: INK.deepInk };
 const secondaryButton: CSSProperties = { ...baseButton, border: `1.5px solid ${INK.agedLine}`, background: 'transparent', color: INK.deepInk };
 const dangerButton: CSSProperties = { ...baseButton, border: `2px solid ${INK.stampRed}`, background: 'transparent', color: INK.stampRed };
+// W2: the tips controls — a two-button row, quieter than the primary/secondary doors above them.
+const tipsRowStyle: CSSProperties = { display: 'flex', gap: 8 };
+const toggleButton: CSSProperties = {
+  flex: 1,
+  minHeight: 40,
+  borderRadius: 8,
+  border: `1.5px solid ${INK.agedLine}`,
+  background: 'transparent',
+  color: INK.deepInk,
+  fontFamily: FONT.display,
+  fontWeight: 700,
+  fontSize: 13,
+  cursor: 'pointer',
+};
